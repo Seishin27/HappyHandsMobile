@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Babyblooom</title>
+    <!-- Modern Google Font -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet">
+</head>
+<body>
+    <header>
+        <nav class="navbar">
+            <div class="logo">
+                <a href="/">
+                  <span class="logo-icon">🍼</span>
+                  <span class="logo-text">BabyBloom</span>
+                </a>
+            </div>
+            <div class="nav-center">
+                <a href="/" class="nav-link">Home</a>
+                <a href="/toys" class="nav-link">Toys</a>
+                <a href="/clothes" class="nav-link">Clothes</a>
+                <a href="/furniture" class="nav-link">Furniture</a>
+            </div>
+            <div class="nav-actions">
+                <div class="search-container">
+                    <input type="text" class="search-input" placeholder="Search toys..." id="searchBar">
+                    <button class="search-toggle" aria-label="Search" id="searchBtn">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="11" cy="11" r="8"></circle>
+                            <path d="m21 21-4.35-4.35"></path>
+                        </svg>
+                    </button>
+                </div>
+                <button class="action-btn" aria-label="Account" href="login.html" onCLick="Action()" id="ActBtn">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                        <circle cx="12" cy="7" r="4"></circle>
+                    </svg>
+                </button>
+                <button class="action-btn" aria-label="Cart" id="cartBtn">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="9" cy="21" r="1"></circle>
+                        <circle cx="20" cy="21" r="1"></circle>
+                        <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
+                    </svg>
+                    <span class="cart-count">0</span>
+                </button>
+            </div>
+        </nav>
+    </header>
+    <!-- Cart Drawer and Backdrop -->
+    <div class="cart-backdrop" id="cartBackdrop"></div>
+    <aside class="cart-drawer" id="cartDrawer">
+      <button class="cart-close" id="cartCloseBtn">&times;</button>
+      <h2>Your Cart</h2>
+      <div class="cart-empty">
+        <div style="width:100%;text-align:center;">
+          Your cart is empty
+          <div style="margin-top:1.5rem;">
+            <button class="continue-shopping-btn" onclick="window.location.href='/'">Continue Shopping</button>
+          </div>
+          <div style="margin-top:2.2rem;font-size:0.98rem;color:#b0b3b8;">
+            Have an account?
+            <a href="/login" class="cart-login-link" style="color:#4fd1c5;cursor:pointer;text-decoration:underline;margin-left:0.3rem;">Login</a>
+          </div>
+        </div>
+      </div>
+      <button class="checkout-btn">Checkout</button>
+    </aside>
+    <script>
+    // Search bar animation (already present)
+    const searchBtn = document.getElementById('searchBtn');
+    const searchBar = document.getElementById('searchBar');
+    searchBtn.addEventListener('click', function(e) {
+        e.preventDefault();
+        searchBar.classList.toggle('active');
+        if (searchBar.classList.contains('active')) {
+            searchBar.focus();
+        } else {
+            searchBar.value = '';
+        }
+    });
+    // Cart drawer logic
+    const cartBtn = document.getElementById('cartBtn');
+    const cartDrawer = document.getElementById('cartDrawer');
+    const cartBackdrop = document.getElementById('cartBackdrop');
+    const cartCloseBtn = document.getElementById('cartCloseBtn');
+    cartBtn.addEventListener('click', () => {
+      cartDrawer.classList.add('active');
+      cartBackdrop.classList.add('active');
+    });
+    cartCloseBtn.addEventListener('click', () => {
+      cartDrawer.classList.remove('active');
+      cartBackdrop.classList.remove('active');
+    });
+    cartBackdrop.addEventListener('click', () => {
+      cartDrawer.classList.remove('active');
+      cartBackdrop.classList.remove('active');
+    });
+
+    const ActBtn = document.getElementById('ActBtn')
+    ActBtn.addEventListener('click', () => {
+        window.location.href = '/login';
+    })
+    </script>
+    <!-- Hero Section -->
+    <section class="hero-section">
+        <div class="hero-content">
+            <div class="hero-text">
+                <h1>Play, learn, & grow!</h1>
+                <p>Crafting smiles with every toy, made for learning, fun, and growth</p>
+                <button class="shop-now-btn">Shop Now</button>
+            </div>
+            <div class="hero-image">
+                <img src="{{ url_for('static', filename='images/baby-hero.jpg') }}" alt="Happy baby playing with toys">
+            </div>
+        </div>
+    </section>
+
+    <!-- Categories Section -->
+    <section class="categories-section">
+        <h2>Find the Perfect Toy</h2>
+        <p class="categories-subtitle">Our collections</p>
+        
+        <div class="categories-grid">
+            <div class="category-item">
+                <div class="category-icon">👶</div>
+                <h3>Baby Clothes</h3>
+            </div>
+            <div class="category-item">
+                <div class="category-icon">🧸</div>
+                <h3>Comfort Toys</h3>
+            </div>
+            <div class="category-item">
+                <div class="category-icon">🎓</div>
+                <h3>Educational Toys</h3>
+            </div>
+            <div class="category-item">
+                <div class="category-icon">🚗</div>
+                <h3>Strollers & Gear</h3>
+            </div>
+            <div class="category-item">
+                <div class="category-icon">🪑</div>
+                <h3>Nursery Furniture</h3>
+            </div>
+        </div>
+    </section>
+    <!-- Featured Products -->
+    <section class="featured-products">
+        <h2>Top picks for your little ones</h2>
+        
+        <div class="product-tabs">
+            <button class="tab-btn active">Featured</button>
+            <button class="tab-btn">Best seller</button>
+            <button class="tab-btn">New arrivals</button>
+        </div>
+
+        <div class="products-grid">
+            <div class="product-card">
+                <div class="product-image">
+                    <img src="{{ url_for('static', filename='images/toy1.jpg') }}" alt="Shape-sorting Toy">
+                    <button class="wishlist-btn">♡</button>
+                </div>
+                <h3>Melissa shape-sorting Toy</h3>
+                <p class="product-price">$18.99</p>
+            </div>
+            
+            <div class="product-card">
+                <div class="product-image">
+                    <img src="{{ url_for('static', filename='images/toy2.jpg') }}" alt="Unicorn Toy">
+                    <button class="wishlist-btn">♡</button>
+                </div>
+                <h3>Melissa Alam tempor eos</h3>
+                <p class="product-price">$29.99</p>
+            </div>
+            
+            <div class="product-card">
+                <div class="product-image">
+                    <img src="{{ url_for('static', filename='images/toy3.jpg') }}" alt="Stacking Rings">
+                    <button class="wishlist-btn">♡</button>
+                </div>
+                <h3>Melissa Alam tempor eos</h3>
+                <p class="product-price">$24.99</p>
+            </div>
+            
+            <div class="product-card">
+                <div class="product-image">
+                    <img src="{{ url_for('static', filename='images/toy4.jpg') }}" alt="Stuffed Animal">
+                    <button class="wishlist-btn">♡</button>
+                </div>
+                <h3>Melissa Alam tempor eos</h3>
+                <p class="product-price">$34.99</p>
+            </div>
+
+            <div class="product-card">
+                <div class="product-image">
+                    <img src="{{ url_for('static', filename='images/toy5.jpg') }}" alt="Race Car">
+                    <button class="wishlist-btn">♡</button>
+                </div>
+                <h3>Melissa Alam tempor eos</h3>
+                <p class="product-price">$39.99</p>
+            </div>
+            
+            <div class="product-card">
+                <div class="product-image">
+                    <img src="{{ url_for('static', filename='images/toy6.jpg') }}" alt="Wooden Toy">
+                    <button class="wishlist-btn">♡</button>
+                </div>
+                <h3>Melissa Alam tempor eos</h3>
+                <p class="product-price">$22.99</p>
+            </div>
+            
+            <div class="product-card">
+                <div class="product-image">
+                    <img src="{{ url_for('static', filename='images/toy7.jpg') }}" alt="Push Toy">
+                    <button class="wishlist-btn">♡</button>
+                </div>
+                <h3>Melissa good-around</h3>
+                <p class="product-price">$28.99</p>
+            </div>
+            
+            <div class="product-card">
+                <div class="product-image">
+                    <img src="{{ url_for('static', filename='images/toy8.jpg') }}" alt="Learning Walker">
+                    <button class="wishlist-btn">♡</button>
+                </div>
+                <h3>Melissa Alam tempor eos</h3>
+                <p class="product-price">$49.99</p>
+            </div>
+        </div>
+    </section>
+  
+
+    <!-- Features Section -->
+    <section class="features-section">
+        <div class="features-grid">
+            <div class="feature-item">
+                  <div class="banner-left">
+                <h2>Discover the Joy of Play</h2>
+                <p>Educational toys that spark creativity</p>
+            </div>
+            <div class="banner-right">
+                <h3>Eco - Friendly Toys</h3>
+                <p>Safe materials for your little ones</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Customer Loves Section -->
+    <section class="customer-loves">
+        <h2>Customer Loves</h2>
+        <p class="section-subtitle">Popular product</p>
+        
+        <div class="loved-products">
+            <div class="loved-product">
+                <div class="product-badge sale">Sale</div>
+                <div class="product-image">
+                    <img src="{{ url_for('static', filename='images/race-car.jpg') }}" alt="Race Car Toy">
+                    <button class="wishlist-btn">♡</button>
+                </div>
+                <h3>Melissa alam tempor eros</h3>
+                <p class="price">$18.99 <span class="old-price">$24.99</span></p>
+                <div class="rating">★★★★★</div>
+            </div>
+
+            <div class="loved-product">
+                <div class="product-badge sale">Sale</div>
+                <div class="product-image">
+                    <img src="{{ url_for('static', filename='images/unicorn-toy.jpg') }}" alt="Unicorn Toy">
+                    <button class="wishlist-btn">♡</button>
+                </div>
+                <h3>Melissa alam tempor eros</h3>
+                <p class="price">$18.99 <span class="old-price">$24.99</span></p>
+                <div class="rating">★★★★★</div>
+            </div>
+
+            <div class="loved-product">
+                <div class="product-badge sale">Sale</div>
+                <div class="product-image">
+                    <img src="{{ url_for('static', filename='images/shape-sorter.jpg') }}" alt="Shape Sorter">
+                    <button class="wishlist-btn">♡</button>
+                </div>
+                <h3>Melissa alam tempor eros</h3>
+                <p class="price">$18.99 <span class="old-price">$24.99</span></p>
+                <div class="rating">★★★★★</div>
+            </div>
+
+            <div class="loved-product">
+                <div class="product-badge sale">Sale</div>
+                <div class="product-image">
+                    <img src="{{ url_for('static', filename='images/stacking-rings.jpg') }}" alt="Stacking Rings">
+                    <button class="wishlist-btn">♡</button>
+                </div>
+                <h3>Melissa alam tempor eros</h3>
+                <p class="price">$18.99 <span class="old-price">$24.99</span></p>
+                <div class="rating">★★★★★</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Recent Photoshoots Section -->
+    <section class="recent-photoshoots">
+        <h2>Recent photoshoots</h2>
+        <p class="section-subtitle">Check our gallery</p>
+        
+        <div class="photoshoot-gallery">
+            <img src="{{ url_for('static', filename='images/photo1.jpg') }}" alt="Kids playing">
+            <img src="{{ url_for('static', filename='images/photo2.jpg') }}" alt="Toy display">
+            <img src="{{ url_for('static', filename='images/photo3.jpg') }}" alt="Happy children">
+            <img src="{{ url_for('static', filename='images/photo4.jpg') }}" alt="Playtime">
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section class="features-section">
+        <div class="features-grid">
+            <div class="feature-item">
+                <div class="feature-icon">📞</div>
+                <h4>Customer help</h4>
+                <p>Got help when you needed?</p>
+            </div>
+            <div class="feature-item">
+                <div class="feature-icon">🚚</div>
+                <h4>Free Ship</h4>
+                <p>Free shipping for $99 and over</p>
+            </div>
+            <div class="feature-item">
+                <div class="feature-icon">↩️</div>
+                <h4>Returns</h4>
+                <p>Within 7 days</p>
+            </div>
+        </div>
+    </section>
+     <section class="banner-section">
+        <div class="banner-content"></div>    <!-- Banner Section -->
+    <section class="banner-section">
+        <div class="banner-content">
+            <div class="banner-left">
+                <h2>Discover the Joy of Play</h2>
+                <p>Educational toys that spark creativity</p>
+            </div>
+            <div class="banner-right">
+                <h3>Eco - Friendly Toys</h3>
+                <p>Safe materials for your little ones</p>
+            </div>
+        </div>
+    </section>
+</body>
+</html>
