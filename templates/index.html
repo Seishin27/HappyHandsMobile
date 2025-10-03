@@ -5,8 +5,9 @@
     <title>Babyblooom</title>
     <!-- Modern Google Font -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}?v=auth-fixed-{{ range(1,9999)|random }}">
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet">
 </head>
 <body>
@@ -34,12 +35,37 @@
                         </svg>
                     </button>
                 </div>
-                <button class="action-btn" aria-label="Account" href="login.html" onCLick="Action()" id="ActBtn">
+                {% if user %}
+                <div class="user-dropdown">
+                    <button class="action-btn account-btn dropdown-toggle" aria-label="Account" id="ActBtn" data-logged-in="1">
+                        {% if user.avatar %}
+                            <img src="{{ user.avatar }}" alt="Profile" style="width:36px; height:36px; border-radius:50%; object-fit:cover;">
+                        {% else %}
+                            <div class="profile-initials" title="{{ user.username }}" style="width:36px;height:36px;border-radius:50%;background:#f3f4f6;display:flex;align-items:center;justify-content:center;font-weight:600;color:#111;">
+                                {{ (user.username[:1] if user.username) |upper }}
+                            </div>
+                        {% endif %}
+                        <i class="fas fa-chevron-down dropdown-arrow"></i>
+                    </button>
+                    <div class="dropdown-menu" id="userDropdown">
+                        <div class="dropdown-header">
+                            <span class="user-name">{{ user.username }}</span>
+                        </div>
+                        <div class="dropdown-divider"></div>
+                        <button class="dropdown-item logout-btn" onclick="handleLogout()">
+                            <i class="fas fa-sign-out-alt"></i>
+                            <span>Logout</span>
+                        </button>
+                    </div>
+                </div>
+                {% else %}
+                <button class="action-btn" aria-label="Account" id="ActBtn" data-logged-in="0">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
                         <circle cx="12" cy="7" r="4"></circle>
                     </svg>
                 </button>
+                {% endif %}
                 <button class="action-btn" aria-label="Cart" id="cartBtn">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <circle cx="9" cy="21" r="1"></circle>
@@ -71,7 +97,7 @@
       <button class="checkout-btn">Checkout</button>
     </aside>
     <script>
-    // Search bar animation (already present)
+    // Search bar animation
     const searchBtn = document.getElementById('searchBtn');
     const searchBar = document.getElementById('searchBar');
     searchBtn.addEventListener('click', function(e) {
@@ -101,10 +127,71 @@
       cartBackdrop.classList.remove('active');
     });
 
-    const ActBtn = document.getElementById('ActBtn')
-    ActBtn.addEventListener('click', () => {
-        window.location.href = '/login';
-    })
+    // User dropdown logic
+    const ActBtn = document.getElementById('ActBtn');
+    const userDropdown = document.getElementById('userDropdown');
+    
+    if (ActBtn) {
+        const loggedIn = ActBtn.getAttribute('data-logged-in') === '1';
+        
+        if (loggedIn && userDropdown) {
+            // Handle dropdown for logged-in users
+            ActBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                userDropdown.classList.toggle('show');
+            });
+            
+            // Close dropdown when clicking outside
+            document.addEventListener('click', function(e) {
+                if (!ActBtn.contains(e.target) && !userDropdown.contains(e.target)) {
+                    userDropdown.classList.remove('show');
+                }
+            });
+        } else {
+            // Handle click for non-logged-in users
+            ActBtn.addEventListener('click', () => {
+                window.location.href = '/login';
+            });
+        }
+    }
+    
+    // Logout function (improved for better debugging and user feedback)
+    async function handleLogout() {
+        try {
+            const response = await fetch('/logout', {
+                method: 'POST',
+                // If your frontend and backend are served from the same origin this is fine;
+                // if you use a different origin for API, change this to 'include'.
+                credentials: 'same-origin',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+            });
+
+            // Try to parse JSON response if any
+            let data = null;
+            try {
+                data = await response.json();
+            } catch (e) {
+                // no JSON body
+            }
+
+            if (!response.ok) {
+                console.error('Logout failed:', response.status, data);
+                // Pick a friendly message from JSON if present
+                const serverMsg = data && (data.msg || data.message || data.error) ? (data.msg || data.message || data.error) : `Status ${response.status}`;
+                alert('Logout failed: ' + serverMsg + '\nSee console for details.');
+                return;
+            }
+
+            // Success: redirect
+            window.location.href = '/';
+        } catch (err) {
+            console.error('Logout error (network):', err);
+            alert('Logout failed: network error. See console for details.');
+        }
+    }
     </script>
     <!-- Hero Section -->
     <section class="hero-section">
@@ -115,7 +202,7 @@
                 <button class="shop-now-btn">Shop Now</button>
             </div>
             <div class="hero-image">
-                <img src="{{ url_for('static', filename='images/baby-hero.jpg') }}" alt="Happy baby playing with toys">
+                <img src="{{ url_for('static', filename='images/The-heroes-little-ones-love.jpg') }}" alt="Happy baby playing with toys">
             </div>
         </div>
     </section>
@@ -154,14 +241,13 @@
         
         <div class="product-tabs">
             <button class="tab-btn active">Featured</button>
-            <button class="tab-btn">Best seller</button>
             <button class="tab-btn">New arrivals</button>
         </div>
 
         <div class="products-grid">
             <div class="product-card">
                 <div class="product-image">
-                    <img src="{{ url_for('static', filename='images/toy1.jpg') }}" alt="Shape-sorting Toy">
+                    <img src="{{ url_for('static', filename='images/toy1.png') }}" alt="Shape-sorting Toy">
                     <button class="wishlist-btn">♡</button>
                 </div>
                 <h3>Melissa shape-sorting Toy</h3>
@@ -170,7 +256,7 @@
             
             <div class="product-card">
                 <div class="product-image">
-                    <img src="{{ url_for('static', filename='images/toy2.jpg') }}" alt="Unicorn Toy">
+                    <img src="{{ url_for('static', filename='images/toy2.png') }}" alt="Unicorn Toy">
                     <button class="wishlist-btn">♡</button>
                 </div>
                 <h3>Melissa Alam tempor eos</h3>
@@ -179,7 +265,7 @@
             
             <div class="product-card">
                 <div class="product-image">
-                    <img src="{{ url_for('static', filename='images/toy3.jpg') }}" alt="Stacking Rings">
+                    <img src="{{ url_for('static', filename='images/toy3.png') }}" alt="Stacking Rings">
                     <button class="wishlist-btn">♡</button>
                 </div>
                 <h3>Melissa Alam tempor eos</h3>
@@ -188,7 +274,7 @@
             
             <div class="product-card">
                 <div class="product-image">
-                    <img src="{{ url_for('static', filename='images/toy4.jpg') }}" alt="Stuffed Animal">
+                    <img src="{{ url_for('static', filename='images/toy4.png') }}" alt="Stuffed Animal">
                     <button class="wishlist-btn">♡</button>
                 </div>
                 <h3>Melissa Alam tempor eos</h3>
@@ -197,7 +283,7 @@
 
             <div class="product-card">
                 <div class="product-image">
-                    <img src="{{ url_for('static', filename='images/toy5.jpg') }}" alt="Race Car">
+                    <img src="{{ url_for('static', filename='images/toy5.png') }}" alt="Race Car">
                     <button class="wishlist-btn">♡</button>
                 </div>
                 <h3>Melissa Alam tempor eos</h3>
@@ -206,7 +292,7 @@
             
             <div class="product-card">
                 <div class="product-image">
-                    <img src="{{ url_for('static', filename='images/toy6.jpg') }}" alt="Wooden Toy">
+                    <img src="{{ url_for('static', filename='images/toy6.png') }}" alt="Wooden Toy">
                     <button class="wishlist-btn">♡</button>
                 </div>
                 <h3>Melissa Alam tempor eos</h3>
@@ -215,7 +301,7 @@
             
             <div class="product-card">
                 <div class="product-image">
-                    <img src="{{ url_for('static', filename='images/toy7.jpg') }}" alt="Push Toy">
+                    <img src="{{ url_for('static', filename='images/toy7.png') }}" alt="Push Toy">
                     <button class="wishlist-btn">♡</button>
                 </div>
                 <h3>Melissa good-around</h3>
@@ -224,7 +310,7 @@
             
             <div class="product-card">
                 <div class="product-image">
-                    <img src="{{ url_for('static', filename='images/toy8.jpg') }}" alt="Learning Walker">
+                    <img src="{{ url_for('static', filename='images/toy8.png') }}" alt="Learning Walker">
                     <button class="wishlist-btn">♡</button>
                 </div>
                 <h3>Melissa Alam tempor eos</h3>
@@ -307,10 +393,10 @@
         <p class="section-subtitle">Check our gallery</p>
         
         <div class="photoshoot-gallery">
-            <img src="{{ url_for('static', filename='images/photo1.jpg') }}" alt="Kids playing">
-            <img src="{{ url_for('static', filename='images/photo2.jpg') }}" alt="Toy display">
-            <img src="{{ url_for('static', filename='images/photo3.jpg') }}" alt="Happy children">
-            <img src="{{ url_for('static', filename='images/photo4.jpg') }}" alt="Playtime">
+            <img src="{{ url_for('static', filename='images/photo1.png') }}" alt="Kids playing">
+            <img src="{{ url_for('static', filename='images/photo2.png') }}" alt="Toy display">
+            <img src="{{ url_for('static', filename='images/photo3.png') }}" alt="Happy children">
+            <img src="{{ url_for('static', filename='images/photo4.png') }}" alt="Playtime">
         </div>
     </section>
 
@@ -334,19 +420,66 @@
             </div>
         </div>
     </section>
-     <section class="banner-section">
-        <div class="banner-content"></div>    <!-- Banner Section -->
-    <section class="banner-section">
-        <div class="banner-content">
-            <div class="banner-left">
-                <h2>Discover the Joy of Play</h2>
-                <p>Educational toys that spark creativity</p>
+
+    <!-- Simple Baby-Themed Footer -->
+    <footer class="baby-footer">
+        <div class="footer-content">
+            <!-- Brand Section -->
+            <div class="footer-brand">
+                <div class="brand-logo">
+                    <span class="logo-icon">🍼</span>
+                    <span class="brand-name">BabyBloom</span>
+                </div>
+                <p class="brand-tagline">Creating magical moments for little ones</p>
+                <div class="social-links">
+                    <a href="#" class="social-btn"><i class="fab fa-facebook-f"></i></a>
+                    <a href="#" class="social-btn"><i class="fab fa-instagram"></i></a>
+                    <a href="#" class="social-btn"><i class="fab fa-twitter"></i></a>
+                </div>
             </div>
-            <div class="banner-right">
-                <h3>Eco - Friendly Toys</h3>
-                <p>Safe materials for your little ones</p>
+
+            <!-- Quick Links -->
+            <div class="footer-section">
+                <h4>Shop</h4>
+                <ul class="footer-links">
+                    <li><a href="/toys">Toys</a></li>
+                    <li><a href="/clothes">Clothes</a></li>
+                    <li><a href="/furniture">Furniture</a></li>
+                    <li><a href="/accessories">Accessories</a></li>
+                </ul>
+            </div>
+
+            <!-- Support -->
+            <div class="footer-section">
+                <h4>Support</h4>
+                <ul class="footer-links">
+                    <li><a href="/contact">Contact Us</a></li>
+                    <li><a href="/shipping">Shipping Info</a></li>
+                    <li><a href="/returns">Returns</a></li>
+                    <li><a href="/help">Help Center</a></li>
+                </ul>
+            </div>
+
+            <!-- Seller & Rider Sections -->
+            <div class="footer-opportunities">
+                <div class="footer-seller">
+                    <h4>Become a Seller</h4>
+                    <p>Join our marketplace and reach thousands of parents</p>
+                    <a href="/seller_homepage" class="seller-btn">Start Selling</a>
+                </div>
+                
+                <div class="footer-rider">
+                    <h4>Become a Rider</h4>
+                    <p>Deliver joy to families and earn with flexible hours</p>
+                    <a href="/rider_homepage" class="rider-btn">Start Riding</a>
+                </div>
             </div>
         </div>
-    </section>
+
+        <!-- Footer Bottom -->
+        <div class="footer-bottom">
+            <p>&copy; 2025 BabyBloom. Made with 💖 for families</p>
+        </div>
+    </footer>
 </body>
 </html>

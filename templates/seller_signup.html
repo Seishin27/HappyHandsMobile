@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Seller Registration - BabyBloom</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}?v=seller-signup-{{ range(1,9999)|random }}">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body class="auth-body">
+    <!-- Header -->
+    <header class="auth-header">
+        <a href="/become-seller" class="auth-logo">
+            <span class="logo-icon">🍼</span>
+            <span class="logo-text">BabyBloom</span>
+        </a>
+    </header>
+
+    <div class="seller-signup-container">
+        <div class="signup-progress">
+            <div class="progress-step active">
+                <span class="step-number">1</span>
+                <span class="step-label">Business Info</span>
+            </div>
+            <div class="progress-line"></div>
+            <div class="progress-step">
+                <span class="step-number">2</span>
+                <span class="step-label">Verification</span>
+            </div>
+            <div class="progress-line"></div>
+            <div class="progress-step">
+                <span class="step-number">3</span>
+                <span class="step-label">Complete</span>
+            </div>
+        </div>
+
+        <div class="signup-card">
+            <div class="card-header">
+                <h1>Start Your Seller Journey</h1>
+                <p>Join thousands of successful sellers on BabyBloom</p>
+            </div>
+
+            <!-- Flash Messages -->
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ category }}">
+                            {{ message }}
+                            <button class="alert-close" onclick="this.parentElement.style.display='none'">&times;</button>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+
+            <form method="POST" class="seller-form">
+                <!-- Business Information -->
+                <div class="form-section">
+                    <h3 class="section-title">Business Information</h3>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">Business Name *</label>
+                            <input type="text" name="business_name" class="form-input" placeholder="e.g., Little Angels Baby Store" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label">Business Type *</label>
+                            <select name="business_type" class="form-select" required>
+                                <option value="">Select Business Type</option>
+                                <option value="individual">Individual Seller</option>
+                                <option value="small_business">Small Business</option>
+                                <option value="corporation">Corporation</option>
+                                <option value="partnership">Partnership</option>
+                                <option value="other">Other</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Business Description *</label>
+                        <textarea name="business_description" class="form-textarea" placeholder="Tell us about your business, what products you sell, and what makes you unique..." required></textarea>
+                    </div>
+                </div>
+
+                <!-- Personal Information -->
+                <div class="form-section">
+                    <h3 class="section-title">Contact Information</h3>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">First Name *</label>
+                            <input type="text" name="first_name" class="form-input" placeholder="Your first name" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label">Last Name *</label>
+                            <input type="text" name="last_name" class="form-input" placeholder="Your last name" required>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">Email Address *</label>
+                            <input type="email" name="email" class="form-input" placeholder="your@email.com" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label">Phone Number *</label>
+                            <input type="tel" name="phone" class="form-input" placeholder="+1 (555) 123-4567" required>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Address Information -->
+                <div class="form-section">
+                    <h3 class="section-title">Business Address</h3>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Address Line 1 *</label>
+                        <input type="text" name="address_line1" class="form-input" placeholder="123 Main Street" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Address Line 2 (Optional)</label>
+                        <input type="text" name="address_line2" class="form-input" placeholder="Apartment, suite, etc. (optional)">
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">City *</label>
+                            <input type="text" name="city" class="form-input" placeholder="New York" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label">State/Province *</label>
+                            <input type="text" name="state" class="form-input" placeholder="NY" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label">ZIP/Postal Code *</label>
+                            <input type="text" name="zip_code" class="form-input" placeholder="10001" required>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Account Security -->
+                <div class="form-section">
+                    <h3 class="section-title">Account Security</h3>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">Password *</label>
+                            <input type="password" name="password" class="form-input" placeholder="Create a strong password" required minlength="8">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label">Confirm Password *</label>
+                            <input type="password" name="confirm_password" class="form-input" placeholder="Confirm your password" required minlength="8">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Terms and Conditions -->
+                <div class="form-section">
+                    <div class="checkbox-group">
+                        <input type="checkbox" name="agree_terms" id="agree_terms" class="form-checkbox" required>
+                        <label for="agree_terms" class="checkbox-label">
+                            I agree to the <a href="/seller-terms" target="_blank" class="link">Seller Terms & Conditions</a> and <a href="/privacy" target="_blank" class="link">Privacy Policy</a>
+                        </label>
+                    </div>
+                    
+                    <div class="checkbox-group">
+                        <input type="checkbox" name="marketing_emails" id="marketing_emails" class="form-checkbox">
+                        <label for="marketing_emails" class="checkbox-label">
+                            I'd like to receive updates about seller opportunities and tips (optional)
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Submit Button -->
+                <div class="form-actions">
+                    <button type="submit" class="btn-primary btn-large">Create Seller Account</button>
+                    <p class="form-note">
+                        Already have a seller account? <a href="/seller-login" class="link">Sign in here</a>
+                    </p>
+                </div>
+            </form>
+        </div>
+
+        <!-- Benefits Sidebar -->
+        <div class="benefits-sidebar">
+            <h3>Why Sell on BabyBloom?</h3>
+            <div class="benefit-list">
+                <div class="benefit-item">
+                    <i class="fas fa-percentage"></i>
+                    <div class="benefit-text">
+                        <strong>Low 3% Fee</strong>
+                        <p>Keep more of what you earn</p>
+                    </div>
+                </div>
+                <div class="benefit-item">
+                    <i class="fas fa-rocket"></i>
+                    <div class="benefit-text">
+                        <strong>Quick Setup</strong>
+                        <p>Start selling in minutes</p>
+                    </div>
+                </div>
+                <div class="benefit-item">
+                    <i class="fas fa-users"></i>
+                    <div class="benefit-text">
+                        <strong>2M+ Customers</strong>
+                        <p>Reach millions of parents</p>
+                    </div>
+                </div>
+                <div class="benefit-item">
+                    <i class="fas fa-headset"></i>
+                    <div class="benefit-text">
+                        <strong>24/7 Support</strong>
+                        <p>We're here when you need us</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
