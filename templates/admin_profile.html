@@ -1,0 +1,21 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Admin Profile - BabyBloom</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+  <main class="admin-container">
+    <h1>Admin Profile</h1>
+    <p><strong>Username:</strong> {{ user.username or 'Admin' }}</p>
+    <p><strong>Email:</strong> {{ user.email or 'admin@example.com' }}</p>
+
+    <form method="post" action="{{ url_for('logout') }}">
+      <button type="submit">Logout</button>
+    </form>
+
+    <p><a href="{{ url_for('admin_dashboard') }}">Back to dashboard</a></p>
+  </main>
+</body>
+</html>

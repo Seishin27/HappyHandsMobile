@@ -1,45 +1,24 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Seller Registration - BabyBloom</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}?v=seller-signup-{{ range(1,9999)|random }}">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Seller Sign Up - BabyBloom</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}?v=auth-fixed-{{ range(1,9999)|random }}">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
 </head>
 <body class="auth-body">
-    <!-- Header -->
+
+    <!-- Header with Logo (same as login) -->
     <header class="auth-header">
-        <a href="/become-seller" class="auth-logo">
+        <a href="/" class="auth-logo">
             <span class="logo-icon">🍼</span>
             <span class="logo-text">BabyBloom</span>
         </a>
     </header>
 
-    <div class="seller-signup-container">
-        <div class="signup-progress">
-            <div class="progress-step active">
-                <span class="step-number">1</span>
-                <span class="step-label">Business Info</span>
-            </div>
-            <div class="progress-line"></div>
-            <div class="progress-step">
-                <span class="step-number">2</span>
-                <span class="step-label">Verification</span>
-            </div>
-            <div class="progress-line"></div>
-            <div class="progress-step">
-                <span class="step-number">3</span>
-                <span class="step-label">Complete</span>
-            </div>
-        </div>
-
-        <div class="signup-card">
-            <div class="card-header">
-                <h1>Start Your Seller Journey</h1>
-                <p>Join thousands of successful sellers on BabyBloom</p>
-            </div>
+    <div class="auth-container">
+        <div class="auth-card">
 
             <!-- Flash Messages -->
             {% with messages = get_flashed_messages(with_categories=true) %}
@@ -53,175 +32,237 @@
                 {% endif %}
             {% endwith %}
 
-            <form method="POST" class="seller-form">
-                <!-- Business Information -->
-                <div class="form-section">
-                    <h3 class="section-title">Business Information</h3>
-                    
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label class="form-label">Business Name *</label>
-                            <input type="text" name="business_name" class="form-input" placeholder="e.g., Little Angels Baby Store" required>
-                        </div>
-                        
-                        <div class="form-group">
-                            <label class="form-label">Business Type *</label>
-                            <select name="business_type" class="form-select" required>
-                                <option value="">Select Business Type</option>
-                                <option value="individual">Individual Seller</option>
-                                <option value="small_business">Small Business</option>
-                                <option value="corporation">Corporation</option>
-                                <option value="partnership">Partnership</option>
-                                <option value="other">Other</option>
-                            </select>
+            <div class="form-header">
+                <h2>Become a Seller</h2>
+                <p>Create your seller account to reach thousands of parents</p>
+            </div>
+
+            <form method="POST" enctype="multipart/form-data" class="auth-form seller-signup-form" action="{{ url_for('seller_signup') }}">
+                <fieldset>
+                    <legend>Seller Details</legend>
+
+                    <div class="form-group">
+                        <label for="sellername">Full Name *</label>
+                        <div class="input-wrapper">
+                            <input type="text" id="sellername" name="sellername" placeholder="Your full name" required>
                         </div>
                     </div>
 
                     <div class="form-group">
-                        <label class="form-label">Business Description *</label>
-                        <textarea name="business_description" class="form-textarea" placeholder="Tell us about your business, what products you sell, and what makes you unique..." required></textarea>
-                    </div>
-                </div>
-
-                <!-- Personal Information -->
-                <div class="form-section">
-                    <h3 class="section-title">Contact Information</h3>
-                    
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label class="form-label">First Name *</label>
-                            <input type="text" name="first_name" class="form-input" placeholder="Your first name" required>
+                        <label for="selleremail">Email Address *</label>
+                        <div class="input-wrapper">
+                            <input type="email" id="selleremail" name="selleremail" placeholder="you@example.com" required>
                         </div>
-                        
-                        <div class="form-group">
-                            <label class="form-label">Last Name *</label>
-                            <input type="text" name="last_name" class="form-input" placeholder="Your last name" required>
-                        </div>
-                    </div>
-
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label class="form-label">Email Address *</label>
-                            <input type="email" name="email" class="form-input" placeholder="your@email.com" required>
-                        </div>
-                        
-                        <div class="form-group">
-                            <label class="form-label">Phone Number *</label>
-                            <input type="tel" name="phone" class="form-input" placeholder="+1 (555) 123-4567" required>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Address Information -->
-                <div class="form-section">
-                    <h3 class="section-title">Business Address</h3>
-                    
-                    <div class="form-group">
-                        <label class="form-label">Address Line 1 *</label>
-                        <input type="text" name="address_line1" class="form-input" placeholder="123 Main Street" required>
                     </div>
 
                     <div class="form-group">
-                        <label class="form-label">Address Line 2 (Optional)</label>
-                        <input type="text" name="address_line2" class="form-input" placeholder="Apartment, suite, etc. (optional)">
+                        <label for="contactnumber">Contact Number *</label>
+                        <div class="input-wrapper">
+                            <input type="tel" id="contactnumber" name="contactnumber" placeholder="09..." required>
+                        </div>
                     </div>
 
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label class="form-label">City *</label>
-                            <input type="text" name="city" class="form-input" placeholder="New York" required>
-                        </div>
-                        
-                        <div class="form-group">
-                            <label class="form-label">State/Province *</label>
-                            <input type="text" name="state" class="form-input" placeholder="NY" required>
-                        </div>
-                        
-                        <div class="form-group">
-                            <label class="form-label">ZIP/Postal Code *</label>
-                            <input type="text" name="zip_code" class="form-input" placeholder="10001" required>
+                    <div class="form-group">
+                        <label for="sellerpassword">Password *</label>
+                        <div class="input-wrapper password-wrapper">
+                            <input type="password" id="password" name="sellerpassword" placeholder="Create a password" required>
                         </div>
                     </div>
-                </div>
 
-                <!-- Account Security -->
-                <div class="form-section">
-                    <h3 class="section-title">Account Security</h3>
-                    
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label class="form-label">Password *</label>
-                            <input type="password" name="password" class="form-input" placeholder="Create a strong password" required minlength="8">
-                        </div>
-                        
-                        <div class="form-group">
-                            <label class="form-label">Confirm Password *</label>
-                            <input type="password" name="confirm_password" class="form-input" placeholder="Confirm your password" required minlength="8">
+                    <div class="form-group">
+                        <label for="confirmpassword">Confirm Password *</label>
+                        <div class="input-wrapper password-wrapper">
+                            <input type="password" id="confirmpassword" name="confirmpassword" placeholder="Confirm your password" required>
                         </div>
                     </div>
-                </div>
+                </fieldset>
 
-                <!-- Terms and Conditions -->
-                <div class="form-section">
-                    <div class="checkbox-group">
-                        <input type="checkbox" name="agree_terms" id="agree_terms" class="form-checkbox" required>
-                        <label for="agree_terms" class="checkbox-label">
-                            I agree to the <a href="/seller-terms" target="_blank" class="link">Seller Terms & Conditions</a> and <a href="/privacy" target="_blank" class="link">Privacy Policy</a>
-                        </label>
-                    </div>
-                    
-                    <div class="checkbox-group">
-                        <input type="checkbox" name="marketing_emails" id="marketing_emails" class="form-checkbox">
-                        <label for="marketing_emails" class="checkbox-label">
-                            I'd like to receive updates about seller opportunities and tips (optional)
-                        </label>
-                    </div>
-                </div>
+                <fieldset>
+                    <legend>Store Details</legend>
 
-                <!-- Submit Button -->
+                    <div class="form-group">
+                        <label for="storelogo">Store Logo</label>
+                        <input type="file" id="storelogo" name="storelogo" accept="image/*">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="storename">Store Name *</label>
+                        <div class="input-wrapper">
+                            <input type="text" id="storename" name="storename" placeholder="Your store name" required>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="storedesc">Store Description *</label>
+                        <div class="input-wrapper">
+                            <textarea id="storedesc" name="storedesc" placeholder="Short description about your store" rows="3" required></textarea>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="businesspermit">Business Permit</label>
+                        <input type="file" id="businesspermit" name="businesspermit" accept=".pdf,image/*">
+                    </div>
+                </fieldset>
+
+                <fieldset>
+                    <legend>Location</legend>
+
+                    <div class="form-group">
+                        <label for="region">Region *</label>
+                        <select id="region" name="region" class="form-select" required>
+                            <option value="">Loading regions...</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="province">Province *</label>
+                        <select id="province" name="province" class="form-select" required disabled>
+                            <option value="">Select region first</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="city">City / Municipality *</label>
+                        <select id="city" name="city" class="form-select" required disabled>
+                            <option value="">Select province first</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="barangay">Barangay *</label>
+                        <select id="barangay" name="barangay" class="form-select" required disabled>
+                            <option value="">Select city first</option>
+                        </select>
+                    </div>
+                </fieldset>
+
                 <div class="form-actions">
-                    <button type="submit" class="btn-primary btn-large">Create Seller Account</button>
-                    <p class="form-note">
-                        Already have a seller account? <a href="/seller-login" class="link">Sign in here</a>
-                    </p>
+                    <button type="submit" class="auth-btn">Sign Up</button>
                 </div>
             </form>
-        </div>
 
-        <!-- Benefits Sidebar -->
-        <div class="benefits-sidebar">
-            <h3>Why Sell on BabyBloom?</h3>
-            <div class="benefit-list">
-                <div class="benefit-item">
-                    <i class="fas fa-percentage"></i>
-                    <div class="benefit-text">
-                        <strong>Low 3% Fee</strong>
-                        <p>Keep more of what you earn</p>
-                    </div>
-                </div>
-                <div class="benefit-item">
-                    <i class="fas fa-rocket"></i>
-                    <div class="benefit-text">
-                        <strong>Quick Setup</strong>
-                        <p>Start selling in minutes</p>
-                    </div>
-                </div>
-                <div class="benefit-item">
-                    <i class="fas fa-users"></i>
-                    <div class="benefit-text">
-                        <strong>2M+ Customers</strong>
-                        <p>Reach millions of parents</p>
-                    </div>
-                </div>
-                <div class="benefit-item">
-                    <i class="fas fa-headset"></i>
-                    <div class="benefit-text">
-                        <strong>24/7 Support</strong>
-                        <p>We're here when you need us</p>
-                    </div>
-                </div>
+            <div class="form-footer">
+                <p>Already have an account? <a href="{{ url_for('seller_login') }}">Sign in</a></p>
             </div>
         </div>
     </div>
+
+    <!-- PSGC-dependent JS (keeps region/province/city/barangay behavior) -->
+    <script>
+        // Client-side PSGC usage (keeps everything inside this HTML file)
+        const PSGC_BASE = 'https://psgc.gitlab.io/api';
+        const regionSelect = document.getElementById('region');
+        const provinceSelect = document.getElementById('province');
+        const citySelect = document.getElementById('city');
+        const barangaySelect = document.getElementById('barangay');
+
+        function setOptions(selectEl, items, defaultText = 'Select...') {
+            selectEl.innerHTML = `<option value="">${defaultText}</option>`;
+            items.forEach(item => {
+                const option = document.createElement('option');
+                option.value = item.code || item.id || item.value;
+                option.text = item.name || item.title || item.label;
+                selectEl.appendChild(option);
+            });
+            selectEl.disabled = false;
+        }
+
+        function setLoading(selectEl, text) {
+            selectEl.innerHTML = `<option value="">${text}</option>`;
+            selectEl.disabled = true;
+        }
+
+        async function fetchJson(url) {
+            const res = await fetch(url, {cache: 'no-store'});
+            if (!res.ok) throw new Error(`HTTP ${res.status}`);
+            return res.json();
+        }
+
+        // Load regions
+        (async function loadRegions(){
+            try {
+                setLoading(regionSelect, 'Loading regions...');
+                const data = await fetchJson(`${PSGC_BASE}/regions/`);
+                if (Array.isArray(data)) setOptions(regionSelect, data, 'Select region');
+                else setLoading(regionSelect, 'No regions found');
+            } catch (err) {
+                console.error('Regions error', err);
+                setLoading(regionSelect, 'Failed to load regions');
+            }
+        })();
+
+        regionSelect.addEventListener('change', async function(){
+            const regionCode = this.value;
+            setLoading(provinceSelect, 'Loading provinces...');
+            citySelect.innerHTML = '<option value="">Select province first</option>'; citySelect.disabled = true;
+            barangaySelect.innerHTML = '<option value="">Select city first</option>'; barangaySelect.disabled = true;
+
+            if (!regionCode) {
+                provinceSelect.innerHTML = '<option value="">Select region first</option>';
+                provinceSelect.disabled = true;
+                return;
+            }
+            try {
+                const data = await fetchJson(`${PSGC_BASE}/regions/${encodeURIComponent(regionCode)}/provinces/`);
+                if (Array.isArray(data)) setOptions(provinceSelect, data, 'Select province');
+                else {
+                    provinceSelect.innerHTML = '<option value="">No provinces found</option>';
+                    provinceSelect.disabled = true;
+                }
+            } catch (err) {
+                console.error('Provinces error', err);
+                provinceSelect.innerHTML = '<option value="">Failed to load provinces</option>';
+                provinceSelect.disabled = true;
+            }
+        });
+
+        provinceSelect.addEventListener('change', async function(){
+            const provinceCode = this.value;
+            setLoading(citySelect, 'Loading cities...');
+            barangaySelect.innerHTML = '<option value="">Select city first</option>'; barangaySelect.disabled = true;
+
+            if (!provinceCode) {
+                citySelect.innerHTML = '<option value="">Select province first</option>';
+                citySelect.disabled = true;
+                return;
+            }
+            try {
+                const data = await fetchJson(`${PSGC_BASE}/provinces/${encodeURIComponent(provinceCode)}/cities-municipalities/`);
+                if (Array.isArray(data)) setOptions(citySelect, data, 'Select city');
+                else {
+                    citySelect.innerHTML = '<option value="">No cities found</option>';
+                    citySelect.disabled = true;
+                }
+            } catch (err) {
+                console.error('Cities error', err);
+                citySelect.innerHTML = '<option value="">Failed to load cities</option>';
+                citySelect.disabled = true;
+            }
+        });
+
+        citySelect.addEventListener('change', async function(){
+            const cityCode = this.value;
+            setLoading(barangaySelect, 'Loading barangays...');
+
+            if (!cityCode) {
+                barangaySelect.innerHTML = '<option value="">Select city first</option>';
+                barangaySelect.disabled = true;
+                return;
+            }
+            try {
+                const data = await fetchJson(`${PSGC_BASE}/cities-municipalities/${encodeURIComponent(cityCode)}/barangays/`);
+                if (Array.isArray(data)) setOptions(barangaySelect, data, 'Select barangay');
+                else {
+                    barangaySelect.innerHTML = '<option value="">No barangays found</option>';
+                    barangaySelect.disabled = true;
+                }
+            } catch (err) {
+                console.error('Barangays error', err);
+                barangaySelect.innerHTML = '<option value="">Failed to load barangays</option>';
+                barangaySelect.disabled = true;
+            }
+        });
+    </script>
 </body>
 </html>

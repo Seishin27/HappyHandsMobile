@@ -3,7 +3,6 @@
 <head>
     <meta charset="UTF-8">
     <title>Babyblooom</title>
-    <!-- Modern Google Font -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}?v=auth-fixed-{{ range(1,9999)|random }}">
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
@@ -199,7 +198,7 @@
             <div class="hero-text">
                 <h1>Play, learn, & grow!</h1>
                 <p>Crafting smiles with every toy, made for learning, fun, and growth</p>
-                <button class="shop-now-btn">Shop Now</button>
+                <a class="shop-now-btn" href="/all-products">Shop Now</a>
             </div>
             <div class="hero-image">
                 <img src="{{ url_for('static', filename='images/The-heroes-little-ones-love.jpg') }}" alt="Happy baby playing with toys">
@@ -213,26 +212,30 @@
         <p class="categories-subtitle">Our collections</p>
         
         <div class="categories-grid">
-            <div class="category-item">
+            <a href="/baby-clothes" class="category-item">
                 <div class="category-icon">👶</div>
                 <h3>Baby Clothes</h3>
-            </div>
-            <div class="category-item">
+            </a>
+            <a href="/comfort-toys" class="category-item">
                 <div class="category-icon">🧸</div>
                 <h3>Comfort Toys</h3>
-            </div>
-            <div class="category-item">
+            </a>
+            <a href="/educational-toys" class="category-item">
                 <div class="category-icon">🎓</div>
                 <h3>Educational Toys</h3>
-            </div>
-            <div class="category-item">
+            </a>
+            <a href="/stroller-gear" class="category-item">
                 <div class="category-icon">🚗</div>
                 <h3>Strollers & Gear</h3>
-            </div>
-            <div class="category-item">
+            </a>
+            <a href="/nursery-furniture" class="category-item">
                 <div class="category-icon">🪑</div>
                 <h3>Nursery Furniture</h3>
-            </div>
+            </a>
+            <a href="/safety-and-health" class="category-item">
+                <div class="category-icon">🩺</div>
+                <h3>Safety and Health</h3>
+            </a>
         </div>
     </section>
     <!-- Featured Products -->
@@ -251,7 +254,7 @@
                     <button class="wishlist-btn">♡</button>
                 </div>
                 <h3>Melissa shape-sorting Toy</h3>
-                <p class="product-price">$18.99</p>
+                <p class="product-price">₱ 900</p>
             </div>
             
             <div class="product-card">
@@ -260,7 +263,7 @@
                     <button class="wishlist-btn">♡</button>
                 </div>
                 <h3>Melissa Alam tempor eos</h3>
-                <p class="product-price">$29.99</p>
+                <p class="product-price">₱ 900</p>
             </div>
             
             <div class="product-card">
@@ -269,7 +272,7 @@
                     <button class="wishlist-btn">♡</button>
                 </div>
                 <h3>Melissa Alam tempor eos</h3>
-                <p class="product-price">$24.99</p>
+                <p class="product-price">₱ 900</p>
             </div>
             
             <div class="product-card">
@@ -278,7 +281,7 @@
                     <button class="wishlist-btn">♡</button>
                 </div>
                 <h3>Melissa Alam tempor eos</h3>
-                <p class="product-price">$34.99</p>
+                <p class="product-price">₱ 900</p>
             </div>
 
             <div class="product-card">
@@ -287,7 +290,7 @@
                     <button class="wishlist-btn">♡</button>
                 </div>
                 <h3>Melissa Alam tempor eos</h3>
-                <p class="product-price">$39.99</p>
+                <p class="product-price">₱ 900</p>
             </div>
             
             <div class="product-card">
@@ -296,7 +299,7 @@
                     <button class="wishlist-btn">♡</button>
                 </div>
                 <h3>Melissa Alam tempor eos</h3>
-                <p class="product-price">$22.99</p>
+                <p class="product-price">₱ 900</p>
             </div>
             
             <div class="product-card">
@@ -305,7 +308,7 @@
                     <button class="wishlist-btn">♡</button>
                 </div>
                 <h3>Melissa good-around</h3>
-                <p class="product-price">$28.99</p>
+                <p class="product-price">₱ 900</p>
             </div>
             
             <div class="product-card">
@@ -314,23 +317,27 @@
                     <button class="wishlist-btn">♡</button>
                 </div>
                 <h3>Melissa Alam tempor eos</h3>
-                <p class="product-price">$49.99</p>
+                <p class="product-price">₱ 900</p>
             </div>
         </div>
     </section>
   
 
-    <!-- Features Section -->
-    <section class="features-section">
-        <div class="features-grid">
-            <div class="feature-item">
-                  <div class="banner-left">
-                <h2>Discover the Joy of Play</h2>
-                <p>Educational toys that spark creativity</p>
-            </div>
-            <div class="banner-right">
-                <h3>Eco - Friendly Toys</h3>
-                <p>Safe materials for your little ones</p>
+    <!-- Features Banner Section -->
+    <section class="features-banner">
+        <div class="banner-container">
+            <div class="banner-content">
+                <div class="banner-left">
+                    <h2>Discover the Joy of Play</h2>
+                    <p>Educational toys that spark creativity and imagination</p>
+                    <button class="banner-btn">Explore Now</button>
+                </div>
+                <div class="banner-right">
+                    <div class="banner-highlight">
+                        <span class="highlight-text">Eco-Friendly</span>
+                        <span class="highlight-subtext">Safe materials for your little ones</span>
+                    </div>
+                </div>
             </div>
         </div>
     </section>
@@ -344,44 +351,44 @@
             <div class="loved-product">
                 <div class="product-badge sale">Sale</div>
                 <div class="product-image">
-                    <img src="{{ url_for('static', filename='images/race-car.jpg') }}" alt="Race Car Toy">
+                    <img src="{{ url_for('static', filename='images/toy1.png') }}" alt="Race Car Toy">
                     <button class="wishlist-btn">♡</button>
                 </div>
                 <h3>Melissa alam tempor eros</h3>
-                <p class="price">$18.99 <span class="old-price">$24.99</span></p>
+                <p class="price">₱ 900 <span class="old-price">$24.99</span></p>
                 <div class="rating">★★★★★</div>
             </div>
 
             <div class="loved-product">
                 <div class="product-badge sale">Sale</div>
                 <div class="product-image">
-                    <img src="{{ url_for('static', filename='images/unicorn-toy.jpg') }}" alt="Unicorn Toy">
+                    <img src="{{ url_for('static', filename='images/toy2.png') }}" alt="Unicorn Toy">
                     <button class="wishlist-btn">♡</button>
                 </div>
                 <h3>Melissa alam tempor eros</h3>
-                <p class="price">$18.99 <span class="old-price">$24.99</span></p>
+                <p class="price">₱ 900 <span class="old-price"></span></p>
                 <div class="rating">★★★★★</div>
             </div>
 
             <div class="loved-product">
                 <div class="product-badge sale">Sale</div>
                 <div class="product-image">
-                    <img src="{{ url_for('static', filename='images/shape-sorter.jpg') }}" alt="Shape Sorter">
+                    <img src="{{ url_for('static', filename='images/toy3.png') }}" alt="Shape Sorter">
                     <button class="wishlist-btn">♡</button>
                 </div>
                 <h3>Melissa alam tempor eros</h3>
-                <p class="price">$18.99 <span class="old-price">$24.99</span></p>
+                <p class="price">₱ 900 <span class="old-price"></span></p>
                 <div class="rating">★★★★★</div>
             </div>
 
             <div class="loved-product">
                 <div class="product-badge sale">Sale</div>
                 <div class="product-image">
-                    <img src="{{ url_for('static', filename='images/stacking-rings.jpg') }}" alt="Stacking Rings">
+                    <img src="{{ url_for('static', filename='images/toy4.png') }}" alt="Stacking Rings">
                     <button class="wishlist-btn">♡</button>
                 </div>
                 <h3>Melissa alam tempor eros</h3>
-                <p class="price">$18.99 <span class="old-price">$24.99</span></p>
+                <p class="price">₱ 900 <span class="old-price"></span></p>
                 <div class="rating">★★★★★</div>
             </div>
         </div>

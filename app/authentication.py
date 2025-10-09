@@ -1,12 +1,17 @@
 from flask import Flask, render_template, request, redirect, url_for, flash, jsonify, make_response, session
 import mysql.connector
 from werkzeug.security import generate_password_hash, check_password_hash
-from werkzeug.security import generate_password_hash, check_password_hash
+from werkzeug.security import check_password_hash
 from flask_jwt_extended import (
     JWTManager, create_access_token, jwt_required, get_jwt_identity, get_jwt, decode_token,
     set_access_cookies, unset_jwt_cookies
 )
 import os
+import requests
+import uuid
+from werkzeug.utils import secure_filename
+from flask import send_from_directory
+from datetime import datetime
 
 # Try to import forms, create a simple class if not available
 try:
@@ -237,14 +242,10 @@ def protected():
 
 @app.route('/logout', methods=['POST'])
 def logout():
-    try:
-        # Clear the session
-        session.clear()
-        print("Logout: Session cleared successfully")
-        return jsonify({'success': True, 'msg': 'Logged out successfully'}), 200
-    except Exception as e:
-        print(f"Logout error: {e}")
-        return jsonify({'success': False, 'msg': 'Logout failed', 'error': str(e)}), 500
+    """Clear session and redirect to login."""
+    session.clear()
+    flash('You have been signed out.', 'success')
+    return redirect(url_for('login'))  # redirect to seller login; change to 'login' if needed
 
 
 # Development helper: inspect the raw access_token cookie and try decoding it.
@@ -320,38 +321,110 @@ def seller_homepage():
 
 @app.route('/seller_signup', methods=['GET', 'POST'])
 def seller_signup():
-    """Seller registration form"""
     if request.method == 'POST':
-        # Handle seller registration - simple form handling without WTForms
-        business_name = request.form.get('business_name')
-        business_type = request.form.get('business_type')
-        business_description = request.form.get('business_description')
-        first_name = request.form.get('first_name')
-        last_name = request.form.get('last_name')
-        email = request.form.get('email')
-        phone = request.form.get('phone')
-        address_line1 = request.form.get('address_line1')
-        address_line2 = request.form.get('address_line2')
+        # Read form fields
+        sellername = (request.form.get('sellername') or '').strip()
+        selleremail = (request.form.get('selleremail') or '').strip()
+        contactnumber = (request.form.get('contactnumber') or '').strip()
+        storename = (request.form.get('storename') or '').strip()
+        storedesc = (request.form.get('storedesc') or request.form.get('storedec') or '').strip()
+        region = request.form.get('region')
+        province = request.form.get('province')
         city = request.form.get('city')
-        state = request.form.get('state')
-        zip_code = request.form.get('zip_code')
-        password = request.form.get('password')
-        confirm_password = request.form.get('confirm_password')
-        agree_terms = request.form.get('agree_terms')
-        marketing_emails = request.form.get('marketing_emails')
+        barangay = request.form.get('barangay')
+        password = request.form.get('password') or request.form.get('sellerpassword') or ''
+        confirmpassword = request.form.get('confirmpassword') or request.form.get('confirm_password') or ''
 
-        # Basic validation
-        if not all([business_name, business_type, first_name, last_name, email, phone, password, agree_terms]):
-            flash('Please fill in all required fields', 'error')
+        # Basic validation (include password)
+        required = [sellername, selleremail, contactnumber, storename, storedesc, region, province, city, barangay, password, confirmpassword]
+        if not all(required):
+            flash('Please fill in all required fields (including password)', 'error')
             return render_template('seller_signup.html')
 
-        if password != confirm_password:
+        if password != confirmpassword:
             flash('Passwords do not match', 'error')
             return render_template('seller_signup.html')
 
-        # For now, just show success message (since we don't have the database table yet)
+        # hash the password
+        hashed_password = generate_password_hash(password)
+
+        # File objects (use request.files for uploads)
+        logo_file = request.files.get('storelogo')
+        permit_file = request.files.get('businesspermit')
+
+        # prepare upload folder
+        try:
+            os.makedirs(app.config.get('UPLOAD_FOLDER', os.path.join(parent_dir, 'uploads')), exist_ok=True)
+        except Exception:
+            app.logger.exception("Failed to ensure upload folder")
+            flash('Server configuration error (uploads).', 'error')
+            return render_template('seller_signup.html')
+
+        logo_path = None
+        permit_path = None
+
+        if logo_file and logo_file.filename:
+            if not allowed_file(logo_file.filename, ALLOWED_IMAGE_EXT):
+                flash('Store logo must be an image (png/jpg/jpeg)', 'error')
+                return render_template('seller_signup.html')
+            filename = secure_filename(logo_file.filename)
+            unique = f"logo_{uuid.uuid4().hex}_{filename}"
+            logo_file.save(os.path.join(app.config['UPLOAD_FOLDER'], unique))
+            logo_path = unique
+
+        if permit_file and permit_file.filename:
+            if not allowed_file(permit_file.filename, ALLOWED_DOC_EXT):
+                flash('Business permit must be PDF or image', 'error')
+                return render_template('seller_signup.html')
+            filename = secure_filename(permit_file.filename)
+            unique = f"permit_{uuid.uuid4().hex}_{filename}"
+            permit_file.save(os.path.join(app.config['UPLOAD_FOLDER'], unique))
+            permit_path = unique
+
+        # Insert into DB (adapt to actual password column)
+        conn = get_db_connection()
+        if not conn:
+            flash('Database connection error', 'error')
+            return render_template('seller_signup.html')
+
+        try:
+            cursor = conn.cursor()
+            # detect password column name
+            cursor.execute("SHOW COLUMNS FROM sellers")
+            columns = [r[0] for r in cursor.fetchall()]
+            if 'password' in columns:
+                pw_col = 'password'
+            elif 'sellerpassword' in columns:
+                pw_col = 'sellerpassword'
+            elif 'passwd' in columns:
+                pw_col = 'passwd'
+            else:
+                flash('Database missing password column on sellers table. Please run migration to add a password column.', 'error')
+                return render_template('seller_signup.html')
+
+            cols = ['sellername', 'selleremail', 'contactnumber', 'storename', 'storedesc', pw_col, 'storelogo_path', 'businesspermit_path', 'region', 'province', 'city', 'barangay']
+            placeholders = ','.join(['%s'] * len(cols))
+            sql = "INSERT INTO sellers ({}) VALUES ({})".format(','.join(cols), placeholders)
+            values = (sellername, selleremail, contactnumber, storename, storedesc, hashed_password, logo_path, permit_path, region, province, city, barangay)
+            cursor.execute(sql, values)
+            conn.commit()
+        except Exception as e:
+            conn.rollback()
+            app.logger.exception("Seller signup DB error")
+            flash('Error saving seller data', 'error')
+            return render_template('seller_signup.html')
+        finally:
+            try:
+                cursor.close()
+            except Exception:
+                pass
+            try:
+                conn.close()
+            except Exception:
+                pass
+
         flash('Thank you for your interest! We will contact you soon to set up your seller account.', 'success')
-        return redirect(url_for('become_seller'))
+        return redirect(url_for('seller_homepage'))
 
     return render_template('seller_signup.html')
 
@@ -359,6 +432,377 @@ def seller_signup():
 def rider_homepage():
     return render_template('rider_homepage.html')
 
-@app.route('/admin_dashboard')
+def admin_required():
+    """Decorator to check if user is admin"""
+    user = session.get('user')
+    if not user or user.get('userID') != 0:  # Admin has userID 0
+        return False
+    return True
+
+@app.route('/admin_dashboard', methods=['GET', 'POST'])
 def admin_dashboard():
+    if not admin_required():
+        return redirect(url_for('login'))
+
+    # load sellers for the "Approve Store" section
+    conn = get_db_connection()
+    sellers = []
+    try:
+        cursor = conn.cursor()
+        cursor.execute("""
+            SELECT id, sellername, selleremail, contactnumber, storename, storedesc,
+                   region, province, city, barangay, status, storelogo_path, businesspermit_path, created_at
+            FROM sellers
+            ORDER BY created_at DESC
+        """)
+        rows = cursor.fetchall()
+        for r in rows:
+            sellers.append({
+                'id': r[0],
+                'sellername': r[1],
+                'selleremail': r[2],
+                'contactnumber': r[3],
+                'storename': r[4],
+                'storedesc': r[5] or '',
+                'region': r[6],
+                'province': r[7],
+                'city': r[8],
+                'barangay': r[9],
+                'status': r[10],
+                'storelogo_path': r[11],
+                'businesspermit_path': r[12],
+                'created_at': r[13]
+            })
+    finally:
+        try:
+            cursor.close()
+            conn.close()
+        except Exception:
+            pass
+
+    return render_template('admin_dashboard.html', sellers=sellers)
+
+@app.route('/admin/stores')
+def admin_stores():
+    if not admin_required():
+        return redirect(url_for('login'))
+    # TODO: Implement stores management
     return render_template('admin_dashboard.html')
+
+@app.route('/admin/coupons')
+def admin_coupons():
+    if not admin_required():
+        return redirect(url_for('login'))
+    # TODO: Implement coupon management
+    return render_template('admin_dashboard.html')
+
+@app.route('/admin/approve-store')
+def admin_sellers():
+    if not admin_required():
+        return redirect(url_for('login'))
+    conn = get_db_connection()
+    sellers = []
+    try:
+        cursor = conn.cursor()
+        cursor.execute("""
+            SELECT id, sellername, selleremail, contactnumber, storename,
+                   region, province, city, barangay, status, storelogo_path, businesspermit_path, created_at
+            FROM sellers
+            ORDER BY created_at DESC
+        """)
+        rows = cursor.fetchall()
+        for r in rows:
+            sellers.append({
+                'id': r[0],
+                'sellername': r[1],
+                'selleremail': r[2],
+                'contactnumber': r[3],
+                'storename': r[4],
+                'region': r[5],
+                'province': r[6],
+                'city': r[7],
+                'barangay': r[8],
+                'status': r[9],
+                'storelogo_path': r[10],
+                'businesspermit_path': r[11],
+                'created_at': r[12]
+            })
+    finally:
+        try:
+            cursor.close()
+            conn.close()
+        except Exception:
+            pass
+    return render_template('admin_sellers.html', sellers=sellers)
+
+
+@app.route('/admin/sellers/<int:seller_id>/update', methods=['POST'])
+def admin_update_seller(seller_id):
+    if not admin_required():
+        # for AJAX return JSON, for normal requests redirect to login
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest' or request.is_json:
+            return jsonify({'success': False, 'msg': 'Unauthorized'}), 403
+        return redirect(url_for('login'))
+
+    action = request.form.get('action')  # 'approve' or 'reject'
+    if action not in ('approve', 'reject'):
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest' or request.is_json:
+            return jsonify({'success': False, 'msg': 'Invalid action'}), 400
+        flash('Invalid action', 'danger')
+        return redirect(url_for('admin_dashboard'))
+
+    new_status = 'approved' if action == 'approve' else 'rejected'
+    conn = get_db_connection()
+    try:
+        cursor = conn.cursor()
+        cursor.execute("""
+            UPDATE sellers
+            SET status = %s, reviewed_at = %s, reviewer_id = %s
+            WHERE id = %s
+        """, (new_status, datetime.utcnow(), 0, seller_id))  # reviewer_id 0 = admin
+        conn.commit()
+    except Exception as e:
+        app.logger.exception("Failed to update seller status")
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest' or request.is_json:
+            return jsonify({'success': False, 'msg': 'DB error'}), 500
+        flash('Database error updating seller', 'danger')
+        return redirect(url_for('admin_dashboard'))
+    finally:
+        try:
+            cursor.close()
+            conn.close()
+        except Exception:
+            pass
+
+    # If request is AJAX/fetch return JSON, otherwise redirect to admin dashboard
+    if request.headers.get('X-Requested-With') == 'XMLHttpRequest' or request.is_json:
+        return jsonify({'success': True, 'status': new_status}), 200
+
+    flash(f'Seller has been {new_status}.', 'success')
+    return redirect(url_for('admin_dashboard'))
+
+
+@app.route('/admin/uploads/<path:filename>')
+def admin_uploaded_file(filename):
+    # Only admin may download business permits
+    if not admin_required():
+        return redirect(url_for('login'))
+    return send_from_directory(app.config['UPLOAD_FOLDER'], filename, as_attachment=True)
+# ...existing code...
+
+@app.route('/all-products')
+def all_products():
+    return render_template('all-products.html')
+
+# Route to fetch regions
+@app.route('/get_regions')
+def get_regions():
+    try:
+        res = requests.get("https://psgc.gitlab.io/api/regions/", timeout=6)
+        res.raise_for_status()
+        data = res.json()
+        simplified = [{'code': item.get('code'), 'name': item.get('name')} for item in data]
+        return jsonify(simplified)
+    except Exception as e:
+        return jsonify({'error': 'Failed to fetch regions', 'details': str(e)}), 500
+
+# Route to fetch provinces by region code
+@app.route('/get_provinces/<region>')
+def get_provinces(region):
+    try:
+        res = requests.get(f"https://psgc.gitlab.io/api/regions/{region}/provinces/", timeout=6)
+        res.raise_for_status()
+        data = res.json()
+        simplified = [{'code': item.get('code'), 'name': item.get('name')} for item in data]
+        return jsonify(simplified)
+    except Exception as e:
+        return jsonify({'error': 'Failed to fetch provinces', 'details': str(e)}), 500
+
+# Route to fetch cities by province code
+@app.route('/get_cities/<province>')
+def get_cities(province):
+    try:
+        res = requests.get(f"https://psgc.gitlab.io/api/provinces/{province}/cities-municipalities/", timeout=6)
+        res.raise_for_status()
+        data = res.json()
+        simplified = [{'code': item.get('code'), 'name': item.get('name')} for item in data]
+        return jsonify(simplified)
+    except Exception as e:
+        return jsonify({'error': 'Failed to fetch cities', 'details': str(e)}), 500
+
+# Route to fetch barangays by city/municipality code
+@app.route('/get_city/<city>')
+def get_city(city):
+    try:
+        res = requests.get(f"https://psgc.gitlab.io/api/cities-municipalities/{city}/barangays/", timeout=6)
+        res.raise_for_status()
+        data = res.json()
+        simplified = [{'code': item.get('code'), 'name': item.get('name')} for item in data]
+        return jsonify(simplified)
+    except Exception as e:
+        return jsonify({'error': 'Failed to fetch barangays', 'details': str(e)}), 500
+
+@app.route('/get_barangay/<barangay>')
+def get_barangay(barangay):
+    try:
+        res = requests.get(f"https://psgc.gitlab.io/api/cities-municipalities/{barangay}/barangays/", timeout=6)
+        res.raise_for_status()
+        data = res.json()
+        simplified = [{'code': item.get('code'), 'name': item.get('name')} for item in data]
+        return jsonify(simplified)
+    except Exception as e:
+        return jsonify({'error': 'Failed to fetch barangays', 'details': str(e)}), 500
+
+# Upload configuration (place after app = Flask(...))
+UPLOAD_DIR = os.path.join(parent_dir, 'uploads')   # c:\Users\admin\Documents\BabyStore\uploads
+os.makedirs(UPLOAD_DIR, exist_ok=True)
+app.config['UPLOAD_FOLDER'] = UPLOAD_DIR
+app.config['MAX_CONTENT_LENGTH'] = 5 * 1024 * 1024   # 5 MB limit
+ALLOWED_IMAGE_EXT = {'png', 'jpg', 'jpeg', 'gif', 'webp'}
+ALLOWED_DOC_EXT = {'pdf', 'png', 'jpg', 'jpeg'}
+
+def allowed_file(filename, allowed_set):
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in allowed_set
+
+# Serve uploads (for business permit consider additional auth checks)
+@app.route('/uploads/<path:filename>')
+def uploaded_file(filename):
+    # optional: restrict access to authenticated users
+    # user = session.get('user'); if not user: redirect(url_for('login'))
+    return send_from_directory(app.config['UPLOAD_FOLDER'], filename, as_attachment=True)
+
+@app.route('/get_barangays/<city>')
+def get_barangays(city):
+    try:
+        url = f"https://psgc.gitlab.io/api/cities-municipalities/{city}/barangays/"
+        res = requests.get(url, timeout=6)
+        res.raise_for_status()
+        data = res.json()
+        simplified = [{'code': item.get('code'), 'name': item.get('name')} for item in data]
+        return jsonify(simplified)
+    except Exception as e:
+        app.logger.exception("Failed to fetch barangays")
+        return jsonify({'error': 'Failed to fetch barangays', 'details': str(e)}), 500
+
+@app.route('/seller_login', methods=['GET', 'POST'])
+def seller_login():
+    # seller-only authentication (robust to different column names)
+    if request.method == 'POST':
+        email = (request.form.get('selleremail') or '').strip()
+        password = request.form.get('sellerpassword') or ''
+
+        if not email or not password:
+            flash('Please provide both email and password', 'error')
+            return render_template('seller_login.html')
+
+        conn = get_db_connection()
+        if not conn:
+            flash('Server error (db)', 'error')
+            return render_template('seller_login.html')
+
+        try:
+            # use dictionary cursor so we can read columns by name even if schema differs
+            cursor = conn.cursor(dictionary=True)
+            cursor.execute("SELECT * FROM sellers WHERE selleremail = %s LIMIT 1", (email,))
+            row = cursor.fetchone()
+        except Exception as e:
+            app.logger.exception("Seller login DB error")
+            flash('Server error, please try later', 'error')
+            return render_template('seller_login.html')
+        finally:
+            try:
+                cursor.close()
+            except Exception:
+                pass
+            try:
+                conn.close()
+            except Exception:
+                pass
+
+        if not row:
+            flash('Invalid credentials', 'error')
+            return render_template('seller_login.html')
+
+        # tolerant column resolution
+        user_id = row.get('id') or row.get('sellerID') or row.get('seller_id')
+        user_name = row.get('sellername') or row.get('storename') or row.get('seller_name')
+        hashed_pw = row.get('sellerpassword') or row.get('passwd')
+        status = row.get('status') or row.get('account_status') or 'approved'
+
+        # status check
+        if status != 'approved':
+            flash('Seller account not approved yet', 'error')
+            return render_template('seller_login.html')
+
+        if not hashed_pw or not check_password_hash(hashed_pw, password):
+            flash('Invalid credentials', 'error')
+            return render_template('seller_login.html')
+
+        # success: set seller session and redirect to seller dashboard
+        session.clear()
+        session['seller'] = {'id': user_id, 'name': user_name, 'email': email}
+        if remember:
+            session.permanent = True
+
+        flash('Signed in successfully', 'success')
+        return redirect(url_for('seller_homepage'))
+
+    return render_template('seller_login.html')
+
+
+@app.route('/baby-clothes')
+def baby_clothes():
+    return render_template('categories/baby-clothes.html')
+
+@app.route('/comfort-toys')
+def comfort_toys():
+    return render_template('categories/comfort-toys.html')
+
+@app.route('/educational-toys')
+def educational_toys():
+    return render_template('categories/educational-toys.html')
+
+@app.route('/nursery-furniture')
+def nursery_furniture():
+    return render_template('categories/nursery-furniture.html')
+
+@app.route('/safety-and-health')
+def safety_and_health():
+    return render_template('categories/safety-and-health.html')
+
+@app.route('/stroller-gear')
+def stroller_gear():
+    return render_template('categories/stroller-gear.html')
+
+@app.route('/admin/profile')
+def admin_profile():
+    if not admin_required():
+        return redirect(url_for('login'))
+    user = session.get('user') or {}
+    return render_template('admin_profile.html', user=user)
+
+@app.route('/api/admin/sellers')
+def api_admin_sellers():
+    if not admin_required():
+        return jsonify({'error': 'unauthorized'}), 403
+    conn = get_db_connection()
+    sellers = []
+    try:
+        cursor = conn.cursor()
+        cursor.execute("""
+            SELECT id, sellername, selleremail, contactnumber, storename, storedesc,
+                   region, province, city, barangay, status, storelogo_path, businesspermit_path, created_at
+            FROM sellers
+            ORDER BY created_at DESC
+        """)
+        for r in cursor.fetchall():
+            sellers.append({
+              'id': r[0], 'sellername': r[1], 'selleremail': r[2], 'contactnumber': r[3],
+              'storename': r[4], 'storedesc': r[5] or '', 'region': r[6], 'province': r[7],
+              'city': r[8], 'barangay': r[9], 'status': r[10], 'storelogo_path': r[11],
+              'businesspermit_path': r[12], 'created_at': str(r[13])
+            })
+    finally:
+        try: cursor.close(); conn.close()
+        except Exception: pass
+    return jsonify(sellers)
