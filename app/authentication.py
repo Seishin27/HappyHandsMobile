@@ -184,44 +184,49 @@ def login():
     username = request.form.get('username')
     password = request.form.get('password')
 
+    # admin quick-check (unchanged)
     if username == ADMIN_EMAIL and password == ADMIN_PASSWORD:
         access_token = create_access_token(identity={'userID': 0, 'username': ADMIN_USERNAME, 'email': ADMIN_EMAIL})
         session['user'] = {'userID': 0, 'username': ADMIN_USERNAME, 'email': ADMIN_EMAIL}
         resp = make_response(redirect(url_for('admin_dashboard')))
         resp.set_cookie('access_token', access_token, httponly=True, secure=False, samesite='Lax', max_age=3600)
         return resp
-    
+
     if not username or not password:
         flash('Please fill in all fields', 'danger')
         return render_template('login.html')
-    
+
     conn = get_db_connection()
     if not conn:
         flash('Database connection error', 'danger')
         return render_template('login.html')
-    
-    try:
-        cursor = conn.cursor()
-        cursor.execute('SELECT userID, username, password, email FROM users WHERE username = %s OR email = %s', (username, username))
-        user = cursor.fetchone()
-        
-        if user and check_password_hash(user[2], password):
-            access_token = create_access_token(identity={'userID': user[0], 'username': user[1]})
-            # Also set session so server-side templates can access the user immediately
-            user_email = user[3] if len(user) > 3 else None
-            session['user'] = {'userID': user[0], 'username': user[1], 'email': user_email}
 
-            resp = make_response(redirect(url_for('home')))
-            # Set the JWT cookie
-            set_access_cookies(resp, access_token)
-            return resp
-        else:
-            flash('Invalid username or password', 'danger')
-            return render_template('login.html')
-            
+    try:
+        # use dictionary cursor so we can read columns by name even if schema differs
+        cursor = conn.cursor(dictionary=True)
+        cursor.execute("SELECT * FROM users WHERE username = %s OR email = %s LIMIT 1", (username, username))
+        user = cursor.fetchone()
+
+        if user:
+            # tolerant column resolution
+            hashed = user.get('password') or user.get('passwd') or user.get('sellerpassword') or ''
+            if hashed and check_password_hash(hashed, password):
+                user_id = user.get('userID') or user.get('id') or user.get('user_id')
+                user_name = user.get('username') or user.get('name')
+                user_email = user.get('email')
+
+                access_token = create_access_token(identity={'userID': user_id, 'username': user_name, 'email': user_email})
+                session['user'] = {'userID': user_id, 'username': user_name, 'email': user_email}
+                resp = make_response(redirect(url_for('home')))
+                set_access_cookies(resp, access_token)
+                return resp
+
+        flash('Invalid username or password', 'danger')
+        return render_template('login.html')
+
     except mysql.connector.Error as err:
+        app.logger.exception("Login DB error")
         flash('Login error occurred', 'danger')
-        print(f"Login error: {err}")
         return render_template('login.html')
     finally:
         try:
@@ -424,7 +429,7 @@ def seller_signup():
                 pass
 
         flash('Thank you for your interest! We will contact you soon to set up your seller account.', 'success')
-        return redirect(url_for('seller_homepage'))
+        return redirect(url_for('seller_login'))
 
     return render_template('seller_signup.html')
 
@@ -448,30 +453,27 @@ def admin_dashboard():
     conn = get_db_connection()
     sellers = []
     try:
-        cursor = conn.cursor()
+        cursor = conn.cursor(dictionary=True)
         cursor.execute("""
-            SELECT id, sellername, selleremail, contactnumber, storename, storedesc,
-                   region, province, city, barangay, status, storelogo_path, businesspermit_path, created_at
+            SELECT sellerID, sellername, selleremail, contactnumber, storename, storedesc,
+                   region, province, city, barangay, storelogo_path, businesspermit_path
             FROM sellers
-            ORDER BY created_at DESC
+            ORDER BY sellerID DESC
         """)
-        rows = cursor.fetchall()
-        for r in rows:
+        for row in cursor.fetchall():
             sellers.append({
-                'id': r[0],
-                'sellername': r[1],
-                'selleremail': r[2],
-                'contactnumber': r[3],
-                'storename': r[4],
-                'storedesc': r[5] or '',
-                'region': r[6],
-                'province': r[7],
-                'city': r[8],
-                'barangay': r[9],
-                'status': r[10],
-                'storelogo_path': r[11],
-                'businesspermit_path': r[12],
-                'created_at': r[13]
+                'sellerID': row.get('sellerID') or row.get('sellerID'.lower()) or row.get('sellerId'),
+                'sellername': row.get('sellername'),
+                'selleremail': row.get('selleremail'),
+                'contactnumber': row.get('contactnumber'),
+                'storename': row.get('storename'),
+                'storedesc': row.get('storedesc') or '',
+                'region': row.get('region'),
+                'province': row.get('province'),
+                'city': row.get('city'),
+                'barangay': row.get('barangay'),
+                'storelogo_path': row.get('storelogo_path'),
+                'businesspermit_path': row.get('businesspermit_path'),
             })
     finally:
         try:
@@ -508,7 +510,7 @@ def admin_sellers():
             SELECT id, sellername, selleremail, contactnumber, storename,
                    region, province, city, barangay, status, storelogo_path, businesspermit_path, created_at
             FROM sellers
-            ORDER BY created_at DESC
+            ORDER BY id DESC
         """)
         rows = cursor.fetchall()
         for r in rows:
@@ -688,10 +690,11 @@ def get_barangays(city):
 def seller_login():
     # seller-only authentication (robust to different column names)
     if request.method == 'POST':
-        email = (request.form.get('selleremail') or '').strip()
+        selleremail = (request.form.get('selleremail') or '').strip()
         password = request.form.get('sellerpassword') or ''
+        remember = bool(request.form.get('remember'))
 
-        if not email or not password:
+        if not selleremail or not password:
             flash('Please provide both email and password', 'error')
             return render_template('seller_login.html')
 
@@ -701,11 +704,10 @@ def seller_login():
             return render_template('seller_login.html')
 
         try:
-            # use dictionary cursor so we can read columns by name even if schema differs
             cursor = conn.cursor(dictionary=True)
-            cursor.execute("SELECT * FROM sellers WHERE selleremail = %s LIMIT 1", (email,))
+            cursor.execute("SELECT * FROM sellers WHERE selleremail = %s LIMIT 1", (selleremail,))
             row = cursor.fetchone()
-        except Exception as e:
+        except Exception:
             app.logger.exception("Seller login DB error")
             flash('Server error, please try later', 'error')
             return render_template('seller_login.html')
@@ -723,10 +725,8 @@ def seller_login():
             flash('Invalid credentials', 'error')
             return render_template('seller_login.html')
 
-        # tolerant column resolution
-        user_id = row.get('id') or row.get('sellerID') or row.get('seller_id')
-        user_name = row.get('sellername') or row.get('storename') or row.get('seller_name')
-        hashed_pw = row.get('sellerpassword') or row.get('passwd')
+        # tolerant column resolution for hashed password & status
+        hashed_pw = row.get('password') or row.get('sellerpassword') or row.get('passwd') or row.get('pwd') or ''
         status = row.get('status') or row.get('account_status') or 'approved'
 
         # status check
@@ -734,18 +734,21 @@ def seller_login():
             flash('Seller account not approved yet', 'error')
             return render_template('seller_login.html')
 
+        # verify password
         if not hashed_pw or not check_password_hash(hashed_pw, password):
             flash('Invalid credentials', 'error')
             return render_template('seller_login.html')
 
         # success: set seller session and redirect to seller dashboard
+        user_id = row.get('id') or row.get('sellerID') or row.get('seller_id')
+        user_name = row.get('sellername') or row.get('storename') or row.get('seller_name')
         session.clear()
-        session['seller'] = {'id': user_id, 'name': user_name, 'email': email}
+        session['seller'] = {'id': user_id, 'name': user_name, 'email': selleremail}
         if remember:
             session.permanent = True
 
         flash('Signed in successfully', 'success')
-        return redirect(url_for('seller_homepage'))
+        return redirect(url_for('seller_dashboard'))
 
     return render_template('seller_login.html')
 
@@ -788,21 +791,38 @@ def api_admin_sellers():
     conn = get_db_connection()
     sellers = []
     try:
-        cursor = conn.cursor()
+        # use dictionary cursor so we can safely read columns by name
+        cursor = conn.cursor(dictionary=True)
         cursor.execute("""
             SELECT id, sellername, selleremail, contactnumber, storename, storedesc,
                    region, province, city, barangay, status, storelogo_path, businesspermit_path, created_at
             FROM sellers
-            ORDER BY created_at DESC
+            ORDER BY id DESC
         """)
-        for r in cursor.fetchall():
+        for row in cursor.fetchall():
             sellers.append({
-              'id': r[0], 'sellername': r[1], 'selleremail': r[2], 'contactnumber': r[3],
-              'storename': r[4], 'storedesc': r[5] or '', 'region': r[6], 'province': r[7],
-              'city': r[8], 'barangay': r[9], 'status': r[10], 'storelogo_path': r[11],
-              'businesspermit_path': r[12], 'created_at': str(r[13])
+              'id': row.get('id'),
+              'sellername': row.get('sellername'),
+              'selleremail': row.get('selleremail'),
+              'contactnumber': row.get('contactnumber'),
+              'storename': row.get('storename'),
+              'storedesc': row.get('storedesc') or '',
+              'region': row.get('region'),
+              'province': row.get('province'),
+              'city': row.get('city'),
+              'barangay': row.get('barangay'),
+              'status': row.get('status'),
+              'storelogo_path': row.get('storelogo_path'),
+              'businesspermit_path': row.get('businesspermit_path'),
+              'created_at': str(row.get('created_at')) if row.get('created_at') else None
             })
     finally:
-        try: cursor.close(); conn.close()
-        except Exception: pass
+        try:
+            cursor.close(); conn.close()
+        except Exception:
+            pass
     return jsonify(sellers)
+
+@app.route('/seller-dashboard')
+def seller_dashboard():
+    return render_template('seller_dashboard.html')

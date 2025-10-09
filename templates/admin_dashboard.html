@@ -73,29 +73,48 @@
 
         <!-- Header -->
         <header class="admin-header">
-            <div class="header-content">
-                <h1 class="page-title">Admin <span class="title-accent">Dashboard</span></h1>
-                <div class="header-actions">
+  <div class="header-content">
+    <h1 class="page-title">Admin <span class="title-accent">Dashboard</span></h1>
+    <div class="header-actions">
 
-                    <!-- profile dropdown -->
-                    <div class="profile-dropdown" style="position:relative;">
-                        <button id="profileBtn" class="profile-btn" aria-expanded="false" aria-haspopup="true" type="button">
-                            <span class="user-greeting">Hi, Admin</span>
-                            <span class="user-avatar"><i class="fas fa-user"></i></span>
-                        </button>
-
-                        <div id="profileMenu" class="dropdown-menu" role="menu" aria-hidden="true" style="display:none; position:absolute; right:0; margin-top:8px; background:#fff; border:1px solid #e6e6e6; border-radius:6px; box-shadow:0 6px 18px rgba(0,0,0,0.06); min-width:180px; z-index:50;">
-                            <a class="dropdown-item" href="{{ url_for('admin_profile') }}" style="display:block;padding:10px 14px;text-decoration:none;color:#333;">Profile</a>
-
-                            <form id="logoutForm" method="post" action="{{ url_for('logout') }}" style="margin:0;">
-                                <button type="submit" class="dropdown-item" style="width:100%;text-align:left;padding:10px 14px;border:none;background:none;cursor:pointer;">Logout</button>
-                            </form>
-                        </div>
-                    </div>
-
-                </div>
+      <!-- index-style user dropdown (uses session user if present) -->
+      {% if session.get('user') %}
+      <div class="user-dropdown" style="position:relative;">
+        <button class="action-btn account-btn dropdown-toggle" aria-label="Account" id="ActBtn" data-logged-in="1" type="button">
+          {% if session.get('user').get('avatar') %}
+            <img src="{{ session.get('user').get('avatar') }}" alt="Profile" style="width:36px; height:36px; border-radius:50%; object-fit:cover;">
+          {% else %}
+            <div class="profile-initials" title="{{ session.get('user').get('username') }}" style="width:36px;height:36px;border-radius:50%;background:#f3f4f6;display:flex;align-items:center;justify-content:center;font-weight:600;color:#111;">
+              {{ (session.get('user').get('username')[:1] if session.get('user').get('username'))|upper }}
             </div>
-        </header>
+          {% endif %}
+          <i class="fas fa-chevron-down dropdown-arrow" style="margin-left:8px;"></i>
+        </button>
+
+        <div class="dropdown-menu" id="userDropdown" style="display:none; position:absolute; right:0; margin-top:8px; background:#fff; border:1px solid #e6e6e6; border-radius:6px; box-shadow:0 6px 18px rgba(0,0,0,0.06); min-width:180px; z-index:50;">
+          <div class="dropdown-header" style="padding:10px 14px;">
+            <span class="user-name">{{ session.get('user').get('username') or 'Admin' }}</span>
+          </div>
+          <div class="dropdown-divider" style="height:1px;background:#f1f1f1;margin:6px 0;"></div>
+
+          <button class="dropdown-item logout-btn" id="adminLogoutBtn" type="button" style="width:100%;text-align:left;padding:10px 14px;border:none;background:none;cursor:pointer;">
+            <i class="fas fa-sign-out-alt" style="margin-right:8px;"></i>
+            Logout
+          </button>
+        </div>
+      </div>
+      {% else %}
+      <button class="action-btn" aria-label="Account" id="ActBtn" data-logged-in="0" type="button">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+          <circle cx="12" cy="7" r="4"></circle>
+        </svg>
+      </button>
+      {% endif %}
+
+    </div>
+  </div>
+</header>
 
         <!-- CONTENT AREAS (all inside the same file, toggled with JS) -->
 
@@ -335,6 +354,82 @@
     }).finally(()=> btn.disabled = false);
   }
 });
+
+    // Add logout handler (same behaviour as index.html.handleLogout)
+    async function handleLogoutAdmin() {
+        try {
+            const response = await fetch('/logout', {
+                method: 'POST',
+                credentials: 'same-origin',
+                headers: { 'Content-Type': 'application/json' }
+            });
+
+            let data = null;
+            try { data = await response.json(); } catch (e) { /* no JSON */ }
+
+            if (!response.ok) {
+                console.error('Logout failed:', response.status, data);
+                const serverMsg = data && (data.msg || data.message || data.error) ? (data.msg || data.message || data.error) : `Status ${response.status}`;
+                alert('Logout failed: ' + serverMsg);
+                return;
+            }
+
+            // Redirect to login (server-side login route)
+            window.location.href = "{{ url_for('login') }}";
+        } catch (err) {
+            console.error('Logout network error:', err);
+            alert('Logout failed: network error. See console for details.');
+        }
+    }
+
+    // wire the button (safe check)
+    document.addEventListener('DOMContentLoaded', function () {
+        const lb = document.getElementById('logoutBtn');
+        if (lb) lb.addEventListener('click', function (e) {
+            e.preventDefault();
+            handleLogoutAdmin();
+        });
+    });
+
+  // replicate index.html dropdown behavior on admin dashboard
+  document.addEventListener('DOMContentLoaded', function () {
+    const ActBtn = document.getElementById('ActBtn');
+    const userDropdown = document.getElementById('userDropdown');
+
+    if (ActBtn && userDropdown) {
+      ActBtn.addEventListener('click', function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+        userDropdown.classList.toggle('show');
+        userDropdown.style.display = userDropdown.style.display === 'block' ? 'none' : 'block';
+      });
+
+      // close dropdown when clicking outside
+      document.addEventListener('click', function (e) {
+        if (!ActBtn.contains(e.target) && !userDropdown.contains(e.target)) {
+          userDropdown.style.display = 'none';
+          userDropdown.classList.remove('show');
+        }
+      });
+    }
+
+    // hook logout button to existing admin logout handler
+    const adminLogoutBtn = document.getElementById('adminLogoutBtn');
+    if (adminLogoutBtn) {
+      adminLogoutBtn.addEventListener('click', function (e) {
+        e.preventDefault();
+        // use your existing handleLogoutAdmin() defined in this template
+        if (typeof handleLogoutAdmin === 'function') {
+          handleLogoutAdmin();
+        } else {
+          // fallback to POST /logout then redirect to login
+          fetch('/logout', { method: 'POST', credentials: 'same-origin', headers: { 'Content-Type': 'application/json' } })
+            .then(res => { if (res.ok) window.location.href = "{{ url_for('login') }}"; else alert('Logout failed'); })
+            .catch(() => alert('Logout network error'));
+        }
+      });
+    }
+  });
     </script>
 </body>
 </html>
