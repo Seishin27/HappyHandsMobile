@@ -1,0 +1,11 @@
+flutter_app/
+env/
+.venv/
+migrations/
+uploads/
+tests/
+tools/
+*.pyc
+__pycache__/
+.env.local
+*.log
