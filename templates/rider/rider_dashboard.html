@@ -333,6 +333,20 @@
             </div>
           </div>
         </div>
+
+        <div class="panel-card" id="reports-card" style="margin-top:16px;">
+          <h3 style="margin:0 0 6px;">Delivery Report</h3>
+          <p class="muted" style="color:#64748b;margin:0 0 12px;">Export a PDF of your deliveries for the chosen period.</p>
+          <div class="report-controls" style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+            <label for="rider-report-period" style="font-weight:600;">Period</label>
+            <select id="rider-report-period" class="form-control" style="padding:6px 10px;border:1px solid #d0d7e2;border-radius:6px;">
+              <option value="today">Today</option>
+              <option value="week" selected>This Week</option>
+              <option value="month">This Month</option>
+            </select>
+            <button type="button" id="rider-export-deliveries-pdf" class="btn btn-primary">Export to PDF</button>
+          </div>
+        </div>
       </section>
 
       <section id="messages" class="tab-section" style="display:none;">

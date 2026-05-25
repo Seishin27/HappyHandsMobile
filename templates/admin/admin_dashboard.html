@@ -336,6 +336,20 @@
                     </div>
                 </div>
 
+                <section class="panel-card" id="reports-card" style="margin-top:16px;padding:16px;background:#fff;border:1px solid #e5e7eb;border-radius:8px;">
+                  <h3 style="margin:0 0 6px;">Sales Report</h3>
+                  <p class="muted" style="color:#64748b;margin:0 0 12px;">Export a PDF of platform sales for the chosen period.</p>
+                  <div class="report-controls" style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+                    <label for="admin-report-period" style="font-weight:600;">Period</label>
+                    <select id="admin-report-period" class="form-control" style="padding:6px 10px;border:1px solid #d0d7e2;border-radius:6px;">
+                      <option value="today">Today</option>
+                      <option value="week" selected>This Week</option>
+                      <option value="month">This Month</option>
+                    </select>
+                    <button type="button" id="admin-export-sales-pdf" class="btn btn-primary">Export to PDF</button>
+                  </div>
+                </section>
+
             </div>
         </section>
 

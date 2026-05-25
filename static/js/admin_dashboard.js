@@ -1490,3 +1490,14 @@ async function loadSellers() {
 document.addEventListener('DOMContentLoaded', function() {
   loadSellers();
 });
+
+// Sales/delivery PDF reports — admin export button (Phase 2)
+document.addEventListener('DOMContentLoaded', function () {
+  var btn = document.getElementById('admin-export-sales-pdf');
+  if (!btn) return;
+  btn.addEventListener('click', function () {
+    var sel = document.getElementById('admin-report-period');
+    var period = (sel && sel.value) ? sel.value : 'week';
+    window.open('/admin/reports/sales.pdf?period=' + encodeURIComponent(period), '_blank');
+  });
+});

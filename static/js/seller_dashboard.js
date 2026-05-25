@@ -1365,3 +1365,14 @@ document.addEventListener('DOMContentLoaded', function(){
       }
     }
   });
+
+// Sales/delivery PDF reports — seller export button (Phase 2)
+document.addEventListener('DOMContentLoaded', function () {
+  var btn = document.getElementById('seller-export-sales-pdf');
+  if (!btn) return;
+  btn.addEventListener('click', function () {
+    var sel = document.getElementById('seller-report-period');
+    var period = (sel && sel.value) ? sel.value : 'week';
+    window.open('/seller/reports/sales.pdf?period=' + encodeURIComponent(period), '_blank');
+  });
+});

@@ -1919,3 +1919,14 @@ document.addEventListener('DOMContentLoaded', function() {
 
   });
 
+
+// Sales/delivery PDF reports — rider export button (Phase 2)
+document.addEventListener('DOMContentLoaded', function () {
+  var btn = document.getElementById('rider-export-deliveries-pdf');
+  if (!btn) return;
+  btn.addEventListener('click', function () {
+    var sel = document.getElementById('rider-report-period');
+    var period = (sel && sel.value) ? sel.value : 'week';
+    window.open('/rider/reports/deliveries.pdf?period=' + encodeURIComponent(period), '_blank');
+  });
+});
