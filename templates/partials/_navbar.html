@@ -1,0 +1,35 @@
+{# Reusable navbar — usage: {% include "partials/_navbar.html" %} #}
+<nav class="navbar app-navbar" aria-label="Primary">
+  <a class="nav-logo" href="{{ url_for('home') }}">
+    <span class="nav-logo-mark" aria-hidden="true">&#9757;&#65039;</span>
+    <span class="nav-logo-text">Happy Hands</span>
+  </a>
+
+  <ul class="nav-center" role="menubar">
+    <li><a href="{{ url_for('home') }}" {% if request.endpoint == 'home' %}aria-current="page"{% endif %}>Home</a></li>
+    <li><a href="{{ url_for('about_page') }}" {% if request.endpoint == 'about_page' %}aria-current="page"{% endif %}>About</a></li>
+    <li class="has-submenu">
+      <button type="button" class="nav-submenu-toggle" aria-expanded="false" aria-haspopup="true">Categories &#9662;</button>
+      <ul class="nav-submenu">
+        {% for cat in nav_categories or [] %}
+          <li><a href="{{ url_for('category_page', slug=cat.slug) }}">{{ cat.name }}</a></li>
+        {% else %}
+          <li><a href="/baby-clothes">Baby Clothes &amp; Accessories</a></li>
+          <li><a href="/comfort-toys">Comfort Toys</a></li>
+          <li><a href="/educational-toys">Educational Toys</a></li>
+          <li><a href="/nursery-furniture">Nursery Furniture</a></li>
+          <li><a href="/safety-and-health">Safety &amp; Health</a></li>
+          <li><a href="/stroller-gear">Stroller Gear</a></li>
+        {% endfor %}
+      </ul>
+    </li>
+  </ul>
+
+  <div class="nav-actions">
+    {% include "partials/_navbar_actions.html" %}
+  </div>
+
+  <button type="button" class="nav-mobile-toggle" aria-label="Open menu" aria-controls="nav-center" aria-expanded="false">
+    <span></span><span></span><span></span>
+  </button>
+</nav>

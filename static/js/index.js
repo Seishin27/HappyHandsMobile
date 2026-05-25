@@ -1002,3 +1002,14 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 })();
 
+// Mobile navbar toggle (shared partial templates/partials/_navbar.html)
+document.addEventListener('click', (e) => {
+  const toggle = e.target.closest('.nav-mobile-toggle');
+  if (!toggle) return;
+  const nav = toggle.closest('.navbar');
+  if (!nav) return;
+  const open = nav.getAttribute('data-open') === 'true';
+  nav.setAttribute('data-open', String(!open));
+  toggle.setAttribute('aria-expanded', String(!open));
+});
+

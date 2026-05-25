@@ -11,117 +11,10 @@
 </head>
 <body class="checkout-page" data-user-id="{{ user.userID if user else '' }}" data-server-flashes='{{ get_flashed_messages(with_categories=true) | tojson | safe }}'>
   <header>
-    <nav class="navbar">
-      <div class="logo">
-        <a href="/">
-          <span class="logo-text">HappyHands</span>
-        </a>
-      </div>
-      <div class="nav-center">
-        <a href="/" class="nav-link">Home</a>
-        <a href="/toys" class="nav-link">Toys</a>
-        <a href="/clothes" class="nav-link">Clothes</a>
-        <a href="/furniture" class="nav-link">Furniture</a>
-      </div>
-      <div class="nav-actions">
-        <div class="search-container">
-          <input type="text" class="search-input" placeholder="Search toys..." id="searchBar">
-          <button class="search-toggle" aria-label="Search" id="searchBtn">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <circle cx="11" cy="11" r="8"></circle>
-              <path d="m21 21-4.35-4.35"></path>
-            </svg>
-          </button>
-        </div>
-        {% if user %}
-        <div class="user-dropdown">
-            <button class="action-btn account-btn dropdown-toggle" aria-label="Account" id="ActBtn" data-logged-in="1">
-                <div class="account-avatar-wrapper">
-                    <div class="account-avatar {% if user.avatar %}account-avatar--with-image{% endif %}">
-                        <div class="account-avatar-inner">
-                            {% if user.avatar %}
-                                <img src="{{ user.avatar }}" alt="Profile" class="account-avatar-img">
-                                <div class="account-avatar-initial">
-                                    {{ (user.username[:1] if user.username) |upper }}
-                                </div>
-                            {% else %}
-                                <div class="account-avatar-initial" title="{{ user.username }}">
-                                    {{ (user.username[:1] if user.username) |upper }}
-                                </div>
-                            {% endif %}
-                        </div>
-                    </div>
-                </div>
-                <span class="account-label">{{ user.username }}</span>
-                <i class="fas fa-chevron-down dropdown-arrow"></i>
-            </button>
-            <div class="dropdown-menu account-dropdown-menu" id="userDropdown">
-                <div class="dropdown-header">
-                    {% if user.avatar %}
-                        <div class="account-avatar account-avatar--with-image">
-                            <div class="account-avatar-inner">
-                                <img src="{{ user.avatar }}" alt="Profile" class="account-avatar-img">
-                                <div class="account-avatar-initial">
-                                    {{ (user.username[:1] if user.username) |upper }}
-                                </div>
-                            </div>
-                        </div>
-                    {% else %}
-                        <div class="account-avatar">
-                            <div class="account-avatar-inner">
-                                <div class="account-avatar-initial" title="{{ user.username }}">{{ (user.username[:1] if user.username) |upper }}</div>
-                            </div>
-                        </div>
-                    {% endif %}
-                    <div style="display:inline-block;vertical-align:middle">
-                        <div class="user-name">{{ user.username }}</div>
-                        <div class="user-email" style="font-size:0.85rem;color:#666">{{ user.email }}</div>
-                    </div>
-                </div>
-                <div class="dropdown-divider"></div>
-                <a href="{{ url_for('profile') }}" class="dropdown-item profile-link">
-                    <i class="fas fa-user-circle"></i>
-                    <span>Profile</span>
-                </a>
-                <a href="/orders" class="dropdown-item">
-                    <i class="fas fa-box"></i>
-                    <span>My Orders</span>
-                </a>
-                <button type="button" class="dropdown-item dropdown-messages">
-                    <i class="fas fa-comments"></i>
-                    <span>Messages</span>
-                </button>
-                <a href="/settings" class="dropdown-item">
-                    <i class="fas fa-cog"></i>
-                    <span>Settings</span>
-                </a>
-                <button class="dropdown-item logout-btn">
-                    <i class="fas fa-sign-out-alt"></i>
-                    <span>Logout</span>
-                </button>
-            </div>
-        </div>
-        {% else %}
-        <button class="action-btn" aria-label="Account" id="ActBtnGuest" data-logged-in="0">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-            <circle cx="12" cy="7" r="4"></circle>
-          </svg>
-        </button>
-        {% endif %}
-        <button class="action-btn" aria-label="Cart" id="cartBtn">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <circle cx="9" cy="21" r="1"></circle>
-            <circle cx="20" cy="21" r="1"></circle>
-            <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
-          </svg>
-          <span class="cart-count">0</span>
-        </button>
-      </div>
-    </nav>
+    {% include "partials/_navbar.html" %}
   </header>
 
-  <main class="checkout-shell">
+  <main class="checkout-shell page-shell">
     <h1 class="checkout-title">Checkout</h1>
     <p class="checkout-subtitle">Review your delivery details and confirm your order.</p>
 
@@ -148,7 +41,7 @@
             <div class="checkout-card-header">
               <div class="checkout-card-title">Delivery details</div>
             </div>
-            <form id="checkoutAddressForm" class="checkout-form-grid" autocomplete="on">
+            <form id="checkoutAddressForm" class="checkout-form-grid" autocomplete="on" data-validate-form>
               <div class="checkout-form-group">
                 <label for="region" class="checkout-label">Region *</label>
                 <select id="region" name="region" class="checkout-select" required>
@@ -237,6 +130,7 @@
 
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   <script src="{{ url_for('static', filename='js/confirm_helper.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/design_system.js') }}"></script>
   <script src="{{ url_for('static', filename='js/index.js') }}"></script>
   <script src="{{ url_for('static', filename='js/checkout.js') }}?v=7"></script>
   <script>
