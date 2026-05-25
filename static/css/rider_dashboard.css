@@ -1,0 +1,1866 @@
+
+.admin-body {
+    margin: 0;
+    padding: 0;
+    font-family: 'Segoe UI', Arial, sans-serif;
+    background-color: #f8f9fa;
+    display: flex;
+    min-height: 100vh;
+    overflow-x: hidden;
+}
+
+:root {
+    --admin-bg: #f8f9fa;
+    --admin-surface: #ffffff;
+    --admin-border: #e2e8f0;
+    --admin-primary: #2c5aa0;
+    --admin-primary-soft: #e6f0fa;
+    --admin-primary-strong: #1e4072;
+    --admin-text-main: #0f172a;
+    --admin-text-muted: #64748b;
+}
+
+/* Sidebar Styles */
+.admin-sidebar {
+    width: 280px;
+    background: #ffffff;
+    border-right: 1px solid #e2e8f0;
+    display: flex;
+    flex-direction: column;
+    position: fixed;
+    left: 0;
+    top: 0;
+    height: 100vh;
+    z-index: 1000;
+}
+
+.sidebar-header {
+    padding: 24px 20px;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.logo-container {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.logo-icon {
+    width: 40px;
+    height: 40px;
+    background: var(--admin-primary);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 18px;
+}
+
+.logo-text {
+    font-size: 24px;
+    font-weight: 800;
+    color: var(--admin-primary);
+}
+
+.sidebar-content {
+    flex: 1;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+}
+
+.store-info {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 16px;
+    background: #f7fafc;
+    border-radius: 12px;
+    margin-bottom: 32px;
+}
+
+.store-avatar {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 20px;
+}
+
+.store-details h4 {
+    margin: 0;
+    font-size: 16px;
+    font-weight: 600;
+    color: #2d3748;
+}
+
+/* Navigation Styles */
+.sidebar-nav {
+    flex: 1;
+}
+
+.nav-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.nav-item {
+    margin-bottom: 8px;
+}
+
+.nav-link {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 16px;
+    color: #64748b;
+    text-decoration: none;
+    border-radius: 10px;
+    transition: all 0.2s ease;
+    font-weight: 500;
+}
+
+.nav-link:hover {
+    background-color: #f1f5f9;
+    color: #334155;
+}
+
+.nav-item.active .nav-link {
+    color: black;
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.25);
+}
+
+.nav-link i {
+    font-size: 18px;
+    width: 20px;
+    text-align: center;
+}
+
+/* Main Content Styles */
+.admin-main {
+    flex: 1;
+    margin-left: 280px;
+    display: flex;
+    flex-direction: column;
+    background: var(--admin-bg);
+    min-height: 100vh;
+}
+
+.admin-header {
+    background: rgba(255, 255, 255, 0.9);
+    border-bottom: 1px solid #e2e8f0;
+    padding: 0;
+    position: sticky;
+    top: 0;
+    z-index: 800;
+    backdrop-filter: blur(12px);
+    box-shadow: 0 12px 30px rgba(15, 23, 42, 0.06);
+}
+
+.header-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 24px 32px;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.page-title {
+    font-size: 28px;
+    font-weight: 600;
+    color: var(--admin-text-main);
+    margin: 0;
+}
+
+.title-accent {
+    color: var(--admin-primary);
+}
+
+.header-actions {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.user-info {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.user-greeting {
+    font-size: 16px;
+    font-weight: 500;
+    color: #4a5568;
+}
+
+.user-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 16px;
+}
+
+/* Dashboard Content */
+.dashboard-content {
+    flex: 1;
+    padding: 0;
+}
+
+/* Stats Grid */
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 24px;
+    margin-bottom: 32px;
+}
+
+.stat-card {
+    background: var(--admin-surface);
+    padding: 24px;
+    border-radius: 16px;
+    border: 1px solid var(--admin-border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    transition: all 0.2s ease;
+}
+
+.stat-card:hover {
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
+    transform: translateY(-2px);
+}
+
+.stat-content {
+    display: flex;
+    flex-direction: column;
+}
+
+.stat-number {
+    font-size: 32px;
+    font-weight: 700;
+    color: var(--admin-text-main);
+    margin-bottom: 4px;
+}
+
+.stat-label {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--admin-text-muted);
+}
+
+.stat-icon {
+    width: 56px;
+    height: 56px;
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    color: white;
+}
+
+.stat-card:nth-child(1) .stat-icon {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.stat-card:nth-child(2) .stat-icon {
+    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+}
+
+.stat-card:nth-child(3) .stat-icon {
+    background: linear-gradient(135deg, #4ecdc4 0%, #44a08d 100%);
+}
+
+.stat-card:nth-child(4) .stat-icon {
+    background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);
+    color: #8b5a2b;
+}
+
+/* Charts Section */
+.charts-section {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 24px;
+}
+
+.chart-container {
+    background: var(--admin-surface);
+    border-radius: 16px;
+    border: 1px solid var(--admin-border);
+    padding: 24px;
+}
+
+.chart-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+}
+
+.chart-header h3 {
+    font-size: 20px;
+    font-weight: 600;
+    color: var(--admin-text-main);
+    margin: 0;
+}
+
+.chart-info {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 4px;
+}
+
+.chart-date {
+    font-size: 14px;
+    font-weight: 500;
+    color: #4a5568;
+}
+
+.chart-orders {
+    font-size: 12px;
+    color: #64748b;
+}
+
+.chart-wrapper {
+    height: 300px;
+    position: relative;
+}
+
+/* General layout for each admin tab section */
+.tab-content {
+    padding: 24px 32px 32px;
+}
+
+@media (max-width: 900px) {
+    .tab-content {
+        padding: 16px 16px 24px;
+    }
+}
+
+/* Generic card wrapper for admin panels */
+.admin-main .panel {
+    background: var(--admin-surface);
+    border-radius: 16px;
+    border: 1px solid var(--admin-border);
+    box-shadow: 0 18px 45px rgba(15, 23, 42, 0.08);
+    padding: 24px 24px 20px;
+}
+
+.admin-main .panel > h2,
+.admin-main .panel > h3 {
+    margin-top: 0;
+    margin-bottom: 16px;
+    font-weight: 600;
+    color: var(--admin-text-main);
+}
+
+/* Consistent table styling across admin dashboard */
+.data-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 8px;
+}
+
+.data-table thead tr {
+    background: #f1f5f9;
+}
+
+.data-table th,
+.data-table td {
+    padding: 12px 14px;
+    font-size: 14px;
+    text-align: left;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.data-table th {
+    font-weight: 600;
+    color: var(--admin-text-muted);
+    text-transform: uppercase;
+    font-size: 11px;
+    letter-spacing: 0.04em;
+}
+
+.data-table tbody tr:hover {
+    background: #f9fafb;
+}
+
+.data-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+/* VAT panel tweaks to match cards */
+#vatPanel {
+    margin-top: 24px;
+}
+
+@media (max-width: 900px) {
+    .header-content {
+        padding: 16px 20px;
+    }
+}
+
+/* Scoped baby-store theme + layout for Stores / Approved Stores only.
+   - Does NOT change dashboard/nav layout.
+   - Centers the stores card inside the admin content area and nudges it
+     a little to the right so it doesn't sit right next to the sidebar. */
+
+section#stores,
+section#stores.tab-content,
+section#stores.tab-content.active,
+section#approve-store,
+#stores {
+    --baby-primary: #2c5aa0;    /* brand blue */
+    --baby-accent: #ffd6cc;     /* soft baby-pink */
+    --baby-accent-2: #4fd1c5;   /* mint accent */
+    max-width: 980px;            /* card width */
+    width: 100%;
+    margin: 2.5rem auto;         /* center horizontally in the admin content area */
+    padding: 1.25rem 1.5rem;
+    background: linear-gradient(180deg, rgba(255,214,204,0.14), rgba(255,255,255,0.6)); /* soft baby tone */
+    border-radius: 12px;
+    box-shadow: 0 10px 30px rgba(16,24,40,0.06);
+    box-sizing: border-box;
+    color: #1f2937;
+    /* small rightward nudge so the card doesn't visually sit flush next to the sidebar */
+    transform: translateX(24px);
+}
+
+/* heading and text */
+section#stores h2,
+#stores h2,
+section#approve-store h2 {
+    text-align: center;
+    color: var(--baby-primary);
+    margin: 0 0 1rem 0;
+    font-weight: 700;
+}
+
+/* table/layout inside the card */
+section#stores table,
+#stores table,
+section#approve-store table {
+    width: 100%;
+    border-collapse: collapse;
+}
+section#stores th,
+section#stores td,
+#stores th,
+#stores td,
+section#approve-store th,
+section#approve-store td {
+    text-align: left;
+    padding: 8px 10px;
+    vertical-align: middle;
+    color: #475569; /* muted dark */
+}
+
+/* link/button styles inside these sections (keeps theme minimal) */
+section#stores a,
+#stores a,
+section#approve-store a {
+    color: var(--baby-accent-2);
+    text-decoration: underline;
+}
+
+/* remove the nudge on small screens so content fits nicely */
+@media (max-width: 900px) {
+    section#stores,
+    #stores,
+    section#approve-store {
+        transform: none;
+        margin: 1rem;
+        padding: 1rem;
+        max-width: calc(100% - 2rem);
+    }
+}
+
+/* if you prefer a larger gap from the sidebar on wide screens, increase this translateX value */
+@media (min-width: 1400px) {
+    section#stores,
+    #stores,
+    section#approve-store {
+        transform: translateX(36px);
+    }
+}
+
+/* ===== Featured Requests / Riders / Approve Riders UI parity =====
+   Reuse the approve-store card layout so these admin sections look consistent
+   and centered. Keeps table contents and actions intact; only the container
+   presentation and heading alignment is standardized. */
+section#featured-requests,
+section#riders,
+section#approve-riders,
+section#featured-requests.tab-content,
+section#riders.tab-content,
+section#approve-riders.tab-content {
+    max-width: 980px;
+    width: 100%;
+    margin: 2.5rem auto;
+    padding: 1.25rem 1.5rem;
+    background: linear-gradient(180deg, rgba(255,255,255,0.98), rgba(247,249,252,0.98));
+    border-radius: 12px;
+    box-shadow: 0 10px 30px rgba(16,24,40,0.06);
+    box-sizing: border-box;
+    color: #1f2937;
+    transform: translateX(24px);
+}
+
+/* headings: centered, bold, match approve-store color */
+section#featured-requests h2,
+section#riders h2,
+section#approve-riders h2 {
+    text-align: center;
+    color: var(--baby-primary, #2c5aa0);
+    margin: 0 0 1rem 0;
+    font-weight: 700;
+}
+
+/* tables inside these sections should match the approve-store table style */
+section#featured-requests table,
+section#riders table,
+section#approve-riders table {
+    width: 100%;
+    border-collapse: collapse;
+}
+section#featured-requests th,
+section#featured-requests td,
+section#riders th,
+section#riders td,
+section#approve-riders th,
+section#approve-riders td {
+    text-align: left;
+    padding: 8px 10px;
+    vertical-align: middle;
+    color: #475569;
+}
+
+/* link/button styles inside these sections keep the accent color */
+section#featured-requests a,
+section#riders a,
+section#approve-riders a {
+    color: var(--baby-accent-2, #4fd1c5);
+    text-decoration: underline;
+}
+
+/* responsive: remove the rightward nudge on small screens */
+@media (max-width: 900px) {
+    section#featured-requests,
+    section#riders,
+    section#approve-riders {
+        transform: none;
+        margin: 1rem;
+        padding: 1rem;
+        max-width: calc(100% - 2rem);
+    }
+}
+
+/* ===== Manage Categories (Admin) ===== */
+section#manage-categories,
+section#manage-categories.tab-content,
+section#manage-categories.tab-content.active {
+    max-width: 980px;
+    width: 100%;
+    margin: 2.5rem auto;
+    padding: 1.25rem 1.5rem;
+    background: linear-gradient(180deg, rgba(240,246,255,0.5), rgba(255,255,255,0.7));
+    border-radius: 12px;
+    box-shadow: 0 10px 30px rgba(16,24,40,0.06);
+    box-sizing: border-box;
+    color: #1f2937;
+    transform: translateX(24px);
+}
+
+section#manage-categories h2,
+#manage-categories h2 {
+    text-align: center;
+    color: #2c5aa0;
+    margin: 0 0 1rem 0;
+    font-weight: 700;
+}
+
+/* inner panel wrapper (optional in template) */
+section#manage-categories .panel {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 1rem;
+}
+
+/* create bar */
+#manage-categories #newCategoryName {
+    max-width: 520px;
+    border: 1px solid #e6e6e6;
+    border-radius: 8px;
+    font-size: 0.95rem;
+}
+
+#manage-categories #createCategoryBtn.btn {
+    background: #2c5aa0;
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+#manage-categories #createCategoryBtn.btn:hover {
+    background: #1e3f73;
+}
+
+/* list */
+#adminCategoriesList {
+    margin-top: .5rem;
+}
+
+#adminCategoriesList li {
+    border: 1px solid #eef2f7 !important;
+    background: #fff !important;
+    border-radius: 10px !important;
+    padding: .65rem .8rem !important;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    transition: box-shadow .15s ease, transform .15s ease;
+}
+
+#adminCategoriesList li:hover {
+    box-shadow: 0 6px 18px rgba(0,0,0,0.06);
+    transform: translateY(-1px);
+}
+
+#adminCategoriesList .muted {
+    color: #6b7280;
+}
+
+/* === Remove black stroke / outline from profile dropdown button === */
+.account-btn,
+#ActBtn,
+.dropdown-toggle,
+.user-dropdown button {
+  outline: none !important;
+  border: none !important;
+  box-shadow: none !important;
+  background: none !important;
+  color: inherit !important;
+}
+
+/* Remove black stroke around the profile SVG icon */
+.user-dropdown svg {
+  stroke: #555; /* change to your desired color, e.g., theme blue */
+}
+
+/* When focused (clicked), stay clean */
+.account-btn:focus,
+#ActBtn:focus,
+.dropdown-toggle:focus,
+.user-dropdown button:focus {
+  outline: none !important;
+  box-shadow: none !important;
+  border: none !important;
+}
+
+/* Optional: if your image/avatar gets a dark border */
+.user-dropdown img {
+  border: none !important;
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+@media (max-width: 900px) {
+    section#manage-categories,
+    section#manage-categories.tab-content,
+    section#manage-categories.tab-content.active {
+        transform: none;
+        margin: 1rem;
+        padding: 1rem;
+        max-width: calc(100% - 2rem);
+    }
+}
+
+@media (max-width: 960px) {
+    .admin-sidebar {
+        position: static;
+        width: 100%;
+        height: auto;
+        box-shadow: 0 4px 16px rgba(15, 23, 42, 0.08);
+    }
+
+    .admin-main {
+        margin-left: 0;
+    }
+
+    .sidebar-content {
+        padding: 16px;
+    }
+}
+/* Action Stack */
+.action-stack { display: flex; flex-direction: column; gap: 8px; }
+.action-stack button { width: 100%; padding: 8px 12px; border: none; border-radius: 6px; cursor: pointer; font-weight: 500; font-size: 0.85rem; transition: all 0.2s; }
+/* Button Colors */
+.btn-approve { background-color: #dcfce7; color: #166534; }
+.btn-approve:hover { background-color: #bbf7d0; }
+.btn-reject { background-color: #fee2e2; color: #991b1b; }
+.btn-reject:hover { background-color: #fecaca; }
+.btn-view-permit { background-color: #e0f2fe; color: #075985; }
+.btn-view-permit:hover { background-color: #bae6fd; }
+/* Permit Modal */
+.permit-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.7); z-index: 2000; justify-content: center; align-items: center; opacity: 0; transition: opacity 0.3s ease; }
+.permit-modal.active { display: flex; opacity: 1; }
+.permit-modal-content { background: white; padding: 20px; border-radius: 12px; max-width: 90%; max-height: 90vh; position: relative; display: flex; flex-direction: column; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04); }
+.permit-modal-close { position: absolute; top: -15px; right: -15px; background: white; border: none; border-radius: 50%; width: 32px; height: 32px; cursor: pointer; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); display: flex; align-items: center; justify-content: center; font-size: 18px; color: #64748b; }
+.permit-modal-close:hover { color: #ef4444; }
+.permit-image-container { overflow: auto; max-height: calc(90vh - 40px); display: flex; justify-content: center; align-items: center; }
+.permit-image { max-width: 100%; height: auto; display: block; }
+
+.btn-view-details { background-color: #f3f4f6; color: #1f2937; }
+.btn-view-details:hover { background-color: #e5e7eb; }
+.detail-row { display: flex; flex-direction: column; border-bottom: 1px solid #f1f5f9; padding-bottom: 8px; }
+.detail-row:last-child { border-bottom: none; }
+.detail-label { font-size: 0.8rem; color: #64748b; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+.detail-value { font-size: 1rem; color: #334155; font-weight: 500; }
+
+/* Featured Requests Buttons */
+.btn-approve-featured { background-color: #10b981; color: #fff; border: none; padding: 6px 10px; border-radius: 6px; cursor: pointer; transition: background-color 0.2s; margin-right: 6px; }
+.btn-approve-featured:hover { background-color: #059669; }
+.btn-reject-featured { background-color: #ef4444; color: #fff; border: none; padding: 6px 10px; border-radius: 6px; cursor: pointer; transition: background-color 0.2s; }
+.btn-reject-featured:hover { background-color: #dc2626; }
+
+/* Rider Approval Buttons */
+.btn-approve-rider { background-color: #10b981; color: #fff; border: none; padding: 6px 10px; border-radius: 6px; cursor: pointer; transition: background-color 0.2s; margin-right: 6px; }
+.btn-approve-rider:hover { background-color: #059669; }
+.btn-reject-rider { background-color: #ef4444; color: #fff; border: none; padding: 6px 10px; border-radius: 6px; cursor: pointer; transition: background-color 0.2s; }
+.btn-reject-rider:hover { background-color: #dc2626; }
+.btn-view-license { background-color: #3b82f6; color: #fff; border: none; padding: 6px 10px; border-radius: 6px; cursor: pointer; transition: background-color 0.2s; margin-right: 6px; }
+.btn-view-license:hover { background-color: #2563eb; }
+
+/* Chat Bubbles */
+.chat-bubble {
+    max-width: 75%;
+    padding: 10px 14px;
+    border-radius: 18px;
+    font-size: 14px;
+    line-height: 1.4;
+    margin-bottom: 8px;
+    word-wrap: break-word;
+    position: relative;
+}
+
+.chat-bubble-me {
+    background: #0b73ff;
+    color: #ffffff;
+    align-self: flex-end;
+    border-bottom-right-radius: 4px;
+    margin-left: auto;
+}
+
+.chat-bubble-them {
+    background: #f1f5f9;
+    color: #0f172a;
+    align-self: flex-start;
+    border-bottom-left-radius: 4px;
+    margin-right: auto;
+}
+
+.chat-messages {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+/* =========================================
+   RIDER DASHBOARD SPECIFIC STYLES
+   ========================================= */
+/* Typography & base */
+.rider-body, .admin-body {
+  margin: 0;
+  padding: 0;
+  font-family: 'Inter', sans-serif;
+  background: #f8fafc;
+  color: #0f1724;
+  min-height: 100vh;
+}
+
+/* Color tokens (match seller palette) */
+:root {
+  /* admin palette (copied from admin.css) */
+  --primary: #667eea;    /* admin purple */
+  --primary-dark: #764ba2;
+  --muted: #64748b;
+  --surface: #ffffff;
+  --surface-2: #f7fafc;
+  --border: #e2e8f0;
+  --bg: #f8fafc;
+}
+
+/* Page layout */
+.admin-sidebar, .rider-sidebar {
+  width: 280px;
+  /* match admin sidebar: white surface with subtle border */
+  background: var(--surface);
+  border-right: 1px solid var(--border);
+  color: #1a202c;
+  position: fixed;
+  height: 100vh;
+  overflow-y: auto;
+  z-index: 1000;
+}
+
+.rider-header {
+    background: white;
+    border-bottom: 1px solid #e2e8f0;
+    padding: 0;
+}
+
+.rider-header-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px 32px;
+}
+
+
+.sidebar-header {
+  padding: 24px 20px;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.logo-container { display:flex; align-items:center; gap:12px; }
+.logo-icon { width:40px; height:40px; background: var(--admin-primary); border-radius:8px; display:flex; align-items:center; justify-content:center; color:white; font-size:18px; }
+.logo-text { font-size:24px; font-weight:800; color:var(--admin-primary); }
+
+/* .sidebar-content { padding: 18px 0; } */
+/* .store-info, .rider-info { padding: 0 20px 20px; display:flex; align-items:center; gap:12px; } */
+/* .store-avatar, .rider-avatar { width:48px; height:48px; background: linear-gradient(135deg, #4fd1c7 0%, #06b6d4 100%); border-radius:12px; display:flex; align-items:center; justify-content:center; color:white; font-size:20px; } */
+/* .store-details h4, .rider-details h4 { margin:0 0 4px 0; font-size:16px; } */
+/* .store-details div, .rider-details p { margin:0; font-size:12px; opacity:0.95; } */
+
+.sidebar-nav { margin-top: 6px; }
+.nav-list { list-style:none; padding:0; margin:0; }
+.nav-item { margin:6px 0; }
+
+
+/* Main area */
+
+
+/* Notification button */
+.action-btn { background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:8px 10px; display:flex; align-items:center; gap:8px; cursor:pointer; }
+#notifMenu { display:none; position:absolute; right:0; margin-top:8px; background:var(--surface); border:1px solid var(--border); border-radius:10px; box-shadow:0 10px 30px rgba(16,24,40,0.08); width:320px; max-height:360px; overflow:auto; }
+.rider-chats-btn {
+  background: #fff;
+  border: 1px solid #e6eef8;
+  border-radius: 10px;
+  padding: 8px 10px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+}
+
+/* Stats grid */
+.stats-grid { display:grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 18px; margin-bottom: 18px; }
+.stat-card { background: var(--surface); padding:24px; border-radius:16px; border:1px solid var(--border); display:flex; justify-content:space-between; align-items:center; transition: all 0.2s ease; }
+.stat-card:hover { box-shadow: 0 8px 25px rgba(0,0,0,0.08); transform: translateY(-2px); }
+.stat-content { display:flex; flex-direction:column; }
+.stat-number { font-size:32px; font-weight:700; color:#1a202c; margin-bottom:4px; }
+.stat-label { font-size:14px; font-weight:500; color:var(--muted); }
+.stat-icon { width:56px; height:56px; border-radius:14px; display:flex; align-items:center; justify-content:center; font-size:24px; color:white; }
+/* Rider-specific role badge and accents */
+.rider-dashboard .page-title-group {
+  display:flex;
+  align-items:center;
+  gap:8px;
+  flex-wrap:wrap;
+}
+
+.rider-dashboard .role-badge {
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  padding:4px 10px;
+  border-radius:999px;
+  font-size:11px;
+  font-weight:600;
+  letter-spacing:0.05em;
+  text-transform:uppercase;
+  background:rgba(34,197,94,0.08);
+  color:#15803d;
+  border:1px solid rgba(34,197,94,0.6);
+}
+
+.rider-dashboard .role-badge-dot {
+  width:8px;
+  height:8px;
+  border-radius:999px;
+  background:currentColor;
+  box-shadow:0 0 0 3px rgba(34,197,94,0.35);
+}
+
+.rider-dashboard .admin-sidebar .nav-item.active > .nav-link {
+  color:#ffffff;
+  background:linear-gradient(120deg,#22c55e,#16a34a);
+  box-shadow:0 10px 25px rgba(22,163,74,0.35);
+  transform:translateX(2px);
+}
+
+.rider-dashboard .nav-section-label {
+  margin:18px 4px 6px;
+  padding:0 8px;
+  font-size:11px;
+  letter-spacing:0.08em;
+  text-transform:uppercase;
+  color:#a0aec0;
+}
+
+.rider-dashboard .stat-card {
+  position:relative;
+  overflow:hidden;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+}
+
+.rider-dashboard .stat-card::before {
+  content:"";
+  position:absolute;
+  inset:-40%;
+  background:radial-gradient(circle at 0 0,rgba(34,197,94,0.3),transparent 60%);
+  opacity:0;
+  transform:translate3d(-10px,-10px,0);
+  transition:opacity 0.25s ease,transform 0.25s ease;
+  pointer-events:none;
+}
+
+.rider-dashboard .stat-card:hover::before {
+  opacity:1;
+  transform:translate3d(0,0,0);
+}
+
+/* Orders */
+.orders-section { margin-top: 20px; }
+.orders-list { margin-top: 10px; }
+.order-card { background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:12px; margin-bottom:10px; display:flex; flex-direction:column; gap:8px; }
+.order-card .order-head { display:flex; justify-content:space-between; align-items:center; }
+.order-card .order-shop, .order-card .order-location { color:#475569; font-size:14px; }
+.order-actions { display:flex; gap:8px; align-items:center; }
+
+/* Buttons */
+.btn { background:transparent; border:0; padding:8px 10px; border-radius:8px; cursor:pointer; }
+.btn-accept { background:#16a34a; color:#fff; border:none; padding:8px 10px; border-radius:8px; }
+.btn-decline { background:#ef4444; color:#fff; border:none; padding:8px 10px; border-radius:8px; }
+.btn-view { background: lightblue; }
+.badge { background:#e6eef8; color:#0f1724; padding:4px 8px; border-radius:8px; font-size:12px; }
+.order-chat-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 6px;
+}
+.btn-chat {
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: #0f1724;
+  padding: 6px 12px;
+  border-radius: 999px;
+  font-weight: 600;
+  font-size: 13px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+.btn-chat:hover {
+  background: #eef2ff;
+  border-color: #c7d2fe;
+}
+.chat-target-icons {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  max-width: 180px;
+  overflow: hidden;
+}
+.chat-target-icons.has-targets {
+  margin-left: 2px;
+}
+.chat-target-icon {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 1px solid #cbd5f5;
+  background: #f8fbff;
+  color: #0f1724;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+.chat-header-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.chat-header-title {
+  font-weight: 700;
+  color: #0f1724;
+  font-size: 15px;
+}
+.chat-header-sub {
+  font-size: 13px;
+  color: #64748b;
+}
+#riderChatHeader {
+  gap: 12px;
+}
+#riderChatHeader .chat-target-icons {
+  margin-left: auto;
+}
+.rider-chat-modes {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 6px;
+}
+.rider-chat-mode-btn {
+  border: 1px solid #e2e8f0;
+  background: #f9fafb;
+  border-radius: 999px;
+  padding: 4px 10px;
+  font-size: 11px;
+  font-weight: 600;
+  color: #64748b;
+  cursor: pointer;
+}
+.rider-chat-mode-btn.active {
+  background: #0b73ff;
+  border-color: #0b73ff;
+  color: #ffffff;
+}
+@media (max-width: 480px) {
+  .rider-chat-modes {
+    flex-wrap: wrap;
+  }
+}
+.chat-target-icon:hover {
+  background: #eef2ff;
+  border-color: #94a3b8;
+}
+.chat-target-icon .icon-letter {
+  font-size: 12px;
+}
+
+/* Override admin.css header layout to fix spacing and alignment */
+.admin-header .header-content {
+    max-width: 100%;
+    margin: 0;
+    padding: 16px 32px; /* Reduced top/bottom padding, kept side padding */
+}
+
+@media (max-width: 768px) {
+    .admin-header .header-content {
+        padding: 16px 20px;
+    }
+}
+
+/* Modal / Panel overlay */
+#pendingOverlay { position: fixed; inset: 0; display: none; align-items: center; justify-content: center; z-index: 9999; background: rgba(255,255,255,0.12); -webkit-backdrop-filter: blur(6px) saturate(110%); backdrop-filter: blur(6px) saturate(110%); }
+#pendingOverlay.visible { display:flex; }
+#pendingOverlay .panel { max-width:520px; margin:0 20px; background: rgba(255,255,255,0.96); border-radius:10px; padding:24px; text-align:center; box-shadow:0 10px 30px rgba(0,0,0,0.12); }
+
+/* Modal for details */
+.modal { display:none; position:fixed; inset:0; z-index:10000; align-items:center; justify-content:center; background:rgba(0,0,0,0.35); }
+.modal .modal-content { background:#fff; border-radius:10px; max-width:720px; width:92%; padding:16px; box-shadow:0 10px 30px rgba(0,0,0,0.15); }
+
+/* Profile dropdown */
+.profile-wrapper { position:relative; }
+.profile-btn { display:flex; align-items:center; gap:8px; padding:6px 10px; background:var(--surface); border:1px solid var(--border); border-radius:10px; cursor:pointer; }
+.profile-btn .user-name { font-weight:600; color:#0f1724; }
+.dropdown-menu { position:absolute; right:0; margin-top:10px; background:var(--surface); border:1px solid var(--border); border-radius:10px; box-shadow:0 8px 24px rgba(16,24,40,0.08); min-width:180px; overflow:hidden; z-index:1200; display:none; }
+.dropdown-menu.visible { display:block; }
+.dropdown-item { display:block; padding:10px 12px; color:#0f1724; text-decoration:none; cursor:pointer; border-bottom:1px solid rgba(0,0,0,0.03); }
+.dropdown-item:hover { background:#f1f7fb; }
+.dropdown-item:last-child { border-bottom:0; }
+
+/* small tweak for mobile header */
+@media (max-width: 880px) {
+  .user-avatar, .rider-avatar { display:none; }
+}
+
+/* Responsive tweaks */
+@media (max-width: 880px) {
+  .admin-sidebar, .rider-sidebar { width: 80px; }
+  .admin-main, .rider-main { margin-left: 80px; padding: 16px; }
+  .nav-link span { display:none; }
+  .stats-grid { grid-template-columns: 1fr; }
+}
+
+/* Ensure consistent spacing between the fixed sidebar and main/tab content.
+   The dashboard content uses .dashboard-content { padding: 32px } in admin.css;
+   add matching padding for other tab sections and give the main area a small extra
+   left margin so the sidebar and main content don't appear stuck together. */
+.admin-main {
+  /* match admin sidebar width so layout remains consistent */
+  margin-left: 280px;
+  /* ensure there's consistent right padding so content isn't flush to the edge */
+  padding-right: 3px;
+}
+
+/* Give all tab sections the same padding as the dashboard content */
+.tab-section {
+  padding: 32px;
+}
+
+/* Make panel cards inside tabs use consistent inner spacing */
+.panel-card {
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  padding: 0;
+}
+
+/* small utility classes */
+.hidden { display:none !important; }
+.text-muted { color:#64748b; }
+
+.recent-deliveries-card th, .recent-deliveries-card td { border:1px solid #e6eef8; padding:10px 12px; text-align:left; vertical-align:top; }
+.recent-deliveries-card th { background:#f8fafc; font-weight:600; }
+.recent-deliveries-card td { word-break:break-word; }
+.recent-deliveries-card .no-data { text-align:center; color:#94a3b8; font-weight:500; }
+@media (max-width: 1440px) {
+  /* On typical laptop widths, hide low-signal columns to reduce visual clutter. */
+  #recentDeliveriesTable th:nth-child(2),
+  #recentDeliveriesTable td:nth-child(2),  /* userID */
+  #recentDeliveriesTable th:nth-child(8),
+  #recentDeliveriesTable td:nth-child(8) { /* payment_method */
+    display:none;
+  }
+}
+@media (max-width: 1200px) {
+  /* On narrower screens, also hide the internal orderID column. */
+  #recentDeliveriesTable th:nth-child(1),
+  #recentDeliveriesTable td:nth-child(1) { /* orderID */
+    display:none;
+  }
+}
+
+/* Ensure form headers and auth-card looks consistent when used */
+.auth-container { display:flex; align-items:center; justify-content:center; padding:40px 16px; }
+.auth-card { width:100%; max-width:640px; background:#fff; border-radius:10px; box-shadow:0 10px 30px rgba(16,24,40,0.08); padding:22px; }
+.auth-header { display:flex; align-items:center; padding:20px; }
+.auth-logo { display:flex; align-items:center; gap:10px; text-decoration:none; color:inherit; }
+.auth-form .form-group { margin-bottom:12px; }
+.auth-btn { background:linear-gradient(135deg,#2c5aa0,#1e3a5f); color:#fff; padding:12px 16px; border-radius:10px; border:0; font-weight:700; cursor:pointer; }
+
+/* Order details modal content styles */
+.order-details-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; }
+.order-details-header h3 { margin:0; }
+.order-details-table { width:100%; border-collapse:collapse; }
+.order-details-table thead tr { text-align:left; border-bottom:1px solid #e5e7eb; }
+.order-details-table th, .order-details-table td { padding:8px 6px; }
+.order-details-close { background:#e5e7eb; border:none; border-radius:6px; padding:6px 10px; cursor:pointer; }
+
+.empty-items { padding:8px 6px; color:#64748b; }
+
+
+/* User dropdown styles (moved from inline) */
+.user-dropdown {
+  position: relative;
+}
+
+.user-dropdown .account-btn {
+  display: flex;
+  align-items: center;
+}
+
+.user-dropdown .account-btn img {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.user-dropdown .profile-initials {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: #f3f4f6;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  color: #111;
+}
+
+.user-dropdown .dropdown-arrow {
+  margin-left: 8px;
+}
+
+.user-dropdown .dropdown-menu {
+  display: none;
+  position: absolute;
+  right: 0;
+  margin-top: 8px;
+  background: #fff;
+  border: 1px solid #e6e6e6;
+  border-radius: 6px;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.06);
+  min-width: 180px;
+  z-index: 50;
+}
+
+.user-dropdown .dropdown-header {
+  padding: 10px 14px;
+}
+
+.user-dropdown .dropdown-divider {
+  height: 1px;
+  background: #f1f1f1;
+  margin: 6px 0;
+}
+
+.user-dropdown .dropdown-item {
+  display: block;
+  padding: 10px 14px;
+  text-decoration: none;
+  color: inherit;
+}
+
+.user-dropdown .logout-btn {
+  width: 100%;
+  text-align: left;
+  padding: 10px 14px;
+  border: none;
+  background: none;
+  cursor: pointer;
+}
+
+.user-dropdown .logout-btn i {
+  margin-right: 8px;
+}
+
+.order-actions .status-dropdown,
+.available-orders .status-dropdown {
+  position: relative;
+  display: inline-block;
+}
+
+#available-orders .status-dropdown .status-btn,
+.order-actions .status-dropdown .status-btn,
+.available-orders .status-dropdown .status-btn {
+  padding: 8px 12px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  border-radius: 8px;
+  min-width: 150px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  color: #0f1724;
+}
+
+#available-orders .status-dropdown .status-btn .status-label,
+.order-actions .status-dropdown .status-btn .status-label,
+.available-orders .status-dropdown .status-btn .status-label { display:flex; align-items:center; gap:8px; }
+
+#available-orders .status-dropdown .status-menu,
+.order-actions .status-dropdown .status-menu,
+.available-orders .status-dropdown .status-menu {
+  display: none;
+  position: absolute;
+  right: 0;
+  top: calc(100% + 8px);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  box-shadow: 0 8px 24px rgba(16,24,40,0.08);
+  min-width: 180px;
+  z-index: 1200;
+  overflow: hidden;
+}
+
+#available-orders .status-dropdown.visible .status-menu,
+.order-actions .status-dropdown.visible .status-menu,
+.available-orders .status-dropdown.visible .status-menu { display: block; }
+
+#available-orders .status-dropdown .status-item,
+.order-actions .status-dropdown .status-item,
+.available-orders .status-dropdown .status-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  cursor: pointer;
+  color: #0f1724;
+}
+
+#available-orders .status-dropdown .status-item:hover,
+.order-actions .status-dropdown .status-item:hover,
+.available-orders .status-dropdown .status-item:hover { background: #f1f7fb; }
+
+#available-orders .status-dropdown .status-item .status-dot,
+.order-actions .status-dropdown .status-item .status-dot,
+.available-orders .status-dropdown .status-item .status-dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+
+/* Status color tokens */
+.status-item.pending .status-dot { background: #f59e0b; }   /* amber / pending */
+.status-item.accepted .status-dot { background: #16a34a; }  /* green / accepted */
+.status-item.picked .status-dot { background: #0ea5a4; }    /* teal / picked */
+.status-item.in-transit .status-dot { background: #2563eb; }/* blue / in-transit */
+.status-item.delivered .status-dot { background: #7c3aed; } /* purple / delivered */
+.status-item.cancelled .status-dot { background: #ef4444; } /* red / cancelled */
+
+/* Support for native <select> fallback */
+#available-orders .status-select,
+.available-orders .status-select,
+.order-actions .status-select {
+  padding: 8px 12px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  border-radius: 8px;
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  cursor: pointer;
+  min-width: 160px;
+  /* add a subtle arrow using background gradients to avoid extra markup */
+  background-image: linear-gradient(45deg, transparent 50%, #94a3b8 50%), linear-gradient(135deg, #94a3b8 50%, transparent 50%);
+  background-position: calc(100% - 16px) calc(1em + 2px), calc(100% - 11px) calc(1em + 2px);
+  background-size: 7px 7px, 7px 7px;
+  background-repeat: no-repeat;
+  padding-right: 32px;
+}
+
+@media (max-width: 600px) {
+  #available-orders .status-dropdown .status-btn,
+  .available-orders .status-dropdown .status-btn,
+  .order-actions .status-dropdown .status-btn,
+  .available-orders .status-select,
+  #available-orders .status-select,
+  .order-actions .status-select { min-width: 120px; font-size: 13px; }
+}
+
+/* Sidebar refinements: remove extra right-side inset so the nav appears flush
+  with its right border. These rules only affect the sidebar/navigation area. */
+.admin-sidebar { box-sizing: border-box; }
+.admin-sidebar .sidebar-header { padding-right: 12px; }
+.admin-sidebar .sidebar-content { padding-left: 18px; padding-right: 12px; }
+.admin-sidebar .nav-link { padding-right: 12px; }
+.admin-sidebar .nav-list { margin-right: 0; }
+
+/* Generic responsive helpers for dashboard tables */
+.table-responsive {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+@media (max-width: 768px) {
+  .tab-section {
+    padding: 20px 16px;
+  }
+  .rider-header-content {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+  .header-actions {
+    flex-wrap: wrap;
+    justify-content: flex-start;
+  }
+}
+
+@media (max-width: 480px) {
+  .tab-section {
+    padding: 16px 12px;
+  }
+}
+
+/* Mobile sidebar toggle + overlay (reuses the pattern from the main site
+   so the fixed admin-sidebar behaves well on small screens). */
+.sidebar-toggle {
+  display: none;
+  width: 44px;
+  height: 44px;
+  border-radius: 8px;
+  background: transparent;
+  border: none;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  margin-right: 8px;
+}
+.sidebar-toggle:focus { outline: 2px solid rgba(44,90,160,0.2); }
+.sidebar-toggle .bars {
+  width: 20px;
+  height: 14px;
+  display: inline-block;
+  position: relative;
+}
+.sidebar-toggle .bars::before,
+.sidebar-toggle .bars::after,
+.sidebar-toggle .bars span {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: #0b2545;
+  border-radius: 2px;
+  transition: transform 0.18s ease, opacity 0.18s ease;
+}
+.sidebar-toggle .bars::before { top: 0; }
+.sidebar-toggle .bars span { top: 6px; }
+.sidebar-toggle .bars::after { bottom: 0; }
+
+.sidebar-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.4);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.18s ease;
+  z-index: 900;
+}
+.sidebar-backdrop.visible {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+@media (max-width: 900px) {
+  .sidebar-toggle {
+    display: flex;
+  }
+
+  .admin-sidebar {
+    position: fixed;
+    left: 0;
+    top: 0;
+    height: 100vh;
+    width: 260px;
+    transform: translateX(-110%);
+    transition: transform 0.22s ease;
+    z-index: 1000;
+    box-shadow: 0 10px 30px rgba(2,6,23,0.25);
+    background: #fff;
+  }
+
+  body.sidebar-open .admin-sidebar {
+    transform: translateX(0);
+  }
+
+  .admin-main {
+    margin-left: 0;
+  }
+}
+
+/* Ensure sidebar backdrop is never visible on desktop */
+@media (min-width: 901px) {
+  .sidebar-backdrop {
+    display: none !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+  }
+}
+
+/* Notification menu (inherited from index page) */
+.notif-bell-wrapper {
+  position: relative;
+  display: inline-flex;
+}
+.notif-btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px;
+  border: none;
+  border-radius: 12px;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  transition: background 0.2s ease, box-shadow 0.2s ease;
+}
+.notif-btn:hover {
+  background: rgba(15, 23, 42, 0.08);
+}
+.notif-badge {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: 9px;
+  background: #ef4444;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 600;
+  display: none;
+  align-items: center;
+  justify-content: center;
+}
+.notif-menu {
+  position: absolute;
+  right: 0;
+  margin-top: 10px;
+  width: 320px;
+  max-height: 420px;
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  box-shadow: 0 14px 40px rgba(15, 23, 42, 0.15);
+  overflow: hidden;
+  display: none;
+  z-index: 120;
+}
+.notif-menu-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  border-bottom: 1px solid #eef2f7;
+  font-weight: 600;
+  color: #0f172a;
+}
+.notif-menu-body {
+  max-height: 360px;
+  overflow-y: auto;
+}
+.notif-empty {
+  padding: 16px;
+  color: #64748b;
+  text-align: center;
+  font-size: 13px;
+}
+.notif-section-title {
+  padding: 10px 16px 4px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #94a3b8;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.notif-card {
+  padding: 12px 16px;
+  border-bottom: 1px solid #f1f5f9;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.notif-card.unread {
+  background: #f8fafc;
+}
+.notif-card-link {
+  text-decoration: none;
+  color: inherit;
+}
+.notif-card-link:hover {
+  background: #f8fafc;
+}
+.notif-card:last-child {
+  border-bottom: none;
+}
+.notif-card-title {
+  font-weight: 600;
+  color: #1e293b;
+  font-size: 14px;
+}
+.notif-card-body {
+  font-size: 13px;
+  color: #475569;
+  line-height: 1.4;
+}
+.notif-card-meta {
+  font-size: 11px;
+  color: #94a3b8;
+}
+.notif-mark-read {
+  background: none;
+  border: none;
+  color: #2c5aa0;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.notif-mark-read:hover {
+  text-decoration: underline;
+}
+.notif-mark-read:disabled {
+  color: #cbd5e1;
+  cursor: default;
+  text-decoration: none;
+}
+
+
+/* Chat Bubbles */
+.chat-bubble {
+    max-width: 75%;
+    padding: 10px 14px;
+    border-radius: 18px;
+    font-size: 14px;
+    line-height: 1.4;
+    margin-bottom: 8px;
+    word-wrap: break-word;
+    position: relative;
+}
+
+.chat-bubble-me {
+    background: #0b73ff;
+    color: #ffffff;
+    align-self: flex-end;
+    border-bottom-right-radius: 4px;
+    margin-left: auto;
+}
+
+.chat-bubble-them {
+    background: #f1f5f9;
+    color: #0f172a;
+    align-self: flex-start;
+    border-bottom-left-radius: 4px;
+    margin-right: auto;
+}
+
+.chat-messages {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+/* Modal Styles */
+.modal {
+  display: none; /* Hidden by default */
+  position: fixed; /* Stay in place */
+  z-index: 2000; /* Sit on top */
+  left: 0;
+  top: 0;
+  width: 100%; /* Full width */
+  height: 100%; /* Full height */
+  overflow: auto; /* Enable scroll if needed */
+  background-color: rgba(0,0,0,0.5); /* Black w/ opacity */
+  align-items: center;
+  justify-content: center;
+}
+
+.modal-content {
+  background-color: #fefefe;
+  margin: auto;
+  padding: 20px;
+  border: 1px solid #888;
+  width: 90%;
+  max-width: 600px;
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+  position: relative;
+  animation: modalFadeIn 0.3s;
+}
+
+@keyframes modalFadeIn {
+  from {opacity: 0; transform: translateY(-20px);}
+  to {opacity: 1; transform: translateY(0);}
+}
+
+.order-details-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  border-bottom: 1px solid #eee;
+  padding-bottom: 10px;
+}
+
+.order-details-header h3 {
+  margin: 0;
+  font-size: 1.25rem;
+  color: #1a202c;
+}
+
+.order-details-close {
+  background: none;
+  border: none;
+  font-size: 1rem;
+  color: #64748b;
+  cursor: pointer;
+  padding: 5px 10px;
+  border-radius: 5px;
+}
+
+.order-details-close:hover {
+  background-color: #f1f5f9;
+  color: #ef4444;
+}
+
+.order-details-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 20px;
+  font-size: 0.95rem;
+}
+
+.order-details-address {
+  grid-column: span 2;
+}
+
+.order-details-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+
+.order-details-table th, .order-details-table td {
+  border: 1px solid #e2e8f0;
+  padding: 8px 12px;
+  text-align: left;
+}
+
+.order-details-table th {
+  background-color: #f8fafc;
+  font-weight: 600;
+}
+
+.empty-items {
+  text-align: center;
+  color: #94a3b8;
+  padding: 20px;
+}
+
+
+/* Copied from seller_dashboard.css for chat button consistency */
+.btn-primary { 
+    background:#2c5aa0; 
+    color:#fff; 
+    border:none; 
+    padding:10px 18px; 
+    border-radius:8px; 
+    cursor:pointer; 
+    font-weight:600; 
+    box-shadow: 0 2px 4px rgba(44, 90, 160, 0.2);
+    transition: all 0.2s;
+}
+.btn-primary:hover {
+    background: #1e4072;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 6px rgba(44, 90, 160, 0.25);
+}
+
+/* -----------------------------------------
+   Rider dashboard 2025 refresh
+   ----------------------------------------- */
+body.admin-body {
+  background: #ffffff;
+  color: #0f172a;
+}
+
+.admin-main {
+  padding: 0;
+}
+
+.admin-main .tab-section {
+  margin: 32px clamp(16px, 4vw, 48px);
+}
+
+.admin-main .tab-section {
+  border-radius: 28px;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.06);
+  padding: clamp(20px, 3vw, 34px);
+}
+
+.stats-grid {
+  gap: clamp(14px, 3vw, 24px);
+}
+
+.stat-card {
+  border: 1px solid #e2e8f0;
+  border-radius: 26px;
+  background: #ffffff;
+  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.06);
+  position: relative;
+  overflow: hidden;
+}
+
+.stat-card::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at 20% 20%, rgba(255, 255, 255, 0.75), transparent 55%);
+}
+
+.stat-card > * {
+  position: relative;
+  z-index: 1;
+}
+
+.recent-deliveries-card th,
+.recent-deliveries-card td,
+.orders-table th,
+.orders-table td,
+.data-table th,
+.data-table td {
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.recent-deliveries-card th,
+.orders-table thead tr,
+.data-table thead tr {
+  background: #f8fafc;
+}
+
+.action-btn,
+.btn,
+.btn-primary,
+.btn-ghost {
+  border-radius: 14px;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 4px 6px rgba(15, 23, 42, 0.05);
+}
+
+
+/* =========================================
+   LAPTOP & RESPONSIVE FIXES (Matches Seller Dashboard)
+   ========================================= */
+
+/* Force block display to prevent flexbox overflow issues on main body */
+body.admin-body {
+    display: block;
+}
+
+/* Adjust main content margin for the narrower sidebar on laptops */
+@media (min-width: 901px) and (max-width: 1400px) {
+    .admin-main {
+        margin-left: 220px; /* Matches the 220px sidebar width in styles.css */
+        padding-right: 16px;
+    }
+
+    .admin-main .tab-section {
+        margin: 20px;
+        padding: 20px;
+    }
+
+    /* Make grid more flexible on smaller laptop screens */
+    .stats-grid {
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 16px;
+    }
+    
+    /* Override inline styles if possible, but inline usually wins. 
+       We will fix inline styles in the HTML file directly. */
+}
+

@@ -1,0 +1,679 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Cancelled Orders - Happy Hands</title>
+    <link rel="icon" href="{{ url_for('static', filename='images/favicon.png') }}?v={{ range(1,9999)|random }}" type="image/png">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}?v=cancelled-orders-{{ range(1,9999)|random }}">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet">
+</head>
+<body>
+    <header>
+        <nav class="navbar">
+            <div class="logo">
+                <a href="/">
+               
+                  <span class="logo-text">Happy Hands</span>
+                </a>
+            </div>
+            <div class="nav-center">
+                <a href="/" class="nav-link">Home</a>
+                <a href="/toys" class="nav-link">Toys</a>
+                <a href="/clothes" class="nav-link">Clothes</a>
+                <a href="/furniture" class="nav-link">Furniture</a>
+            </div>
+            <div class="nav-actions">
+                <div class="search-container">
+                    <input type="text" class="search-input" placeholder="Search toys..." id="searchBar">
+                    <button class="search-toggle" aria-label="Search" id="searchBtn">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="11" cy="11" r="8"></circle>
+                            <path d="m21 21-4.35-4.35"></path>
+                        </svg>
+                    </button>
+                </div>
+                {% if user %}
+                <div class="user-dropdown">
+                    <button class="action-btn account-btn dropdown-toggle" aria-label="Account" id="ActBtn" data-logged-in="1">
+                        <div class="account-avatar-wrapper">
+                            <div class="account-avatar {% if user.avatar %}account-avatar--with-image{% endif %}">
+                                <div class="account-avatar-inner">
+                                    {% if user.avatar %}
+                                        <img src="{{ user.avatar }}" alt="Profile" class="account-avatar-img">
+                                        <div class="account-avatar-initial">
+                                            {{ (user.username[:1] if user.username) |upper }}
+                                        </div>
+                                    {% else %}
+                                        <div class="account-avatar-initial" title="{{ user.username }}">
+                                            {{ (user.username[:1] if user.username) |upper }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        <span class="account-label">{{ user.username }}</span>
+                        <i class="fas fa-chevron-down dropdown-arrow"></i>
+                    </button>
+                    <div class="dropdown-menu account-dropdown-menu" id="userDropdown">
+                        <div class="dropdown-header">
+                            {% if user.avatar %}
+                                <div class="account-avatar account-avatar--with-image">
+                                    <div class="account-avatar-inner">
+                                        <img src="{{ user.avatar }}" alt="Profile" class="account-avatar-img">
+                                        <div class="account-avatar-initial">
+                                            {{ (user.username[:1] if user.username) |upper }}
+                                        </div>
+                                    </div>
+                                </div>
+                            {% else %}
+                                <div class="account-avatar">
+                                    <div class="account-avatar-inner">
+                                        <div class="account-avatar-initial" title="{{ user.username }}">{{ (user.username[:1] if user.username) |upper }}</div>
+                                    </div>
+                                </div>
+                            {% endif %}
+                            <div style="display:inline-block;vertical-align:middle">
+                                <div class="user-name">{{ user.username }}</div>
+                                <div class="user-email" style="font-size:0.85rem;color:#666">{{ user.email }}</div>
+                            </div>
+                        </div>
+                        <div class="dropdown-divider"></div>
+                        <a href="{{ url_for('profile') }}" class="dropdown-item profile-link">
+                            <i class="fas fa-user-circle"></i>
+                            <span>Profile</span>
+                        </a>
+                        <a href="/orders" class="dropdown-item">
+                            <i class="fas fa-box"></i>
+                            <span>My Orders</span>
+                        </a>
+                        <button type="button" class="dropdown-item dropdown-messages">
+                            <i class="fas fa-comments"></i>
+                            <span>Messages</span>
+                        </button>
+                        <a href="/settings" class="dropdown-item">
+                            <i class="fas fa-cog"></i>
+                            <span>Settings</span>
+                        </a>
+                        <button class="dropdown-item logout-btn" id="userLogoutBtn">
+                            <i class="fas fa-sign-out-alt"></i>
+                            <span>Logout</span>
+                        </button>
+                    </div>
+                </div>
+                {% else %}
+                <a href="/login" class="action-btn login-btn">Login</a>
+                {% endif %}
+                <a href="/cart" class="action-btn cart-btn" id="cartBtn">
+                    <i class="fas fa-shopping-cart"></i>
+                    <span class="cart-count">0</span>
+                </a>
+            </div>
+        </nav>
+    </header>
+
+    <main class="orders-page-white">
+        <div class="orders-container-white">
+            <div class="page-header-white">
+                <h1>Cancelled Orders</h1>
+                <p>View your cancelled orders and reinstate them if items are available</p>
+                <div style="margin-top:12px;">
+                    <a href="/orders" class="btn-shop-white">← Back to Active Orders</a>
+                </div>
+            </div>
+
+            {% if cancelled_pending_orders %}
+                <div class="orders-section-white">
+                    <h2>Cancelled Pending Orders</h2>
+                    <p>Orders that were cancelled before confirmation:</p>
+                    
+                    <div class="orders-list-white">
+                        {% for order in cancelled_pending_orders %}
+                        <div class="order-card-white pending-order cancelled-order">
+                            <div class="order-header-white">
+                                <div class="order-info-white">
+                                    <h3>Order #{{ order.order_number }}</h3>
+                                    <p class="order-date-white">Cancelled on {{ order.created_at.strftime('%B %d, %Y at %I:%M %p') if order.created_at else 'N/A' }}</p>
+                                    {% if order.cancellation_reason %}
+                                    <p class="cancellation-reason-white">
+                                        <i class="fas fa-info-circle"></i> Reason: {{ order.cancellation_reason }}
+                                    </p>
+                                    {% endif %}
+                                </div>
+                                <div class="order-status-white">
+                                    <span class="status-badge-white status-cancelled">Cancelled</span>
+                                </div>
+                            </div>
+
+                            <div class="order-items-white">
+                                {% for item in order.order_items %}
+                                <div class="item-chip-white" title="{{ item.name }} × {{ item.quantity }}">
+                                    {% if item.image_path %}
+                                        <img src="{{ url_for('uploaded_file', filename=item.image_path.split(',')[0]) }}" alt="{{ item.name }}">
+                                    {% else %}
+                                        <img src="{{ url_for('static', filename='images/default.png') }}" alt="No image">
+                                    {% endif %}
+                                    <span class="qty">×{{ item.quantity }}</span>
+                                </div>
+                                {% endfor %}
+                            </div>
+
+                            <div class="order-summary-bar-white">
+                                <div class="order-meta-white">
+                                    <span style="font-size: 1.1rem; font-weight: 600; color: #111827;">Total: ₱{{ "%.2f"|format(order.total_amount) }}</span>
+                                </div>
+                                <div class="order-actions-white">
+                                    {% set all_available = true %}
+                                    {% for item in order.order_items %}
+                                        {% if item.stock is none or item.quantity is none or (item.stock | int) < (item.quantity | int) %}
+                                            {% set all_available = false %}
+                                        {% endif %}
+                                    {% endfor %}
+                                    {% if all_available and order.order_items %}
+                                        <button class="btn-reinstate-white btn-reinstate-order" data-pending-id="{{ order.pendingID }}">
+                                            <i class="fas fa-redo"></i>
+                                            Reinstate Order
+                                        </button>
+                                    {% else %}
+                                        <span style="color:#6b7280;font-size:0.9rem; display:flex; align-items:center; gap:6px;">
+                                            <i class="fas fa-info-circle"></i> Some items are out of stock
+                                        </span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            {% endif %}
+
+            {% if cancelled_confirmed_orders %}
+                <div class="orders-section-white">
+                    <h2>Cancelled Confirmed Orders</h2>
+                    <p>Orders that were cancelled after confirmation:</p>
+                    
+                    <div class="orders-list-white">
+                        {% for order in cancelled_confirmed_orders %}
+                        <div class="order-card-white cancelled-order">
+                          <div class="order-header-white">
+                            <div>
+                              <div class="order-title-white">Order #{{ order.order_number }}</div>
+                              <div class="order-date-white">Cancelled on {{ order.created_at.strftime('%B %d, %Y at %I:%M %p') if order.created_at else 'N/A' }}</div>
+                            </div>
+                            <span class="status-badge-white status-cancelled">Cancelled</span>
+                          </div>
+                          
+                          <div class="order-table-container-white">
+                            <table class="order-table-white">
+                                <thead>
+                                    <tr class="order-table-head-white">
+                                        <th class="col-product">Product</th>
+                                        <th class="col-price">Price</th>
+                                        <th class="col-qty">Quantity</th>
+                                        <th class="col-total">Total</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for item in order.order_items %}
+                                    <tr class="order-table-row-white">
+                                        <td class="col-product">
+                                            <div class="prod-wrap-white">
+                                                {% if item.image_path %}
+                                                    <img src="{{ url_for('uploaded_file', filename=item.image_path.split(',')[0]) }}" alt="{{ item.name }}">
+                                                {% else %}
+                                                    <img src="{{ url_for('static', filename='images/default.png') }}" alt="No image">
+                                                {% endif %}
+                                                <div class="prod-info-white">
+                                                    <div class="name">{{ item.name }}</div>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td class="col-price">
+                                            <span>₱{{ "%.2f"|format(item.price) }}</span>
+                                        </td>
+                                        <td class="col-qty">{{ item.quantity }}</td>
+                                        <td class="col-total">₱{{ "%.2f"|format(item.price * item.quantity) }}</td>
+                                    </tr>
+                                    {% endfor %}
+                                    <tr class="order-table-foot-white">
+                                        <td colspan="3" class="total-label">Total</td>
+                                        <td class="grand-total">₱{{ "%.2f"|format(order.total_amount) }}</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                          </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            {% endif %}
+
+            {% if not cancelled_pending_orders and not cancelled_confirmed_orders %}
+                <div class="empty-orders-white">
+                    <div class="empty-icon-white">
+                        <i class="fas fa-times-circle"></i>
+                    </div>
+                    <h2>No Cancelled Orders</h2>
+                    <p>You don't have any cancelled orders yet.</p>
+                    <a href="/orders" class="btn-shop-white">View Active Orders</a>
+                </div>
+            {% endif %}
+        </div>
+    </main>
+
+    <footer>
+        <div class="footer-container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h4>HappyHands</h4>
+                    <p>Your trusted partner for all baby needs. Quality products, exceptional service.</p>
+                </div>
+                <div class="footer-section">
+                    <h4>Quick Links</h4>
+                    <ul class="footer-links">
+                        <li><a href="/">Home</a></li>
+                        <li><a href="/#shopCategories">Shop Categories</a></li>
+                        <li><a href="/about">About</a></li>
+                        <li><a href="/cart">Cart</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2025 HappyHands. Made with 💖 for families</p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Update cart count
+        async function updateCartCount() {
+            try {
+                const response = await fetch('/cart/count');
+                const data = await response.json();
+                const cartCount = document.querySelector('.cart-count');
+                if (cartCount) {
+                    cartCount.textContent = data.count || 0;
+                }
+            } catch (error) {
+                console.error('Error fetching cart count:', error);
+            }
+        }
+
+        // Reinstate order function
+        async function reinstateOrder(pendingId) {
+            try {
+                const ok = await (window.confirmAction ? window.confirmAction({
+                    title: 'Reinstate Order',
+                    text: 'Are you sure you want to reinstate this cancelled order?',
+                    icon: 'question',
+                    confirmButtonText: 'Yes, reinstate',
+                    cancelButtonText: 'Cancel'
+                }) : Promise.resolve(window.confirm('Are you sure you want to reinstate this cancelled order?')));
+
+                if (!ok) return;
+
+                const response = await fetch(`/api/orders/reinstate/${pendingId}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    }
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    if (window.Swal && typeof window.Swal.fire === 'function') {
+                        window.Swal.fire({ 
+                            title: 'Order Reinstated', 
+                            text: data.msg || 'Order has been reinstated. Please confirm it in Your Orders.', 
+                            icon: 'success' 
+                        }).then(() => {
+                            location.reload();
+                        });
+                    } else {
+                        alert(data.msg || 'Order has been reinstated. Please confirm it in Your Orders.');
+                        location.reload();
+                    }
+                } else {
+                    if (window.Swal && typeof window.Swal.fire === 'function') {
+                        window.Swal.fire({ title: 'Error', text: data.msg, icon: 'error' });
+                    } else {
+                        alert('Error: ' + data.msg);
+                    }
+                }
+            } catch (error) {
+                console.error('Error reinstating order:', error);
+                if (window.Swal && typeof window.Swal.fire === 'function') {
+                    window.Swal.fire({ title: 'Error', text: 'An error occurred while reinstating the order.', icon: 'error' });
+                } else {
+                    alert('An error occurred while reinstating the order.');
+                }
+            }
+        }
+
+        // Initialize page
+        document.addEventListener('DOMContentLoaded', function() {
+            updateCartCount();
+
+            // Attach reinstate order listeners
+            document.querySelectorAll('.btn-reinstate-order').forEach(btn => {
+                btn.addEventListener('click', function(e) {
+                    const pendingId = this.getAttribute('data-pending-id');
+                    if (pendingId) reinstateOrder(pendingId);
+                });
+            });
+
+            // Messages button logic
+            const msgBtns = document.querySelectorAll('.dropdown-messages');
+            msgBtns.forEach(btn => {
+                btn.addEventListener('click', function() {
+                    window.location.href = '/profile#profile-messages';
+                });
+            });
+        });
+    </script>
+
+    <style>
+        /* --- New White Theme Styles --- */
+        body {
+            background-color: #ffffff;
+            color: #111827;
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+        }
+
+        .orders-page-white {
+            padding: 2rem 1rem;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .page-header-white {
+            margin-bottom: 2rem;
+            text-align: center;
+        }
+
+        .page-header-white h1 {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: #111827;
+            margin-bottom: 0.5rem;
+            letter-spacing: -0.02em;
+        }
+
+        .page-header-white p {
+            color: #6b7280;
+        }
+
+        .orders-section-white {
+            margin-bottom: 3rem;
+        }
+
+        .orders-section-white h2 {
+            font-size: 1.4rem;
+            font-weight: 600;
+            color: #111827;
+            margin-bottom: 0.5rem;
+        }
+
+        .orders-section-white p {
+            color: #6b7280;
+            margin-bottom: 1.5rem;
+        }
+
+        .order-card-white {
+            background: #ffffff;
+            border: 1px solid #e5e7eb;
+            border-radius: 12px;
+            overflow: hidden;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+            transition: box-shadow 0.2s;
+        }
+
+        .order-card-white:hover {
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+
+        .order-header-white {
+            background: #f9fafb;
+            padding: 1rem 1.5rem;
+            border-bottom: 1px solid #e5e7eb;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .order-title-white {
+            font-weight: 700;
+            color: #111827;
+            font-size: 1.05rem;
+        }
+
+        .order-date-white {
+            font-size: 0.85rem;
+            color: #6b7280;
+            margin-top: 2px;
+        }
+
+        .cancellation-reason-white {
+            margin-top: 6px;
+            font-size: 0.85rem;
+            color: #ef4444;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .status-badge-white {
+            padding: 4px 10px;
+            border-radius: 999px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .status-cancelled { background: #fef2f2; color: #b91c1c; border: 1px solid #fee2e2; }
+
+        /* Item Chips for Pending Orders */
+        .order-items-white {
+            padding: 1rem 1.5rem;
+            display: flex;
+            gap: 0.75rem;
+            overflow-x: auto;
+        }
+
+        .item-chip-white {
+            position: relative;
+            width: 56px;
+            height: 56px;
+            border-radius: 8px;
+            overflow: hidden;
+            flex: 0 0 auto;
+            border: 1px solid #e5e7eb;
+            background: #fff;
+        }
+
+        .item-chip-white img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .item-chip-white .qty {
+            position: absolute;
+            right: 2px;
+            bottom: 2px;
+            background: rgba(0,0,0,0.7);
+            color: #fff;
+            font-size: 0.7rem;
+            padding: 0 4px;
+            border-radius: 4px;
+        }
+
+        /* Table Styles */
+        .order-table-container-white {
+            padding: 0;
+        }
+
+        .order-table-white {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .order-table-head-white th {
+            background: #ffffff;
+            color: #6b7280;
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.75rem;
+            letter-spacing: 0.05em;
+            padding: 0.75rem 1.5rem;
+            text-align: left;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .order-table-row-white td {
+            padding: 1rem 1.5rem;
+            vertical-align: middle;
+            border-bottom: 1px solid #f3f4f6;
+            color: #374151;
+        }
+
+        .order-table-row-white:last-child td {
+            border-bottom: none;
+        }
+
+        .prod-wrap-white {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .prod-wrap-white img {
+            width: 56px;
+            height: 56px;
+            border-radius: 8px;
+            object-fit: cover;
+            border: 1px solid #e5e7eb;
+        }
+
+        .prod-info-white .name {
+            font-weight: 600;
+            color: #111827;
+            font-size: 0.95rem;
+        }
+
+        .order-table-foot-white td {
+            padding: 1rem 1.5rem;
+            background: #f9fafb;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .total-label {
+            text-align: right;
+            font-weight: 600;
+            color: #4b5563;
+        }
+
+        .grand-total {
+            font-weight: 700;
+            color: #111827;
+            font-size: 1.1rem;
+        }
+
+        /* Summary Bar & Actions */
+        .order-summary-bar-white {
+            padding: 1rem 1.5rem;
+            background: #ffffff;
+            border-top: 1px solid #e5e7eb;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .order-meta-white {
+            flex: 1;
+        }
+
+        .order-actions-white {
+            display: flex;
+            gap: 0.75rem;
+        }
+
+        .btn-reinstate-white {
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            transition: all 0.2s;
+            background: #10b981;
+            border: 1px solid #059669;
+            color: #ffffff;
+        }
+        .btn-reinstate-white:hover { background: #059669; }
+
+        .btn-shop-white {
+            display: inline-block;
+            padding: 0.75rem 1.5rem;
+            background: #111827;
+            color: #ffffff;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: background 0.2s;
+        }
+        .btn-shop-white:hover { background: #1f2937; }
+
+        /* Empty State */
+        .empty-orders-white {
+            text-align: center;
+            padding: 4rem 1rem;
+            background: #f9fafb;
+            border-radius: 12px;
+            border: 1px dashed #d1d5db;
+        }
+
+        .empty-icon-white {
+            font-size: 3rem;
+            color: #d1d5db;
+            margin-bottom: 1rem;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .order-header-white { flex-direction: column; align-items: flex-start; gap: 0.5rem; }
+            .order-summary-bar-white { flex-direction: column; align-items: flex-start; }
+            .order-actions-white { width: 100%; justify-content: flex-end; }
+            .col-price, .col-qty { display: none; }
+        }
+    </style>
+    <script id="server-flashes" type="application/json">
+        {{ get_flashed_messages(with_categories=true) | tojson | safe }}
+    </script>
+    <script>
+        (function(){
+            var el = document.getElementById('server-flashes');
+            try {
+                window.__server_flashes = JSON.parse(el ? el.textContent : '[]');
+            } catch (e) {
+                window.__server_flashes = [];
+                console.error('Failed to parse server flashes', e);
+            }
+        })();
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="{{ url_for('static', filename='js/confirm_helper.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/index.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/flash.js') }}"></script>
+</body>
+</html>
+

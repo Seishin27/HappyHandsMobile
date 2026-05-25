@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Happy Hands — Handcrafted Kids' Products</title>
+    <link rel="icon" href="{{ url_for('static', filename='images/favicon.png') }}" type="image/png">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        :root {
+            --navy:   #0b2350;
+            --blue:   #2c5aa0;
+            --light-blue: #2563eb;
+            --teal:   #4fd1c5;
+            --green:  #10b981;
+            --bg:     #f1f5f9;
+            --bg2:    #f8fafc;
+            --text:   #0f172a;
+            --muted:  #64748b;
+            --border: #e2e8f0;
+        }
+
+        html { scroll-behavior: smooth; }
+        body { font-family: 'Inter', sans-serif; color: var(--text); background: var(--bg2); }
+
+        /* ── NAVBAR ──────────────────────────────────────────── */
+        .lp-nav {
+            position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 1rem 3rem;
+            background: rgba(11,35,80,0.95);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid rgba(255,255,255,0.08);
+        }
+        .lp-nav-logo {
+            display: flex; align-items: center; gap: 0.6rem;
+            text-decoration: none;
+        }
+        .lp-nav-logo img { width: 36px; height: 36px; border-radius: 8px; }
+        .lp-nav-logo span {
+            font-size: 1.2rem; font-weight: 800; color: #fff;
+            letter-spacing: -0.02em;
+        }
+        .lp-nav-actions { display: flex; align-items: center; gap: 0.75rem; }
+        .btn-ghost {
+            padding: 0.55rem 1.2rem;
+            border: 1.5px solid rgba(255,255,255,0.3);
+            border-radius: 10px;
+            color: #fff; background: transparent;
+            font-size: 0.9rem; font-weight: 600;
+            text-decoration: none; cursor: pointer;
+            transition: all 0.2s;
+        }
+        .btn-ghost:hover { background: rgba(255,255,255,0.1); border-color: rgba(255,255,255,0.5); }
+        .btn-teal {
+            padding: 0.55rem 1.4rem;
+            border: none; border-radius: 10px;
+            background: var(--teal); color: var(--navy);
+            font-size: 0.9rem; font-weight: 700;
+            text-decoration: none; cursor: pointer;
+            transition: all 0.2s;
+            box-shadow: 0 4px 14px rgba(79,209,197,0.35);
+        }
+        .btn-teal:hover { background: #38b2ac; transform: translateY(-1px); box-shadow: 0 6px 18px rgba(79,209,197,0.4); }
+
+        /* ── HERO ────────────────────────────────────────────── */
+        .hero {
+            min-height: 100vh;
+            background: var(--navy);
+            display: flex; align-items: center; justify-content: center;
+            text-align: center; padding: 7rem 1.5rem 5rem;
+            position: relative; overflow: hidden;
+        }
+        .hero-badge {
+            display: inline-flex; align-items: center; gap: 0.5rem;
+            background: rgba(79,209,197,0.15);
+            border: 1px solid rgba(79,209,197,0.3);
+            border-radius: 50px;
+            padding: 0.4rem 1rem;
+            font-size: 0.8rem; font-weight: 600;
+            color: var(--teal); letter-spacing: 0.05em;
+            text-transform: uppercase; margin-bottom: 1.5rem;
+        }
+        .hero-badge span { width: 6px; height: 6px; border-radius: 50%; background: var(--teal); display: inline-block; }
+        .hero h1 {
+            font-size: clamp(2.5rem, 6vw, 4.5rem);
+            font-weight: 900; color: #fff;
+            line-height: 1.08; letter-spacing: -0.03em;
+            margin-bottom: 1.25rem;
+        }
+        .hero h1 em { font-style: normal; color: var(--teal); }
+        .hero p {
+            font-size: clamp(1rem, 2vw, 1.2rem);
+            color: rgba(255,255,255,0.72);
+            max-width: 520px; margin: 0 auto 2.5rem;
+            line-height: 1.65;
+        }
+        .hero-cta { display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap; }
+        .btn-hero-primary {
+            padding: 0.9rem 2.2rem;
+            background: var(--teal); color: var(--navy);
+            font-weight: 800; font-size: 1rem; border-radius: 14px;
+            text-decoration: none; transition: all 0.2s;
+            box-shadow: 0 6px 20px rgba(79,209,197,0.4);
+        }
+        .btn-hero-primary:hover { background: #38b2ac; transform: translateY(-2px); box-shadow: 0 10px 28px rgba(79,209,197,0.45); }
+        .btn-hero-secondary {
+            padding: 0.9rem 2.2rem;
+            background: rgba(255,255,255,0.1); color: #fff;
+            font-weight: 600; font-size: 1rem; border-radius: 14px;
+            text-decoration: none; border: 1.5px solid rgba(255,255,255,0.25);
+            transition: all 0.2s;
+        }
+        .btn-hero-secondary:hover { background: rgba(255,255,255,0.18); }
+        .hero-scroll {
+            position: absolute; bottom: 2rem; left: 50%; transform: translateX(-50%);
+            display: flex; flex-direction: column; align-items: center; gap: 0.4rem;
+            color: rgba(255,255,255,0.4); font-size: 0.75rem;
+            animation: bounce 2s infinite;
+        }
+        @keyframes bounce { 0%,100%{transform:translateX(-50%) translateY(0)} 50%{transform:translateX(-50%) translateY(6px)} }
+        .hero-content { position: relative; z-index: 1; }
+
+        /* ── FEATURES STRIP ──────────────────────────────────── */
+        .features { background: var(--bg); padding: 5rem 1.5rem; }
+        .section-label {
+            text-align: center; font-size: 0.78rem; font-weight: 700;
+            color: var(--teal); letter-spacing: 0.1em; text-transform: uppercase;
+            margin-bottom: 0.6rem;
+        }
+        .section-title {
+            text-align: center; font-size: clamp(1.6rem, 3.5vw, 2.4rem);
+            font-weight: 800; color: var(--navy);
+            letter-spacing: -0.025em; margin-bottom: 3rem;
+        }
+        .features-grid {
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 1.5rem; max-width: 1000px; margin: 0 auto;
+        }
+        .feature-card {
+            background: #fff; border-radius: 18px;
+            padding: 2rem 1.75rem;
+            border: 1.5px solid var(--border);
+            transition: all 0.25s;
+        }
+        .feature-card:hover {
+            border-color: var(--teal);
+            box-shadow: 0 8px 30px rgba(44,90,160,0.1);
+            transform: translateY(-3px);
+        }
+        .feature-icon {
+            width: 48px; height: 48px; border-radius: 12px;
+            background: rgba(79,209,197,0.12);
+            display: flex; align-items: center; justify-content: center;
+            margin-bottom: 1.1rem;
+            font-size: 1.4rem;
+        }
+        .feature-card h3 { font-size: 1rem; font-weight: 700; color: var(--navy); margin-bottom: 0.45rem; }
+        .feature-card p { font-size: 0.9rem; color: var(--muted); line-height: 1.6; }
+
+        /* ── HOW IT WORKS ────────────────────────────────────── */
+        .how { background: #fff; padding: 5rem 1.5rem; }
+        .steps-grid {
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 2rem; max-width: 900px; margin: 0 auto;
+            position: relative;
+        }
+        .step { text-align: center; }
+        .step-num {
+            width: 52px; height: 52px; border-radius: 50%;
+            background: var(--blue);
+            color: #fff; font-weight: 800; font-size: 1.1rem;
+            display: flex; align-items: center; justify-content: center;
+            margin: 0 auto 1rem;
+            box-shadow: 0 4px 14px rgba(44,90,160,0.3);
+        }
+        .step h3 { font-size: 1rem; font-weight: 700; color: var(--navy); margin-bottom: 0.4rem; }
+        .step p { font-size: 0.88rem; color: var(--muted); line-height: 1.6; }
+
+        /* ── SELLER CTA ──────────────────────────────────────── */
+        .seller-cta {
+            background: var(--navy);
+            padding: 5rem 1.5rem;
+            text-align: center;
+        }
+        .seller-cta h2 {
+            font-size: clamp(1.7rem, 3vw, 2.5rem); font-weight: 800;
+            color: #fff; letter-spacing: -0.025em; margin-bottom: 0.8rem;
+        }
+        .seller-cta p { font-size: 1.05rem; color: rgba(255,255,255,0.72); margin-bottom: 2rem; max-width: 500px; margin-left: auto; margin-right: auto; }
+        .btn-seller {
+            display: inline-block;
+            padding: 0.9rem 2.4rem;
+            background: #fff; color: var(--navy);
+            font-weight: 800; font-size: 1rem; border-radius: 14px;
+            text-decoration: none; transition: all 0.2s;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+        }
+        .btn-seller:hover { background: var(--teal); color: var(--navy); transform: translateY(-2px); }
+
+        /* ── FOOTER ──────────────────────────────────────────── */
+        .lp-footer {
+            background: var(--navy);
+            padding: 2.5rem 3rem;
+            display: flex; align-items: center; justify-content: space-between;
+            flex-wrap: wrap; gap: 1rem;
+        }
+        .lp-footer-logo { display: flex; align-items: center; gap: 0.6rem; text-decoration: none; }
+        .lp-footer-logo img { width: 28px; height: 28px; border-radius: 6px; }
+        .lp-footer-logo span { font-weight: 700; color: #fff; font-size: 1rem; }
+        .lp-footer p { color: rgba(255,255,255,0.4); font-size: 0.82rem; }
+        .lp-footer-links { display: flex; gap: 1.5rem; }
+        .lp-footer-links a { color: rgba(255,255,255,0.5); text-decoration: none; font-size: 0.85rem; transition: color 0.2s; }
+        .lp-footer-links a:hover { color: var(--teal); }
+
+        /* ── RESPONSIVE ──────────────────────────────────────── */
+        @media (max-width: 768px) {
+            .lp-nav { padding: 1rem 1.5rem; }
+            .lp-footer { flex-direction: column; align-items: flex-start; padding: 2rem 1.5rem; }
+        }
+        @media (max-width: 480px) {
+            .lp-nav-logo span { display: none; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- NAVBAR -->
+    <nav class="lp-nav">
+        <a href="/" class="lp-nav-logo">
+            <img src="{{ url_for('static', filename='images/favicon.png') }}" alt="Happy Hands">
+            <span>Happy Hands</span>
+        </a>
+        <div class="lp-nav-actions">
+            <a href="/login" class="btn-ghost">Sign In</a>
+            <a href="/home" class="btn-teal">Shop Now</a>
+        </div>
+    </nav>
+
+    <!-- HERO -->
+    <section class="hero">
+        <div class="hero-content">
+            <div class="hero-badge"><span></span> Philippines' trusted kids' marketplace</div>
+            <h1>Shop <em>Handcrafted</em><br>Kids' Products</h1>
+            <p>Discover unique, locally made toys, clothes, and essentials — curated by verified Filipino sellers just for your little ones.</p>
+            <div class="hero-cta">
+                <a href="/home" class="btn-hero-primary">Shop Now</a>
+                <a href="/login" class="btn-hero-secondary">Sign In</a>
+            </div>
+        </div>
+        <div class="hero-scroll">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+            scroll
+        </div>
+    </section>
+
+    <!-- FEATURES -->
+    <section class="features">
+        <p class="section-label">Why Happy Hands</p>
+        <h2 class="section-title">Everything you need, made with love</h2>
+        <div class="features-grid">
+            <div class="feature-card">
+                <div class="feature-icon">🚚</div>
+                <h3>Fast Delivery</h3>
+                <p>Your orders are dispatched quickly with real-time rider tracking so you always know where your package is.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">✅</div>
+                <h3>Verified Sellers</h3>
+                <p>Every seller on Happy Hands is verified with a valid business permit, so you can shop with confidence.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">🔒</div>
+                <h3>Secure Checkout</h3>
+                <p>Your payment and personal information are protected with industry-standard security measures.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- HOW IT WORKS -->
+    <section class="how">
+        <p class="section-label">Simple Process</p>
+        <h2 class="section-title">How it works</h2>
+        <div class="steps-grid">
+            <div class="step">
+                <div class="step-num">1</div>
+                <h3>Browse</h3>
+                <p>Explore hundreds of handcrafted kids' products across toys, clothes, furniture, and more.</p>
+            </div>
+            <div class="step">
+                <div class="step-num">2</div>
+                <h3>Add to Cart</h3>
+                <p>Pick your favourites, choose quantities, and head to checkout in just a few taps.</p>
+            </div>
+            <div class="step">
+                <div class="step-num">3</div>
+                <h3>Get Delivered</h3>
+                <p>Track your rider live on the map and receive your order right at your door.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- SELLER CTA -->
+    <section class="seller-cta">
+        <h2>Are you a seller?</h2>
+        <p>Join Happy Hands and start selling your handcrafted products to thousands of Filipino families today.</p>
+        <a href="/seller_login" class="btn-seller">Start Selling</a>
+    </section>
+
+    <!-- FOOTER -->
+    <footer class="lp-footer">
+        <a href="/" class="lp-footer-logo">
+            <img src="{{ url_for('static', filename='images/favicon.png') }}" alt="Happy Hands">
+            <span>Happy Hands</span>
+        </a>
+        <p>&copy; {{ 2025 }} Happy Hands. All rights reserved.</p>
+        <div class="lp-footer-links">
+            <a href="/about">About</a>
+            <a href="/login">Sign In</a>
+            <a href="/home">Shop</a>
+        </div>
+    </footer>
+
+</body>
+</html>

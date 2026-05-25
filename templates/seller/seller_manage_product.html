@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Manage Products - Seller</title>
+  <link rel="icon" href="{{ url_for('static', filename='images/favicon.png') }}?v={{ range(1,9999)|random }}" type="image/png">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}?v=manage-product">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+  <header>
+    <nav class="navbar">
+      <div class="logo">
+        <a href="/seller-dashboard">
+          <span class="logo-icon">🏪</span>
+          <span class="logo-text">Seller Dashboard</span>
+        </a>
+      </div>
+      <div class="nav-center">
+        <a href="/seller-dashboard" class="nav-link">Dashboard</a>
+        <a href="/seller/orders" class="nav-link">Orders</a>
+        <a href="/seller/add-product" class="nav-link">Add Product</a>
+        <a href="/seller/manage-product" class="nav-link active">Manage Products</a>
+      </div>
+      <div class="nav-actions">
+        <div class="user-dropdown">
+          <button class="action-btn account-btn dropdown-toggle" aria-label="Account">
+            <i class="fas fa-store"></i>
+            <span>{{ seller.name if seller else 'Seller' }}</span>
+            <i class="fas fa-chevron-down dropdown-arrow"></i>
+          </button>
+          <div class="dropdown-menu" id="userDropdown">
+            <div class="dropdown-header">
+              <span class="user-name">{{ seller.name if seller else 'Seller' }}</span>
+            </div>
+            <div class="dropdown-divider"></div>
+            <a href="/seller-dashboard" class="dropdown-item"><i class="fas fa-tachometer-alt"></i> Dashboard</a>
+            <a href="/seller/orders" class="dropdown-item"><i class="fas fa-shopping-bag"></i> Orders</a>
+            <div class="dropdown-divider"></div>
+            <a href="/seller-logout" class="dropdown-item"><i class="fas fa-sign-out-alt"></i> Logout</a>
+          </div>
+        </div>
+      </div>
+    </nav>
+  </header>
+
+  <main class="container" style="max-width:980px; margin:20px auto;">
+    <section id="manage-product">
+      <style>
+        #manage-product { color:#0f1724; font-family: Inter, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial; }
+        #manage-product .title { text-align:center; font-weight:700; color:#2c5aa0; margin:0 0 1rem 0; font-size:1.25rem; }
+        #manage-product table { width:100%; border-collapse:collapse; margin-top:1rem; }
+        #manage-product th, #manage-product td { padding:12px 15px; border:1px solid #e6eef8; text-align:left; }
+        #manage-product th { background:#f9fafb; font-weight:600; color:#111827; }
+        #manage-product tr { transition: background-color .15s ease; }
+        #manage-product tr:hover { background-color:#f1f5f9; }
+        #manage-product .btn { padding:8px 12px; border-radius:6px; font-size:.9rem; cursor:pointer; }
+        #manage-product .btn-edit { background:#2563eb; color:#fff; border:none; }
+        #manage-product .btn-delete { background:#ef4444; color:#fff; border:none; }
+        #manage-product .btn-edit:hover { background:#3b82f6; }
+        #manage-product .btn-delete:hover { background:#dc2626; }
+        .table-responsive { overflow-x:auto; }
+      </style>
+
+      <h2 class="title">Manage Your Products</h2>
+      <div class="table-responsive">
+        <table>
+          <thead>
+            <tr>
+              <th class="col-id">Product ID</th>
+              <th class="col-name">Name</th>
+              <th class="col-price">Price</th>
+              <th class="col-actions">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% if seller_products %}
+              {% for p in seller_products %}
+              {% set image_keys = ['image_gallery','image_list','images','image_urls','image_path','image','main_image','imageurl','image0','image1','image2','image3'] %}
+              {% set img_ns = namespace(items=[]) %}
+              {% for key in image_keys %}
+                {% if key in p %}
+                  {% set raw_val = p[key] %}
+                  {% if raw_val %}
+                    {% if raw_val is string %}
+                      {% for part in raw_val.split(',') %}
+                        {% set trimmed = part|trim %}
+                        {% if trimmed %}
+                          {% set img_ns.items = img_ns.items + [trimmed] %}
+                        {% endif %}
+                      {% endfor %}
+                    {% elif raw_val is iterable %}
+                      {% for part in raw_val %}
+                        {% if part %}
+                          {% set img_ns.items = img_ns.items + [part] %}
+                        {% endif %}
+                      {% endfor %}
+                    {% endif %}
+                  {% endif %}
+                {% endif %}
+              {% endfor %}
+              {% set product_images = img_ns.items[:4] %}
+              {% set product_description = p.description or p.product_description or p.details or '' %}
+              {% set price_value = (p.price|float if p.price is not none else '') %}
+              {% set stock_value = p.stock if p.stock is not none else (p.quantity if p.quantity is not none else '') %}
+              <tr data-id="{{ p.productID or p.productId or p.id }}" data-name="{{ (p.name or p.title or p.product_name)|string }}" data-price="{{ price_value }}" data-stock="{{ stock_value }}" data-images='{{ product_images|tojson|safe }}' data-description="{{ product_description|e }}">
+                <td>{{ p.productID or p.productId or p.id }}</td>
+                <td class="prod-name">{{ p.name or p.title or p.product_name }}</td>
+                <td class="prod-price">
+                  {% if p.price is not none %}
+                    ₱{{ ('%.2f'|format(p.price|float)) }}
+                  {% else %}
+                    -
+                  {% endif %}
+                </td>
+                <td>
+                  <button class="btn btn-edit" data-id="{{ p.productID or p.productId or p.id }}">Edit</button>
+                  <button class="btn btn-delete" data-id="{{ p.productID or p.productId or p.id }}">Delete</button>
+                </td>
+              </tr>
+              {% endfor %}
+            {% else %}
+              <tr><td colspan="4" class="no-data">No products yet.</td></tr>
+            {% endif %}
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <script src="{{ url_for('static', filename='js/seller_dashboard.js') }}" defer></script>
+</body>
+</html>

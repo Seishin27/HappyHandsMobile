@@ -1,0 +1,277 @@
+<div id="checkoutModal" class="modal">
+  <div class="modal-content checkout-layout">
+    <!-- Saved addresses sidebar -->
+    <aside class="checkout-sidebar">
+      <div class="checkout-sidebar-header">
+        <h3>Saved Addresses</h3>
+        <button type="button" id="chk_openSaveAddress" class="btn-small">Save Address</button>
+      </div>
+      <div id="chk_savedAddressesList" class="saved-addresses-list">
+        <!-- Populated via JS using /api/user/address -->
+        <p class="saved-empty">No saved address yet.</p>
+      </div>
+    </aside>
+
+    <!-- Main checkout content -->
+    <div class="checkout-main">
+      <div class="modal-body">
+        <form id="checkoutFormAjax">
+          <div class="address-section">
+            <h3>Delivery Address</h3>
+            <div class="form-group">
+              <label for="chk_region">Region</label>
+              <select name="region" id="chk_region" required class="form-control">
+                <option value="">Select Region</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="chk_province">Province</label>
+              <select name="province" id="chk_province" required class="form-control">
+                <option value="">Select Province</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="chk_city">City / Municipality</label>
+              <select name="city" id="chk_city" required class="form-control">
+                <option value="">Select City/Municipality</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="chk_barangay">Barangay</label>
+              <select name="barangay" id="chk_barangay" required class="form-control">
+                <option value="">Select Barangay</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="chk_home_address">Home Address / Landmark</label>
+              <input type="text" name="home_address" id="chk_home_address" required class="form-control" />
+            </div>
+            <div class="form-group">
+              <label for="chk_contact_number">Contact Number</label>
+              <input type="text" name="contact_number" id="chk_contact_number" required class="form-control" />
+            </div>
+          </div>
+
+          <div class="payment-section">
+            <h3>Payment Method</h3>
+            <div class="form-group">
+              <select name="payment_method" id="chk_payment_method" class="form-control">
+                <option value="cash_on_delivery">Cash on Delivery</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="order-summary" id="chk_orderSummary">
+            <!-- Order summary (product or cart) is injected via JS -->
+          </div>
+
+          <div class="modal-actions">
+            <button type="button" id="chk_cancel" class="btn-cancel">Cancel</button>
+            <button type="submit" id="chk_submit" class="btn-checkout">Place Order</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Save Address popup modal -->
+<div id="saveAddressModal" class="modal">
+  <div class="modal-content save-address-content">
+    <div class="modal-header">
+      <h2>Save Address</h2>
+      <button type="button" class="close" id="sa_close">&times;</button>
+    </div>
+    <div class="modal-body">
+      <form id="saveAddressForm">
+        <div class="form-group">
+          <label for="sa_region">Region</label>
+          <input type="text" id="sa_region" name="region" required class="form-control" />
+        </div>
+        <div class="form-group">
+          <label for="sa_province">Province</label>
+          <input type="text" id="sa_province" name="province" required class="form-control" />
+        </div>
+        <div class="form-group">
+          <label for="sa_city">City / Municipality</label>
+          <input type="text" id="sa_city" name="city" required class="form-control" />
+        </div>
+        <div class="form-group">
+          <label for="sa_barangay">Barangay</label>
+          <input type="text" id="sa_barangay" name="barangay" required class="form-control" />
+        </div>
+        <div class="form-group">
+          <label for="sa_home_address">Home Address / Landmark</label>
+          <input type="text" id="sa_home_address" name="home_address" required class="form-control" />
+        </div>
+        <div class="form-group">
+          <label for="sa_contact_number">Contact Number</label>
+          <input type="text" id="sa_contact_number" name="contact_number" required class="form-control" />
+        </div>
+        <div class="modal-actions">
+          <button type="button" id="sa_cancel" class="btn-cancel">Cancel</button>
+          <button type="submit" id="sa_save" class="btn-checkout">Save</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<style>
+  #checkoutModal {
+    display:none;
+    position:fixed;
+    z-index:1000;
+    left:0;
+    top:0;
+    width:100%;
+    height:100%;
+    background:rgba(0,0,0,0.5);
+    align-items:center;
+    justify-content:center;
+    padding:16px;
+  }
+  #checkoutModal .checkout-layout {
+    background:#fff;
+    margin:0;
+    padding:0;
+    border-radius:12px;
+    width:100%;
+    max-width:900px;
+    max-height:90vh;
+    display:flex;
+    overflow:auto;
+    box-shadow:0 10px 30px rgba(0,0,0,0.15);
+  }
+  .checkout-sidebar {
+    flex:0 0 260px;
+    border-right:1px solid #e5e7eb;
+    padding:16px;
+    background:#f9fafb;
+  }
+  .checkout-sidebar-header {
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-bottom:8px;
+  }
+  .checkout-sidebar-header h3 {
+    margin:0;
+    font-size:1rem;
+    color:#1f2937;
+  }
+  .btn-small {
+    padding:6px 10px;
+    font-size:0.8rem;
+    border-radius:999px;
+    border:1px solid #d1d5db;
+    background:#fff;
+    cursor:pointer;
+  }
+  .saved-addresses-list {
+    margin-top:8px;
+    font-size:0.85rem;
+    color:#4b5563;
+  }
+  .saved-empty {
+    margin:0;
+    color:#6b7280;
+  }
+  .checkout-main {
+    flex:1;
+    display:flex;
+    flex-direction:column;
+  }
+  #checkoutModal .modal-header {
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    padding:12px 16px;
+    background:linear-gradient(135deg,#2c5aa0,#1e3a5f);
+    color:#fff;
+  }
+  #checkoutModal .modal-body {
+    padding:18px;
+  }
+  .address-section,
+  .payment-section,
+  .order-summary {
+    margin-bottom:16px;
+    padding:12px;
+    background:#f9fafb;
+    border-radius:8px;
+  }
+  .address-section h3,
+  .payment-section h3,
+  .order-summary h3 {
+    margin:0 0 10px 0;
+    font-size:1rem;
+    color:#1f2937;
+  }
+  .form-group {
+    margin-bottom:10px;
+  }
+  .form-group label {
+    display:block;
+    margin-bottom:4px;
+    font-weight:500;
+    font-size:0.9rem;
+  }
+  .form-control {
+    width:100%;
+    padding:8px 10px;
+    border:1px solid #e1e5e9;
+    border-radius:6px;
+    font-size:0.9rem;
+  }
+  .modal-actions {
+    display:flex;
+    gap:10px;
+    justify-content:flex-end;
+    margin-top:14px;
+  }
+  .btn-cancel {
+    padding:8px 14px;
+    background:#6c757d;
+    color:#fff;
+    border-radius:8px;
+    border:none;
+    cursor:pointer;
+  }
+  .btn-checkout {
+    padding:8px 14px;
+    background:#2c5aa0;
+    color:#fff;
+    border-radius:8px;
+    border:none;
+    cursor:pointer;
+  }
+
+  /* Slightly smaller buttons for the main checkout actions */
+  #checkoutModal #chk_cancel,
+  #checkoutModal #chk_submit {
+    padding:6px 10px;
+    font-size:0.85rem;
+  }
+
+  /* Save address modal */
+  #saveAddressModal {
+    display:none;
+    position:fixed;
+    z-index:1100;
+    left:0;
+    top:0;
+    width:100%;
+    height:100%;
+    background:rgba(0,0,0,0.5);
+  }
+  #saveAddressModal .save-address-content {
+    background:#fff;
+    margin:6% auto;
+    padding:0;
+    border-radius:12px;
+    width:90%;
+    max-width:480px;
+    box-shadow:0 10px 30px rgba(0,0,0,0.2);
+  }
+</style>

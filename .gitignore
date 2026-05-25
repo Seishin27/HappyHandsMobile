@@ -1,0 +1,22 @@
+# Environment files (keep .env.example tracked, ignore real .env)
+.env
+.env.local
+.env.*.local
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+.venv_broken/
+.pytest_cache/
+
+# IDE / OS
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+
+# Uploads & local artifacts
+uploads/
+*.log

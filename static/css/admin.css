@@ -1,0 +1,956 @@
+.admin-body {
+    margin: 0;
+    padding: 0;
+    font-family: 'Segoe UI', Arial, sans-serif;
+    background-color: #f8f9fa;
+    display: flex;
+    min-height: 100vh;
+    overflow-x: hidden;
+}
+
+:root {
+    --admin-bg: #f8f9fa;
+    --admin-surface: #ffffff;
+    --admin-border: #e2e8f0;
+    --admin-primary: #2c5aa0;
+    --admin-primary-soft: #e6f0fa;
+    --admin-primary-strong: #1e4072;
+    --admin-text-main: #0f172a;
+    --admin-text-muted: #64748b;
+}
+
+/* Sidebar Styles */
+.admin-sidebar {
+    width: 280px;
+    background: var(--admin-surface);
+    border-right: 1px solid var(--admin-border);
+    display: flex;
+    flex-direction: column;
+    position: fixed;
+    left: 0;
+    top: 0;
+    height: 100vh;
+    z-index: 1000;
+    box-shadow: 2px 0 18px rgba(15, 23, 42, 0.08);
+    overflow: hidden;
+}
+
+.sidebar-header {
+    padding: 24px 20px;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.logo-container {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.logo-icon {
+    width: 40px;
+    height: 40px;
+    background: var(--admin-primary);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 18px;
+}
+
+.logo-text {
+    font-size: 24px;
+    font-weight: 800;
+    color: var(--admin-primary);
+}
+
+.sidebar-content {
+    flex: 1;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+}
+
+.store-info {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 16px;
+    background: #f7fafc;
+    border-radius: 12px;
+    margin-bottom: 32px;
+}
+
+.store-avatar {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 20px;
+}
+
+.store-details h4 {
+    margin: 0;
+    font-size: 16px;
+    font-weight: 600;
+    color: #2d3748;
+}
+
+/* Navigation Styles */
+.sidebar-nav {
+    flex: 1;
+}
+
+.nav-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.nav-item {
+    margin-bottom: 8px;
+}
+
+.nav-link {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 14px;
+    color: var(--admin-text-muted);
+    text-decoration: none;
+    border-radius: 999px;
+    transition: background-color 0.18s ease, color 0.18s ease, transform 0.18s ease, box-shadow 0.18s ease;
+    font-weight: 500;
+}
+
+.nav-link:hover {
+    background-color: var(--admin-primary-soft);
+    color: var(--admin-text-main);
+    transform: translateX(2px);
+}
+
+.admin-sidebar .nav-item.active > .nav-link {
+    color: #ffffff;
+    background: linear-gradient(120deg, var(--admin-primary), var(--admin-primary-strong));
+    box-shadow: 0 4px 12px rgba(44, 90, 160, 0.3);
+}
+
+.nav-link i {
+    font-size: 18px;
+    width: 20px;
+    text-align: center;
+}
+
+/* Section labels in the sidebar (Overview, Store Management, etc.) */
+.nav-section-label {
+    margin: 18px 4px 6px;
+    padding: 0 8px;
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #a0aec0;
+}
+
+/* Main Content Styles */
+.admin-main {
+    flex: 1;
+    margin-left: 280px;
+    display: flex;
+    flex-direction: column;
+    background: var(--admin-bg);
+    min-height: 100vh;
+}
+
+.admin-header {
+    background: rgba(255, 255, 255, 0.9);
+    border-bottom: 1px solid #e2e8f0;
+    padding: 0;
+    position: sticky;
+    top: 0;
+    z-index: 800;
+    backdrop-filter: blur(12px);
+    box-shadow: 0 12px 30px rgba(15, 23, 42, 0.06);
+}
+
+.header-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 24px 32px;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.page-title {
+    font-size: 28px;
+    font-weight: 600;
+    color: var(--admin-text-main);
+    margin: 0;
+}
+
+/* Page title group with small role badge next to it */
+.admin-dashboard .page-title-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.title-accent {
+    color: var(--admin-primary);
+}
+
+/* Role badge shared across admin dashboard pages */
+.role-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 10px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    background: rgba(102, 126, 234, 0.08);
+    color: #4c1d95;
+    border: 1px solid rgba(129, 140, 248, 0.6);
+}
+
+.role-badge-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 999px;
+    background: currentColor;
+    box-shadow: 0 0 0 3px rgba(129, 140, 248, 0.35);
+}
+
+.role-badge--admin {
+    background: rgba(99, 102, 241, 0.08);
+    color: #4c1d95;
+    border-color: rgba(129, 140, 248, 0.7);
+}
+
+.header-actions {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.user-info {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.user-greeting {
+    font-size: 16px;
+    font-weight: 500;
+    color: #4a5568;
+}
+
+.user-avatar {
+    width: 40px;
+    height: 40px;
+    background: linear-gradient(135deg, #4fd1c7 0%, #06b6d4 100%);
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 16px;
+}
+
+/* Dashboard Content */
+.dashboard-content {
+    flex: 1;
+    padding: 0;
+}
+
+/* Stats Grid */
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 24px;
+    margin-bottom: 32px;
+}
+
+.stat-card {
+    background: var(--admin-surface);
+    padding: 24px;
+    border-radius: 16px;
+    border: 1px solid var(--admin-border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    transition: all 0.2s ease;
+}
+
+.stat-card:hover {
+    box-shadow: 0 16px 45px rgba(15, 23, 42, 0.16);
+    transform: translateY(-2px);
+}
+
+.stat-content {
+    display: flex;
+    flex-direction: column;
+}
+
+.stat-number {
+    font-size: 32px;
+    font-weight: 700;
+    color: var(--admin-text-main);
+    margin-bottom: 4px;
+}
+
+.stat-label {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--admin-text-muted);
+}
+
+.stat-icon {
+    width: 56px;
+    height: 56px;
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    color: white;
+}
+
+.stat-card:nth-child(1) .stat-icon {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.stat-card:nth-child(2) .stat-icon {
+    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+}
+
+.stat-card:nth-child(3) .stat-icon {
+    background: linear-gradient(135deg, #4ecdc4 0%, #44a08d 100%);
+}
+
+.stat-card:nth-child(4) .stat-icon {
+    background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);
+    color: #8b5a2b;
+}
+
+/* Charts Section */
+.charts-section {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 24px;
+}
+
+.chart-container {
+    background: var(--admin-surface);
+    border-radius: 16px;
+    border: 1px solid var(--admin-border);
+    padding: 24px;
+}
+
+.chart-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+}
+
+.chart-header h3 {
+    font-size: 20px;
+    font-weight: 600;
+    color: var(--admin-text-main);
+    margin: 0;
+}
+
+.chart-info {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 4px;
+}
+
+.chart-date {
+    font-size: 14px;
+    font-weight: 500;
+    color: #4a5568;
+}
+
+.chart-orders {
+    font-size: 12px;
+    color: #64748b;
+}
+
+.chart-wrapper {
+    height: 300px;
+    position: relative;
+}
+
+/* Lightweight chart overlays for loading/empty states */
+.chart-state {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.95rem;
+    color: #94a3b8;
+    background: rgba(255, 255, 255, 0.94);
+    border-radius: 12px;
+    text-align: center;
+    padding: 12px;
+}
+
+.chart-state.hidden {
+    display: none;
+}
+
+/* General layout for each admin tab section */
+.tab-content {
+    padding: 24px 32px 32px;
+}
+
+@media (max-width: 900px) {
+    .tab-content {
+        padding: 16px 16px 24px;
+    }
+}
+
+/* Generic card wrapper for admin panels */
+.admin-main .panel {
+    background: var(--admin-surface);
+    border-radius: 16px;
+    border: 1px solid var(--admin-border);
+    box-shadow: 0 18px 45px rgba(15, 23, 42, 0.08);
+    padding: 24px 24px 20px;
+}
+
+.admin-main .panel > h2,
+.admin-main .panel > h3 {
+    margin-top: 0;
+    margin-bottom: 16px;
+    font-weight: 600;
+    color: var(--admin-text-main);
+}
+
+/* Consistent table styling across admin dashboard */
+.data-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 8px;
+}
+
+.data-table thead tr {
+    background: #f1f5f9;
+}
+
+.data-table th,
+.data-table td {
+    padding: 12px 14px;
+    font-size: 14px;
+    text-align: left;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.data-table th {
+    font-weight: 600;
+    color: var(--admin-text-muted);
+    text-transform: uppercase;
+    font-size: 11px;
+    letter-spacing: 0.04em;
+}
+
+.data-table tbody tr:hover {
+    background: #f9fafb;
+}
+
+.data-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+/* VAT panel tweaks to match cards */
+#vatPanel {
+    margin-top: 24px;
+}
+
+@media (max-width: 900px) {
+    .header-content {
+        padding: 16px 20px;
+    }
+}
+
+/* Scoped baby-store theme + layout for Stores / Approved Stores only.
+   - Does NOT change dashboard/nav layout.
+   - Centers the stores card inside the admin content area and nudges it
+     a little to the right so it doesn't sit right next to the sidebar. */
+
+section#stores,
+section#stores.tab-content,
+section#stores.tab-content.active,
+section#approve-store,
+#stores {
+    --baby-primary: #2c5aa0;    /* brand blue */
+    --baby-accent: #ffd6cc;     /* soft baby-pink */
+    --baby-accent-2: #4fd1c5;   /* mint accent */
+    max-width: 980px;            /* card width */
+    width: 100%;
+    margin: 2.5rem auto;         /* center horizontally in the admin content area */
+    padding: 1.25rem 1.5rem;
+    background: linear-gradient(180deg, rgba(255,214,204,0.14), rgba(255,255,255,0.6)); /* soft baby tone */
+    border-radius: 12px;
+    box-shadow: 0 10px 30px rgba(16,24,40,0.06);
+    box-sizing: border-box;
+    color: #1f2937;
+    /* small rightward nudge so the card doesn't visually sit flush next to the sidebar */
+    transform: translateX(24px);
+}
+
+/* heading and text */
+section#stores h2,
+#stores h2,
+section#approve-store h2 {
+    text-align: center;
+    color: var(--baby-primary);
+    margin: 0 0 1rem 0;
+    font-weight: 700;
+}
+
+/* table/layout inside the card */
+section#stores table,
+#stores table,
+section#approve-store table {
+    width: 100%;
+    border-collapse: collapse;
+}
+section#stores th,
+section#stores td,
+#stores th,
+#stores td,
+section#approve-store th,
+section#approve-store td {
+    text-align: left;
+    padding: 8px 10px;
+    vertical-align: middle;
+    color: #475569; /* muted dark */
+}
+
+/* link/button styles inside these sections (keeps theme minimal) */
+section#stores a,
+#stores a,
+section#approve-store a {
+    color: var(--baby-accent-2);
+    text-decoration: underline;
+}
+
+/* remove the nudge on small screens so content fits nicely */
+@media (max-width: 900px) {
+    section#stores,
+    #stores,
+    section#approve-store {
+        transform: none;
+        margin: 1rem;
+        padding: 1rem;
+        max-width: calc(100% - 2rem);
+    }
+}
+
+/* if you prefer a larger gap from the sidebar on wide screens, increase this translateX value */
+@media (min-width: 1400px) {
+    section#stores,
+    #stores,
+    section#approve-store {
+        transform: translateX(36px);
+    }
+}
+
+/* ===== Featured Requests / Riders / Approve Riders UI parity =====
+   Reuse the approve-store card layout so these admin sections look consistent
+   and centered. Keeps table contents and actions intact; only the container
+   presentation and heading alignment is standardized. */
+section#featured-requests,
+section#riders,
+section#approve-riders,
+section#featured-requests.tab-content,
+section#riders.tab-content,
+section#approve-riders.tab-content {
+    max-width: 980px;
+    width: 100%;
+    margin: 2.5rem auto;
+    padding: 1.25rem 1.5rem;
+    background: linear-gradient(180deg, rgba(255,255,255,0.98), rgba(247,249,252,0.98));
+    border-radius: 12px;
+    box-shadow: 0 10px 30px rgba(16,24,40,0.06);
+    box-sizing: border-box;
+    color: #1f2937;
+    transform: translateX(24px);
+}
+
+/* headings: centered, bold, match approve-store color */
+section#featured-requests h2,
+section#riders h2,
+section#approve-riders h2 {
+    text-align: center;
+    color: var(--baby-primary, #2c5aa0);
+    margin: 0 0 1rem 0;
+    font-weight: 700;
+}
+
+/* tables inside these sections should match the approve-store table style */
+section#featured-requests table,
+section#riders table,
+section#approve-riders table {
+    width: 100%;
+    border-collapse: collapse;
+}
+section#featured-requests th,
+section#featured-requests td,
+section#riders th,
+section#riders td,
+section#approve-riders th,
+section#approve-riders td {
+    text-align: left;
+    padding: 8px 10px;
+    vertical-align: middle;
+    color: #475569;
+}
+
+/* link/button styles inside these sections keep the accent color */
+section#featured-requests a,
+section#riders a,
+section#approve-riders a {
+    color: var(--baby-accent-2, #4fd1c5);
+    text-decoration: underline;
+}
+
+/* responsive: remove the rightward nudge on small screens */
+@media (max-width: 900px) {
+    section#featured-requests,
+    section#riders,
+    section#approve-riders {
+        transform: none;
+        margin: 1rem;
+        padding: 1rem;
+        max-width: calc(100% - 2rem);
+    }
+}
+
+/* ===== Manage Categories (Admin) ===== */
+section#manage-categories,
+section#manage-categories.tab-content,
+section#manage-categories.tab-content.active {
+    max-width: 980px;
+    width: 100%;
+    margin: 2.5rem auto;
+    padding: 1.25rem 1.5rem;
+    background: linear-gradient(180deg, rgba(240,246,255,0.5), rgba(255,255,255,0.7));
+    border-radius: 12px;
+    box-shadow: 0 10px 30px rgba(16,24,40,0.06);
+    box-sizing: border-box;
+    color: #1f2937;
+    transform: translateX(24px);
+}
+
+section#manage-categories h2,
+#manage-categories h2 {
+    text-align: center;
+    color: #2c5aa0;
+    margin: 0 0 1rem 0;
+    font-weight: 700;
+}
+
+/* inner panel wrapper (optional in template) */
+section#manage-categories .panel {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 1rem;
+}
+
+/* create bar */
+#manage-categories #newCategoryName {
+    max-width: 520px;
+    border: 1px solid #e6e6e6;
+    border-radius: 8px;
+    font-size: 0.95rem;
+}
+
+#manage-categories #createCategoryBtn.btn {
+    background: #2c5aa0;
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+#manage-categories #createCategoryBtn.btn:hover {
+    background: #1e3f73;
+}
+
+/* list */
+#adminCategoriesList {
+    margin-top: .5rem;
+}
+
+#adminCategoriesList li {
+    border: 1px solid #eef2f7 !important;
+    background: #fff !important;
+    border-radius: 10px !important;
+    padding: .65rem .8rem !important;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    transition: box-shadow .15s ease, transform .15s ease;
+}
+
+#adminCategoriesList li:hover {
+    box-shadow: 0 6px 18px rgba(0,0,0,0.06);
+    transform: translateY(-1px);
+}
+
+#adminCategoriesList .muted {
+    color: #6b7280;
+}
+
+/* === Remove black stroke / outline from profile dropdown button === */
+.account-btn,
+#ActBtn,
+.dropdown-toggle,
+.user-dropdown button {
+  outline: none !important;
+  border: none !important;
+  box-shadow: none !important;
+  background: none !important;
+  color: inherit !important;
+}
+
+/* Remove black stroke around the profile SVG icon */
+.user-dropdown svg {
+  stroke: #555; /* change to your desired color, e.g., theme blue */
+}
+
+/* When focused (clicked), stay clean */
+.account-btn:focus,
+#ActBtn:focus,
+.dropdown-toggle:focus,
+.user-dropdown button:focus {
+  outline: none !important;
+  box-shadow: none !important;
+  border: none !important;
+}
+
+/* Optional: if your image/avatar gets a dark border */
+.user-dropdown img {
+  border: none !important;
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+@media (max-width: 900px) {
+    section#manage-categories,
+    section#manage-categories.tab-content,
+    section#manage-categories.tab-content.active {
+        transform: none;
+        margin: 1rem;
+        padding: 1rem;
+        max-width: calc(100% - 2rem);
+    }
+}
+
+@media (max-width: 960px) {
+    .admin-sidebar {
+        position: static;
+        width: 100%;
+        height: auto;
+
+/* -----------------------------------------
+   Admin dashboard 2025 refresh
+   ----------------------------------------- */
+.admin-body {
+    background: radial-gradient(circle at 10% -10%, #f8f5ff 0%, #eef2ff 42%, #ffffff 88%);
+    color: var(--admin-text-main);
+}
+
+.admin-main {
+    padding: 32px clamp(16px, 4vw, 48px);
+    position: relative;
+}
+
+.admin-main::after {
+    content: "";
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    background: radial-gradient(circle at 80% 0%, rgba(59, 130, 246, 0.12), transparent 55%);
+    z-index: -1;
+}
+
+.admin-main .tab-section,
+.admin-main .tab-content {
+    width: 100%;
+    max-width: 1240px;
+    margin: 0 auto 32px;
+    padding: clamp(20px, 3vw, 36px);
+    border-radius: 28px;
+    background: rgba(255, 255, 255, 0.94);
+    border: 1px solid rgba(148, 163, 184, 0.25);
+    box-shadow: 0 25px 65px rgba(15, 23, 42, 0.08);
+}
+
+.stats-grid {
+    gap: clamp(16px, 3vw, 24px);
+}
+
+.stat-card {
+    border-radius: 26px;
+    border: none;
+    background: linear-gradient(135deg, rgba(59, 130, 246, 0.18), rgba(14, 165, 233, 0.2));
+    box-shadow: 0 25px 60px rgba(15, 23, 42, 0.16);
+    position: relative;
+    overflow: hidden;
+    backdrop-filter: blur(6px);
+}
+
+.stat-card::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle at 20% 20%, rgba(255, 255, 255, 0.65), transparent 55%);
+    opacity: 0.8;
+}
+
+.stat-card > * {
+    position: relative;
+    z-index: 1;
+}
+
+.stat-icon {
+    background: rgba(15, 23, 42, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.2);
+}
+
+.admin-main .panel {
+    background: rgba(255, 255, 255, 0.92);
+    border-radius: 24px;
+    border: 1px solid rgba(148, 163, 184, 0.3);
+    box-shadow: 0 30px 60px rgba(15, 23, 42, 0.12);
+    padding: clamp(20px, 3vw, 32px);
+}
+
+.data-table thead tr {
+    background: linear-gradient(90deg, rgba(248, 250, 252, 0.9), rgba(241, 245, 249, 0.9));
+}
+
+.data-table th,
+.data-table td {
+    border-bottom: 1px solid rgba(226, 232, 240, 0.7);
+}
+
+.action-btn,
+.btn {
+    border-radius: 12px;
+    border: 1px solid rgba(148, 163, 184, 0.35);
+    background: #ffffff;
+    box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
+}
+
+.panel-card,
+.orders-panel,
+.add-product-panel,
+.manage-product-panel {
+    border-radius: 26px;
+    border: 1px solid rgba(203, 213, 225, 0.45);
+    box-shadow: 0 25px 65px rgba(15, 23, 42, 0.1);
+    background: rgba(255, 255, 255, 0.96);
+}
+        box-shadow: 0 4px 16px rgba(15, 23, 42, 0.08);
+    }
+
+    .admin-main {
+        margin-left: 0;
+    }
+
+    .sidebar-content {
+        padding: 16px;
+    }
+}
+/* Action Stack */
+.action-stack { display: flex; flex-direction: column; gap: 8px; }
+.action-stack button { width: 100%; padding: 8px 12px; border: none; border-radius: 6px; cursor: pointer; font-weight: 500; font-size: 0.85rem; transition: all 0.2s; }
+/* Button Colors */
+.btn-approve { background-color: #dcfce7; color: #166534; }
+.btn-approve:hover { background-color: #bbf7d0; }
+.btn-reject { background-color: #fee2e2; color: #991b1b; }
+.btn-reject:hover { background-color: #fecaca; }
+.btn-view-permit { background-color: #e0f2fe; color: #075985; }
+.btn-view-permit:hover { background-color: #bae6fd; }
+/* Permit Modal */
+.permit-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.7); z-index: 2000; justify-content: center; align-items: center; opacity: 0; transition: opacity 0.3s ease; }
+.permit-modal.active { display: flex; opacity: 1; }
+.permit-modal-content { background: white; padding: 20px; border-radius: 12px; max-width: 90%; max-height: 90vh; position: relative; display: flex; flex-direction: column; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04); }
+.permit-modal-close { position: absolute; top: -15px; right: -15px; background: white; border: none; border-radius: 50%; width: 32px; height: 32px; cursor: pointer; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); display: flex; align-items: center; justify-content: center; font-size: 18px; color: #64748b; }
+.permit-modal-close:hover { color: #ef4444; }
+.permit-image-container { overflow: auto; max-height: calc(90vh - 40px); display: flex; justify-content: center; align-items: center; }
+.permit-document { width: min(900px, 90vw); height: min(700px, 80vh); border: none; }
+
+.btn-view-details { background-color: #f3f4f6; color: #1f2937; }
+.btn-view-details:hover { background-color: #e5e7eb; }
+.detail-row { display: flex; flex-direction: column; border-bottom: 1px solid #f1f5f9; padding-bottom: 8px; }
+.detail-row:last-child { border-bottom: none; }
+.detail-label { font-size: 0.8rem; color: #64748b; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+.detail-value { font-size: 1rem; color: #334155; font-weight: 500; }
+
+/* Featured Requests Buttons */
+.btn-approve-featured { background-color: #10b981; color: #fff; border: none; padding: 6px 10px; border-radius: 6px; cursor: pointer; transition: background-color 0.2s; margin-right: 6px; }
+.btn-approve-featured:hover { background-color: #059669; }
+.btn-reject-featured { background-color: #ef4444; color: #fff; border: none; padding: 6px 10px; border-radius: 6px; cursor: pointer; transition: background-color 0.2s; }
+.btn-reject-featured:hover { background-color: #dc2626; }
+
+/* Rider Approval Buttons */
+.btn-approve-rider { background-color: #10b981; color: #fff; border: none; padding: 6px 10px; border-radius: 6px; cursor: pointer; transition: background-color 0.2s; margin-right: 6px; }
+.btn-approve-rider:hover { background-color: #059669; }
+.btn-reject-rider { background-color: #ef4444; color: #fff; border: none; padding: 6px 10px; border-radius: 6px; cursor: pointer; transition: background-color 0.2s; }
+.btn-reject-rider:hover { background-color: #dc2626; }
+.btn-view-license { background-color: #3b82f6; color: #fff; border: none; padding: 6px 10px; border-radius: 6px; cursor: pointer; transition: background-color 0.2s; margin-right: 6px; }
+.btn-view-license:hover { background-color: #2563eb; }
+
+/* Chat Bubbles */
+.chat-bubble {
+    max-width: 75%;
+    padding: 10px 14px;
+    border-radius: 18px;
+    font-size: 14px;
+    line-height: 1.4;
+    margin-bottom: 8px;
+    word-wrap: break-word;
+    position: relative;
+}
+
+.chat-bubble-me {
+    background: #0b73ff;
+    color: #ffffff;
+    align-self: flex-end;
+    border-bottom-right-radius: 4px;
+    margin-left: auto;
+}
+
+.chat-bubble-them {
+    background: #f1f5f9;
+    color: #0f172a;
+    align-self: flex-start;
+    border-bottom-left-radius: 4px;
+    margin-right: auto;
+}
+
+.chat-messages {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+

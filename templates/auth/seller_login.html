@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Seller Login - BabyBloom</title>
+    <link rel="icon" href="{{ url_for('static', filename='images/favicon.png') }}?v={{ range(1,9999)|random }}" type="image/png">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}?v=auth-fixed-{{ range(1,9999)|random }}">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc;
+        }
+        .split-layout {
+            display: flex;
+            height: 100vh;
+            width: 100%;
+            overflow: hidden;
+            background-color: #f1f5f9;
+        }
+        .left-panel {
+            width: 70%;
+            background-color: #f1f5f9; 
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            position: relative;
+        }
+        .brand-large {
+            font-size: 5rem;
+            font-weight: 800;
+            color: #2563eb; 
+            letter-spacing: -2px;
+            z-index: 1;
+        }
+        .right-panel {
+            width: 30%;
+            min-width: 450px;
+            background: transparent; 
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+            position: relative;
+            z-index: 10;
+            box-shadow: none;
+            border-radius: 0;
+        }
+        .form-container-centered {
+            width: 100%;
+            max-width: 380px;
+            background: #ffffff;
+            padding: 2.5rem;
+            border-radius: 24px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+        
+        .auth-form .form-group {
+            margin-bottom: 1.25rem;
+        }
+        .auth-form label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            font-size: 0.85rem;
+            color: #334155;
+            text-transform: uppercase;
+            letter-spacing: 0.02em;
+        }
+        .input-wrapper {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+        .input-wrapper input {
+            width: 100%;
+            padding: 0.85rem 1rem 0.85rem 2.75rem; 
+            border: 1px solid #e2e8f0;
+            border-radius: 12px; 
+            font-size: 0.95rem;
+            transition: all 0.2s;
+            background: #f8fafc;
+        }
+        .input-wrapper input:focus {
+            outline: none;
+            border-color: #2563eb;
+            background: #fff;
+            box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1);
+        }
+        .input-icon {
+            position: absolute;
+            left: 1rem;
+            color: #94a3b8;
+            pointer-events: none;
+        }
+        .auth-btn {
+            width: 100%;
+            padding: 1rem;
+            background-color: #2563eb;
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: background-color 0.2s, transform 0.1s;
+            margin-top: 1.5rem;
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
+        }
+        .auth-btn:hover {
+            background-color: #1d4ed8;
+            transform: translateY(-1px);
+        }
+        .auth-btn:active {
+            transform: translateY(0);
+        }
+        .forgot-link-container {
+            text-align: center;
+            margin-top: 1.25rem;
+        }
+        .forgot-link {
+            color: #64748b;
+            font-size: 0.85rem;
+            text-decoration: none;
+            font-weight: 500;
+        }
+        .forgot-link:hover {
+            color: #2563eb;
+            text-decoration: underline;
+        }
+        .form-header {
+            text-align: center;
+            margin-bottom: 2.5rem;
+        }
+        .form-header h2 {
+            font-size: 2rem;
+            font-weight: 800;
+            color: #1e293b;
+            margin: 0 0 0.5rem 0;
+            letter-spacing: -0.02em;
+        }
+        .form-header p {
+            color: #64748b;
+            margin: 0;
+            font-size: 0.9rem;
+            line-height: 1.5;
+        }
+        .password-toggle {
+            position: absolute;
+            right: 0.75rem;
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: #94a3b8;
+            padding: 0;
+            display: flex;
+            align-items: center;
+        }
+
+        /* Mobile Responsive */
+        @media (max-width: 1024px) {
+             .left-panel { width: 50%; }
+             .right-panel { width: 50%; min-width: auto; }
+        }
+        @media (max-width: 768px) {
+            .split-layout {
+                flex-direction: column;
+                overflow-y: auto;
+            }
+            .left-panel {
+                width: 100%;
+                height: auto;
+                padding: 3rem 1rem 1rem;
+                flex: 0 0 auto;
+            }
+            .right-panel {
+                width: 100%;
+                height: auto;
+                min-height: auto;
+                padding: 1rem 1.5rem 3rem;
+                align-items: flex-start;
+                justify-content: center;
+            }
+            .form-container-centered {
+                max-width: 100%;
+                box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+            }
+            .brand-large {
+                font-size: 2.5rem;
+            }
+        }
+        @media (max-width: 480px) {
+            .right-panel {
+                padding: 1rem;
+            }
+            .brand-large {
+                font-size: 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="split-layout">
+        <!-- Left Side (70%) -->
+        <div class="left-panel">
+            <img src="{{ url_for('static', filename='images/favicon.png') }}" alt="HappyHands Logo" style="max-width: 600px; width: 90%; height: auto;">
+        </div>
+
+        <!-- Right Side (30%) -->
+        <div class="right-panel">
+            <div class="form-container-centered">
+                
+                <!-- Flash Messages -->
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                    {% if messages %}
+                        {% for category, message in messages %}
+                            <div class="alert alert-{{ category }}" style="margin-bottom: 1rem; padding: 0.75rem; border-radius: 8px; font-size: 0.9rem; 
+                                {% if category == 'success' %}
+                                    background: #d1fae5; color: #065f46; border: 1px solid #a7f3d0;
+                                {% else %}
+                                    background: #fee2e2; color: #991b1b; border: 1px solid #fecaca;
+                                {% endif %}">
+                                {{ message }}
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+                {% endwith %}
+
+                <!-- SELLER LOGIN FORM -->
+                <div id="login-form" class="form-section active">
+                    <div class="form-header">
+                        <h2>Seller Sign In</h2>
+                        <p>Sign in to manage your store and orders.</p>
+                    </div>
+                    
+                    <form method="POST" action="{{ url_for('seller_login') }}" class="auth-form">
+                        <div class="form-group">
+                            <label for="selleremail">Email Address</label>
+                            <div class="input-wrapper">
+                                <svg class="input-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+                                    <polyline points="22,6 12,13 2,6"></polyline>
+                                </svg>
+                                <input type="email" name="selleremail" id="selleremail" placeholder="Enter your seller email" required>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="sellerpassword">Password</label>
+                            <div class="input-wrapper">
+                                <svg class="input-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                                    <circle cx="12" cy="16" r="1"></circle>
+                                    <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                                </svg>
+                                <input type="password" name="sellerpassword" id="sellerpassword" placeholder="Enter your password" required>
+                                <button type="button" class="password-toggle" onclick="togglePassword('sellerpassword', this)">
+                                    <svg class="eye-open" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                                        <circle cx="12" cy="12" r="3"></circle>
+                                    </svg>
+                                    <svg class="eye-closed" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display: none;">
+                                        <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
+                                        <line x1="1" y1="1" x2="23" y2="23"></line>
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <button type="submit" class="auth-btn">Sign In</button>
+                        
+                        <div class="forgot-link-container">
+                            <a href="{{ url_for('forgot_password') }}" class="forgot-link">Forgot Password?</a>
+                        </div>
+                    </form>
+                    
+                    <div class="form-footer" style="text-align: center; margin-top: 2rem; font-size: 0.9rem; color: #64748b;">
+                        <p>Don't have a seller account? <a href="{{ url_for('seller_signup') }}" style="color: #2563eb; font-weight: 600; text-decoration: none;">Create seller account</a></p>
+                        <p style="margin-top: 0.5rem;"><a href="/" style="color: #64748b; text-decoration: none;">Back to home</a></p>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function togglePassword(inputId, btn) {
+            const input = document.getElementById(inputId);
+            const eyeOpen = btn.querySelector('.eye-open');
+            const eyeClosed = btn.querySelector('.eye-closed');
+            
+            if (input.type === 'password') {
+                input.type = 'text';
+                eyeOpen.style.display = 'none';
+                eyeClosed.style.display = 'block';
+            } else {
+                input.type = 'password';
+                eyeOpen.style.display = 'block';
+                eyeClosed.style.display = 'none';
+            }
+        }
+    </script>
+</body>
+</html>

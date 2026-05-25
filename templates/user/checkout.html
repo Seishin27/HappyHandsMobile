@@ -1,0 +1,254 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Checkout - BabyBloom</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <link rel="icon" href="{{ url_for('static', filename='images/favicon.png') }}?v={{ range(1,9999)|random }}" type="image/png">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}?v=checkout-{{ range(1,9999)|random }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/checkout.css') }}?v=1">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body class="checkout-page" data-user-id="{{ user.userID if user else '' }}" data-server-flashes='{{ get_flashed_messages(with_categories=true) | tojson | safe }}'>
+  <header>
+    <nav class="navbar">
+      <div class="logo">
+        <a href="/">
+          <span class="logo-text">HappyHands</span>
+        </a>
+      </div>
+      <div class="nav-center">
+        <a href="/" class="nav-link">Home</a>
+        <a href="/toys" class="nav-link">Toys</a>
+        <a href="/clothes" class="nav-link">Clothes</a>
+        <a href="/furniture" class="nav-link">Furniture</a>
+      </div>
+      <div class="nav-actions">
+        <div class="search-container">
+          <input type="text" class="search-input" placeholder="Search toys..." id="searchBar">
+          <button class="search-toggle" aria-label="Search" id="searchBtn">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="11" cy="11" r="8"></circle>
+              <path d="m21 21-4.35-4.35"></path>
+            </svg>
+          </button>
+        </div>
+        {% if user %}
+        <div class="user-dropdown">
+            <button class="action-btn account-btn dropdown-toggle" aria-label="Account" id="ActBtn" data-logged-in="1">
+                <div class="account-avatar-wrapper">
+                    <div class="account-avatar {% if user.avatar %}account-avatar--with-image{% endif %}">
+                        <div class="account-avatar-inner">
+                            {% if user.avatar %}
+                                <img src="{{ user.avatar }}" alt="Profile" class="account-avatar-img">
+                                <div class="account-avatar-initial">
+                                    {{ (user.username[:1] if user.username) |upper }}
+                                </div>
+                            {% else %}
+                                <div class="account-avatar-initial" title="{{ user.username }}">
+                                    {{ (user.username[:1] if user.username) |upper }}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                <span class="account-label">{{ user.username }}</span>
+                <i class="fas fa-chevron-down dropdown-arrow"></i>
+            </button>
+            <div class="dropdown-menu account-dropdown-menu" id="userDropdown">
+                <div class="dropdown-header">
+                    {% if user.avatar %}
+                        <div class="account-avatar account-avatar--with-image">
+                            <div class="account-avatar-inner">
+                                <img src="{{ user.avatar }}" alt="Profile" class="account-avatar-img">
+                                <div class="account-avatar-initial">
+                                    {{ (user.username[:1] if user.username) |upper }}
+                                </div>
+                            </div>
+                        </div>
+                    {% else %}
+                        <div class="account-avatar">
+                            <div class="account-avatar-inner">
+                                <div class="account-avatar-initial" title="{{ user.username }}">{{ (user.username[:1] if user.username) |upper }}</div>
+                            </div>
+                        </div>
+                    {% endif %}
+                    <div style="display:inline-block;vertical-align:middle">
+                        <div class="user-name">{{ user.username }}</div>
+                        <div class="user-email" style="font-size:0.85rem;color:#666">{{ user.email }}</div>
+                    </div>
+                </div>
+                <div class="dropdown-divider"></div>
+                <a href="{{ url_for('profile') }}" class="dropdown-item profile-link">
+                    <i class="fas fa-user-circle"></i>
+                    <span>Profile</span>
+                </a>
+                <a href="/orders" class="dropdown-item">
+                    <i class="fas fa-box"></i>
+                    <span>My Orders</span>
+                </a>
+                <button type="button" class="dropdown-item dropdown-messages">
+                    <i class="fas fa-comments"></i>
+                    <span>Messages</span>
+                </button>
+                <a href="/settings" class="dropdown-item">
+                    <i class="fas fa-cog"></i>
+                    <span>Settings</span>
+                </a>
+                <button class="dropdown-item logout-btn">
+                    <i class="fas fa-sign-out-alt"></i>
+                    <span>Logout</span>
+                </button>
+            </div>
+        </div>
+        {% else %}
+        <button class="action-btn" aria-label="Account" id="ActBtnGuest" data-logged-in="0">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+            <circle cx="12" cy="7" r="4"></circle>
+          </svg>
+        </button>
+        {% endif %}
+        <button class="action-btn" aria-label="Cart" id="cartBtn">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="9" cy="21" r="1"></circle>
+            <circle cx="20" cy="21" r="1"></circle>
+            <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
+          </svg>
+          <span class="cart-count">0</span>
+        </button>
+      </div>
+    </nav>
+  </header>
+
+  <main class="checkout-shell">
+    <h1 class="checkout-title">Checkout</h1>
+    <p class="checkout-subtitle">Review your delivery details and confirm your order.</p>
+
+    <div id="checkoutRoot"
+         data-mode="{{ mode }}"
+         data-cart-items='{{ cart_items | tojson | safe }}'
+         data-direct-item='{{ direct_item | tojson | safe }}'>
+      <div class="checkout-layout">
+        <div class="checkout-left">
+          <section class="checkout-card">
+            <div class="checkout-card-header">
+              <div>
+                <div class="checkout-card-title">Saved addresses</div>
+                <div class="checkout-card-subtitle">Tap an address to use it for this order.</div>
+              </div>
+              <div class="checkout-card-header-actions">
+                <button type="button" id="addAddressBtn" class="btn-small-outline">Save this address</button>
+              </div>
+            </div>
+            <div id="savedAddressesList" class="saved-addresses-list"></div>
+          </section>
+
+          <section class="checkout-card">
+            <div class="checkout-card-header">
+              <div class="checkout-card-title">Delivery details</div>
+            </div>
+            <form id="checkoutAddressForm" class="checkout-form-grid" autocomplete="on">
+              <div class="checkout-form-group">
+                <label for="region" class="checkout-label">Region *</label>
+                <select id="region" name="region" class="checkout-select" required>
+                  <option value="">Select Region</option>
+                </select>
+              </div>
+
+              <div class="checkout-form-group">
+                <label for="province" class="checkout-label">Province *</label>
+                <select id="province" name="province" class="checkout-select" required>
+                  <option value="">Select Province</option>
+                </select>
+              </div>
+
+              <div class="checkout-form-group">
+                <label for="city" class="checkout-label">City / Municipality *</label>
+                <select id="city" name="city" class="checkout-select" required>
+                  <option value="">Select City/Municipality</option>
+                </select>
+              </div>
+
+              <div class="checkout-form-group">
+                <label for="barangay" class="checkout-label">Barangay *</label>
+                <select id="barangay" name="barangay" class="checkout-select" required>
+                  <option value="">Select Barangay</option>
+                </select>
+              </div>
+
+              <div class="checkout-form-group checkout-full-width">
+                <label for="homeAddress" class="checkout-label">Home address / landmark *</label>
+                <input id="homeAddress" name="home_address" type="text" class="checkout-input" placeholder="House, street, village, or landmark" required>
+              </div>
+
+              <div class="checkout-form-group checkout-full-width">
+                <label for="contactNumber" class="checkout-label">Contact number *</label>
+                <input id="contactNumber" name="contact_number" type="tel" class="checkout-input" placeholder="09XX-XXX-XXXX" required>
+              </div>
+            </form>
+          </section>
+        </div>
+
+        <div class="checkout-right">
+          <section class="order-summary-card">
+            <div class="order-summary-header">
+              <div class="order-summary-title">Order summary</div>
+            </div>
+
+            <div id="orderItems" class="order-summary-items"></div>
+
+            <div class="order-summary-totals">
+              <div class="order-summary-row">
+                <span>Subtotal</span>
+                <span id="orderSubtotal">₱0.00</span>
+              </div>
+              <div class="order-summary-row">
+                <span>Shipping</span>
+                <span id="orderShipping">₱30.00</span>
+              </div>
+              <div class="order-summary-row total">
+                <span>Total</span>
+                <span id="orderTotal">₱0.00</span>
+              </div>
+            </div>
+
+            <div class="payment-card">
+              <div class="checkout-card-header">
+                <div class="checkout-card-title">Payment</div>
+              </div>
+              <label class="payment-option-row">
+                <input type="radio" name="payment_method" value="cash_on_delivery" checked>
+                <div class="payment-option-main">
+                  <strong>Cash on Delivery (COD)</strong>
+                  <small>Pay safely with cash when your order arrives.</small>
+                </div>
+              </label>
+            </div>
+
+            <button type="button" id="placeOrderBtn" class="checkout-primary-btn">
+              Place order
+            </button>
+          </section>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script src="{{ url_for('static', filename='js/confirm_helper.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/index.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/checkout.js') }}?v=7"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Messages button logic
+        const msgBtns = document.querySelectorAll('.dropdown-messages');
+        msgBtns.forEach(btn => {
+            btn.addEventListener('click', function() {
+                window.location.href = '/profile#profile-messages';
+            });
+        });
+    });
+  </script>
+</body>
+</html>

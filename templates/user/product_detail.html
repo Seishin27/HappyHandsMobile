@@ -1,0 +1,744 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>{{ product.name }} — Happy Hands</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <link rel="icon" href="{{ url_for('static', filename='images/favicon.png') }}?v={{ range(1,9999)|random }}" type="image/png">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/product_pages.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}?v=auth-fixed-{{ range(1,9999)|random }}">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+  <style>
+    .qty-input.qty-invalid { border: 1px solid #ef4444 !important; outline: 0; box-shadow: 0 0 0 2px rgba(239,68,68,0.15); background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="%23ef4444" viewBox="0 0 16 16"><path d="M8.982 1.566a1.13 1.13 0 0 0-1.964 0L.165 13.233c-.457.778.091 1.767.982 1.767h13.706c.89 0 1.438-.99.982-1.767L8.982 1.566zM8 5c.535 0 .954.462.9.995l-.35 3.507a.552.552 0 0 1-1.1 0L7.1 5.995A.905.905 0 0 1 8 5zm.002 6a1 1 0 1 0 0 2 1 1 0 0 0 0-2z"/></svg>'); background-repeat: no-repeat; background-position: right 8px center; padding-right: 28px; }
+  </style>
+</head>
+<body class="product-detail-page"
+      data-product-stock="{{ product.stock|default(0)|int }}"
+      data-user-logged-in="{{ 'true' if user else 'false' }}"
+      data-product-name="{{ (product.name or '')|e }}"
+      data-product-price="{{ (product.price or 0)|float }}"
+      data-product-id="{{ product.get('productID') or product.get('product_id') or product.get('productId') or product.get('id') or product.id }}">
+  
+ <header>
+        <nav class="navbar">
+            <div class="logo">
+                <a href="/">
+                  <span class="logo-text">Happy Hands</span>
+                </a>
+            </div>
+            <div class="nav-center">
+                <a href="/" class="nav-link">Home</a>
+                <a href="/toys" class="nav-link">Toys</a>
+                <a href="/clothes" class="nav-link">Clothes</a>
+                <a href="/furniture" class="nav-link">Furniture</a>
+            </div>
+            <div class="nav-actions">
+                <div class="search-container">
+                    <input type="text" class="search-input" placeholder="Search toys..." id="searchBar" aria-label="Search toys">
+                    <button class="search-toggle" aria-label="Search" id="searchBtn">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="11" cy="11" r="8"></circle>
+                            <path d="m21 21-4.35-4.35"></path>
+                        </svg>
+                    </button>
+                </div>
+                {% if user %}
+                <div class="user-dropdown">
+                    <button class="action-btn account-btn dropdown-toggle" aria-label="Account" id="ActBtn" data-logged-in="1">
+                        <div class="account-avatar-wrapper">
+                            <div class="account-avatar {% if user.avatar %}account-avatar--with-image{% endif %}">
+                                <div class="account-avatar-inner">
+                                    {% if user.avatar %}
+                                        <img src="{{ user.avatar }}" alt="Profile" class="account-avatar-img">
+                                        <div class="account-avatar-initial">
+                                            {{ (user.username[:1] if user.username) |upper }}
+                                        </div>
+                                    {% else %}
+                                        <div class="account-avatar-initial" title="{{ user.username }}">
+                                            {{ (user.username[:1] if user.username) |upper }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        <span class="account-label">{{ user.username }}</span>
+                        <i class="fas fa-chevron-down dropdown-arrow"></i>
+                    </button>
+                    <div class="dropdown-menu account-dropdown-menu" id="userDropdown">
+                        <div class="dropdown-header">
+                            {% if user.avatar %}
+                                <div class="account-avatar account-avatar--with-image">
+                                    <div class="account-avatar-inner">
+                                        <img src="{{ user.avatar }}" alt="Profile" class="account-avatar-img">
+                                        <div class="account-avatar-initial">
+                                            {{ (user.username[:1] if user.username) |upper }}
+                                        </div>
+                                    </div>
+                                </div>
+                            {% else %}
+                                <div class="account-avatar">
+                                    <div class="account-avatar-inner">
+                                        <div class="account-avatar-initial" title="{{ user.username }}">{{ (user.username[:1] if user.username) |upper }}</div>
+                                    </div>
+                                </div>
+                            {% endif %}
+                            <div style="display:inline-block;vertical-align:middle">
+                                <div class="user-name">{{ user.username }}</div>
+                                <div class="user-email" style="font-size:0.85rem;color:#666">{{ user.email }}</div>
+                            </div>
+                        </div>
+                        <div class="dropdown-divider"></div>
+                        <a href="{{ url_for('profile') }}" class="dropdown-item profile-link">
+                            <i class="fas fa-user-circle"></i>
+                            <span>Profile</span>
+                        </a>
+                        <a href="/orders" class="dropdown-item">
+                            <i class="fas fa-box"></i>
+                            <span>My Orders</span>
+                        </a>
+                        <button type="button" class="dropdown-item dropdown-messages">
+                            <i class="fas fa-comments"></i>
+                            <span>Messages</span>
+                        </button>
+                        <a href="/settings" class="dropdown-item">
+                            <i class="fas fa-cog"></i>
+                            <span>Settings</span>
+                        </a>
+                        <button class="dropdown-item logout-btn">
+                            <i class="fas fa-sign-out-alt"></i>
+                            <span>Logout</span>
+                        </button>
+                    </div>
+                </div>
+                {% else %}
+                <button class="action-btn" aria-label="Account" id="ActBtn" data-logged-in="0">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                        <circle cx="12" cy="7" r="4"></circle>
+                    </svg>
+                </button>
+                {% endif %}
+                <button class="action-btn" aria-label="Cart" id="cartBtn">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="9" cy="21" r="1"></circle>
+                        <circle cx="20" cy="21" r="1"></circle>
+                        <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
+                    </svg>
+                    <span class="cart-count">0</span>
+                </button>
+            </div>
+        </nav>
+    </header>
+ 
+  <main class="product-container">
+    <div class="back-link-container">
+        <a class="back-link" href="{{ url_for('home') }}">
+            <i class="fas fa-arrow-left"></i> Back to Shop
+        </a>
+    </div>
+
+    {% set gallery = namespace(images=[]) %}
+    {% set placeholder_image = url_for('static', filename='images/default.png') %}
+    {% if product.gallery_images %}
+      {% for raw in product.gallery_images %}
+        {% set cleaned = raw|string|trim %}
+        {% if cleaned %}
+          {% if '://' in cleaned %}
+            {% set source = cleaned %}
+          {% else %}
+            {% set source = url_for('uploaded_file', filename=cleaned) %}
+          {% endif %}
+          {% if source not in gallery.images %}
+            {% set _ = gallery.images.append(source) %}
+          {% endif %}
+        {% endif %}
+      {% endfor %}
+    {% endif %}
+    {% if product.image %}
+      {% for raw in product.image.split(',') %}
+        {% set cleaned = raw.strip() %}
+        {% if cleaned %}
+          {% if '://' in cleaned %}
+            {% set source = cleaned %}
+          {% else %}
+            {% set source = url_for('uploaded_file', filename=cleaned) %}
+          {% endif %}
+          {% if source not in gallery.images %}
+            {% set _ = gallery.images.append(source) %}
+          {% endif %}
+        {% endif %}
+      {% endfor %}
+    {% endif %}
+    {% if product.images %}
+      {% for raw in product.images %}
+        {% set cleaned = raw|string|trim %}
+        {% if cleaned %}
+          {% if '://' in cleaned %}
+            {% set source = cleaned %}
+          {% else %}
+            {% set source = url_for('uploaded_file', filename=cleaned) %}
+          {% endif %}
+          {% if source not in gallery.images %}
+            {% set _ = gallery.images.append(source) %}
+          {% endif %}
+        {% endif %}
+      {% endfor %}
+    {% endif %}
+    {% for key in ['image_url', 'main_image', 'primary_image'] %}
+      {% set value = (product.get(key) if product.get is defined else attribute(product, key)) %}
+      {% if value %}
+        {% set cleaned_value = value|string|trim %}
+        {% if '://' in cleaned_value %}
+          {% set source = cleaned_value %}
+        {% else %}
+          {% set source = url_for('uploaded_file', filename=cleaned_value) %}
+        {% endif %}
+        {% if source not in gallery.images %}
+          {% set _ = gallery.images.append(source) %}
+        {% endif %}
+      {% endif %}
+    {% endfor %}
+    {% if gallery.images|length == 0 %}
+      {% set _ = gallery.images.append(placeholder_image) %}
+    {% endif %}
+
+    <!-- LEFT COLUMN: Product Images -->
+    <section class="image-section">
+      <div id="productGallery"
+           class="product-gallery"
+           data-images='{{ gallery.images|tojson|safe }}'
+           data-placeholder="{{ placeholder_image }}"
+           aria-label="Product media gallery">
+        <figure class="gallery-stage">
+          <img id="productMainImage"
+               src="{{ gallery.images[0] }}"
+               alt="{{ product.name }} main image"
+               data-active-index="0"
+               loading="eager">
+          <button type="button" class="gallery-zoom-btn" data-role="gallery-modal-trigger" aria-label="Open full-screen gallery">
+            <i class="fas fa-expand"></i>
+          </button>
+        </figure>
+        {% if gallery.images|length > 1 %}
+        <div class="gallery-thumbnails" role="list" aria-label="Product image thumbnails">
+          {% for img_url in gallery.images %}
+            <button type="button"
+                    class="gallery-thumb{% if loop.first %} is-active{% endif %}"
+                    data-role="thumb"
+                    data-index="{{ loop.index0 }}"
+                    aria-label="Show image {{ loop.index }}">
+              <img src="{{ img_url }}" alt="{{ product.name }} thumbnail {{ loop.index }}" loading="lazy">
+            </button>
+          {% endfor %}
+        </div>
+        {% endif %}
+      </div>
+    </section>
+
+    <!-- RIGHT COLUMN: Product Info -->
+    <section class="details-section">
+      <h1 class="product-title">{{ product.name or '[Product Name Placeholder]' }}</h1>
+
+      <div class="product-price">₱{{ product.price or '[Price Placeholder]' }}</div>
+
+      <div class="quantity-section">
+        <label for="quantity" class="qty-label">Quantity</label>
+        <div class="qty-controls">
+          <button type="button" class="qty-btn minus" aria-label="Decrease quantity" {% if (product.stock|default(0)|int) == 0 %} disabled aria-disabled="true" {% endif %}>−</button>
+          <input id="quantity" name="quantity" class="qty-input" type="number" value="1" min="1" max="{{ product.stock or 1 }}" {% if (product.stock|default(0)|int) == 0 %} disabled aria-disabled="true" {% endif %}>
+          <button type="button" class="qty-btn plus" aria-label="Increase quantity" {% if (product.stock|default(0)|int) == 0 %} disabled aria-disabled="true" {% endif %}>+</button>
+        </div>
+        <div class="qty-error" aria-live="polite" style="display:none;color:#ef4444;font-size:12px;margin-top:6px;">Quantity must be at least 1</div>
+        <div class="stock-info" aria-live="polite">Stock: {{ product.stock|default(0)|int }}</div>
+        {% if (product.stock|default(0)|int) == 0 %}
+        <div class="oos-note" role="status">This product is currently out of stock and cannot be added to the cart.</div>
+        {% endif %}
+      </div>
+
+      <!-- Add to Cart + Checkout Buttons -->
+      {% set pid = product.get('productID') or product.get('product_id') or product.get('productId') or product.get('id') or product.id %}
+      
+      <div class="action-buttons-container">
+        {% if user %}
+            {% if (product.stock|default(0)|int) > 0 %}
+            <div class="cart-actions">
+                <button type="button" class="btn-add add-to-cart-btn">Add to Cart</button>
+            </div>
+            {% else %}
+            <div class="cart-actions">
+                <button type="button" class="btn-out-of-stock" disabled aria-disabled="true">Out of stock</button>
+            </div>
+            {% endif %}
+        {% else %}
+            <div class="cart-actions">
+            {% if (product.stock|default(0)|int) > 0 %}
+                <button type="button" class="btn-add login-required" onclick="showLoginPrompt()">Add to Cart</button>
+            {% else %}
+                <button type="button" class="btn-out-of-stock" disabled aria-disabled="true">Out of stock</button>
+            {% endif %}
+            </div>
+        {% endif %}
+
+        <form class="checkout-actions" action="#" onsubmit="return false;">
+            <input type="hidden" name="product_id" value="{{ pid }}">
+            <button type="button" class="btn-checkout">Checkout</button>
+        </form>
+      </div>
+
+      <div style="margin-top:12px;">
+        <button id="openReportBtn" class="btn" type="button" style="background:#ef4444;color:#fff;border:none;padding:.6rem .9rem;border-radius:8px;cursor:pointer;">Report</button>
+      </div>
+
+      {% set description_source = product.description or product.details or '' %}
+      <div class="product-description">
+        <h2>Product Description</h2>
+        {% if description_source %}
+          <div id="productDescriptionBody" class="product-description-body" data-raw-description='{{ description_source|tojson|safe }}'>
+            {{ description_source }}
+          </div>
+          <button type="button" id="productDescriptionToggle" class="see-more-btn" hidden>See more</button>
+        {% else %}
+          <p class="product-description-empty">No description available.</p>
+        {% endif %}
+      </div>
+    </section>
+  </main>
+
+  {# store card MUST be outside main so it sits below the entire product panel #}
+  <div class="store-footer" aria-label="Store">
+    {% if product.seller_id %}
+      <div class="store-card-link">
+         <div class="store-card">
+           <div class="store-left">
+            <div class="store-meta">
+              <div class="store-name">{{ product.store_name or 'Store' }}</div>
+            </div>
+           </div>
+            <div class="store-right">
+             <button id="chatBtn" class="chat-btn" type="button" data-seller-id="{{ product.seller_id or '' }}" data-product-id="{{ pid }}" data-user-id="{{ (user.userID if user and user.userID else '') }}">Chat Now</button>
+             <a class="viewshop-btn" href="/seller/{{ product.seller_id }}" role="button">View Shop</a>
+           </div>
+         </div>
+       </div>
+    {% else %}
+       <div class="store-card">
+         <div class="store-left">
+          <div class="store-logo-placeholder"></div>
+          <div class="store-meta">
+            <div class="store-name">{{ product.store_name or 'Store' }}</div>
+          </div>
+         </div>
+         <div class="store-right">
+           <button id="chatBtn" class="chat-btn" type="button" data-seller-id="{{ product.seller_id or '' }}" data-product-id="{{ pid }}" data-user-id="{{ (user.userID if user and user.userID else '') }}">Chat Now</button>
+           <button class="viewshop-btn" type="button" disabled>View Shop</button>
+         </div>
+       </div>
+    {% endif %}
+  </div>
+
+  {% if random_products %}
+  <section class="you-may-also-like">
+      <div class="section-header">
+        <h2>You May Also Like</h2>
+      </div>
+      <div class="products-grid">
+          {% for p in random_products %}
+            {% with product=p %}
+              {% include "partials/_product_card.html" %}
+            {% endwith %}
+          {% endfor %}
+      </div>
+  </section>
+  {% endif %}
+
+  <script>
+    // Report modal toggle (simple)
+    document.addEventListener('DOMContentLoaded', function(){
+      const openBtn = document.getElementById('openReportBtn');
+      if (!openBtn) return;
+      const isLoggedIn = document.body && document.body.dataset.userLoggedIn === 'true';
+
+      if (!isLoggedIn) {
+        openBtn.addEventListener('click', function(e){
+          e.preventDefault();
+          if (window.Swal && typeof window.Swal.fire === 'function') {
+            window.Swal.fire({
+              icon: 'info',
+              title: 'Login required',
+              text: 'You need to log in to report a product.',
+              showCancelButton: true,
+              confirmButtonText: 'Go to login',
+              cancelButtonText: 'Cancel'
+            }).then(function(result){
+              if (result && result.isConfirmed) {
+                window.location.href = '/login';
+              }
+            });
+          } else if (window.confirmAction) {
+            window.confirmAction({
+              title: 'Login required',
+              text: 'You need to log in to report a product.',
+              icon: 'info',
+              confirmButtonText: 'Go to login',
+              cancelButtonText: 'Cancel'
+            }).then(function(ok){
+              if (ok) {
+                window.location.href = '/login';
+              }
+            });
+          } else {
+            if (window.confirm('You need to log in to report a product. Go to login page?')) {
+              window.location.href = '/login';
+            }
+          }
+        });
+        return;
+      }
+
+      // create modal markup
+      const modalHtml = `
+        <div id="reportModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.35);align-items:center;justify-content:center;z-index:10000;">
+          <div style="width:520px;max-width:96%;background:#fff;padding:18px;border-radius:10px;box-shadow:0 10px 30px rgba(0,0,0,0.2);">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+              <h3 style="margin:0;font-size:18px;">Report Product</h3>
+              <button id="closeReportModal" type="button" style="border:none;background:transparent;font-size:20px;">&times;</button>
+            </div>
+            <form action="/report" method="post" enctype="multipart/form-data" id="reportForm">
+              <input type="hidden" name="reported_product_id" value="{{ pid }}">
+              <!-- Complaint type dropdown -->
+              <div style="margin-bottom:12px;">
+                <label for="complaint_type" style="display:block;margin-bottom:4px;font-weight:500;">Complaint Type <span style="color:#ef4444;">*</span></label>
+                <select id="complaint_type" name="complaint_type" required style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;font-size:14px;">
+                  <option value="">Select a complaint type...</option>
+                  <option value="Inappropriate Content">Inappropriate Content</option>
+                  <option value="False Information">False Information</option>
+                  <option value="Product Quality Issue">Product Quality Issue</option>
+                  <option value="Seller Misconduct">Seller Misconduct</option>
+                  <option value="Scam or Fraud">Scam or Fraud</option>
+                  <option value="Copyright Violation">Copyright Violation</option>
+                  <option value="Other">Other</option>
+                </select>
+              </div>
+              <!-- Description -->
+              <div style="margin-bottom:12px;">
+                <label for="description" style="display:block;margin-bottom:4px;font-weight:500;">Description <span style="color:#ef4444;">*</span></label>
+                <textarea id="description" name="description" rows="4" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;font-size:14px;resize:vertical;" required placeholder="Please provide details about your complaint..."></textarea>
+              </div>
+              <!-- Evidence image -->
+              <div style="margin-bottom:12px;">
+                <label for="evidence" style="display:block;margin-bottom:4px;font-weight:500;">Attach image (optional)</label>
+                <input id="evidence" name="evidence" type="file" accept="image/*" style="width:100%;padding:6px;border:1px solid #ddd;border-radius:6px;">
+                <small style="color:#666;font-size:12px;">Accepted formats: JPG, PNG, GIF</small>
+              </div>
+              <div style="text-align:right;margin-top:12px;display:flex;gap:8px;justify-content:flex-end;">
+                <button type="button" id="cancelReportBtn" class="btn" style="background:#6b7280;color:#fff;padding:.5rem .8rem;border-radius:6px;border:none;cursor:pointer;">Cancel</button>
+                <button type="submit" class="btn" style="background:#ef4444;color:#fff;padding:.5rem .8rem;border-radius:6px;border:none;cursor:pointer;">Submit Report</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      `;
+      document.body.insertAdjacentHTML('beforeend', modalHtml);
+      const modal = document.getElementById('reportModal');
+      const close = function(){ if(modal) modal.style.display='none'; };
+      document.getElementById('closeReportModal')?.addEventListener('click', close);
+      const cancelBtn = document.getElementById('cancelReportBtn');
+      if (cancelBtn) cancelBtn.addEventListener('click', close);
+      openBtn.addEventListener('click', function(){ if(modal) modal.style.display='flex'; });
+      // close modal on outside click
+      document.addEventListener('click', function(e){ if(modal && e.target===modal) modal.style.display='none'; });
+      
+      // Handle form submission with confirmation
+      const reportForm = document.getElementById('reportForm');
+      if (reportForm) {
+        let reportSubmitting = false;
+        reportForm.addEventListener('submit', async function(e) {
+          e.preventDefault();
+          e.stopImmediatePropagation();
+          
+          if (reportSubmitting) {
+            return;
+          }
+
+          const submitBtn = reportForm.querySelector('button[type="submit"]');
+          if (submitBtn.disabled) return;
+
+          reportSubmitting = true;
+          const originalText = submitBtn.textContent;
+          submitBtn.disabled = true;
+          submitBtn.textContent = 'Submitting...';
+
+          const formData = new FormData(reportForm);
+          const complaintType = formData.get('complaint_type');
+          const description = formData.get('description');
+
+          if (!complaintType || !description || !description.trim()) {
+            reportSubmitting = false;
+            submitBtn.disabled = false;
+            submitBtn.textContent = originalText;
+
+            if (window.Swal) {
+              Swal.fire({ icon: 'error', title: 'Missing Information', text: 'Please fill in all required fields.' });
+            } else {
+              alert('Please fill in all required fields.');
+            }
+            return;
+          }
+
+          try {
+            const response = await fetch('/report', {
+              method: 'POST',
+              body: formData,
+              credentials: 'same-origin'
+            });
+            const data = await response.json().catch(() => ({}));
+            if (!response.ok || !data.success) {
+              const errMsg = data && data.msg ? data.msg : 'Submission failed';
+              throw new Error(errMsg);
+            }
+            
+            close();
+            reportForm.reset();
+            
+            if (window.Swal) {
+              Swal.fire({ 
+                icon: 'success', 
+                title: 'Report Submitted', 
+                text: 'Thank you for your report. We will review it shortly.',
+                confirmButtonText: 'OK'
+              });
+            } else {
+              alert('Report submitted successfully. Thank you!');
+            }
+          } catch (error) {
+            console.error('Report submission error:', error);
+            let msg = 'Failed to submit report. Please try again.';
+            const m = error.message;
+            if (m === 'login_required') msg = 'Session expired. Please login again.';
+            else if (m === 'missing_fields') msg = 'Please fill in all required fields.';
+            else if (m === 'invalid_product') msg = 'Invalid product information.';
+            else if (m === 'product_not_found') msg = 'This product no longer exists.';
+            else if (m === 'invalid_file_type') msg = 'Invalid file type. Please upload an image.';
+            else if (m === 'db_error' || m === 'server_error') msg = 'A server error occurred. Please try again later.';
+            else if (m && m !== 'Submission failed') msg = m;
+
+            if (window.Swal) {
+              Swal.fire({ icon: 'error', title: 'Error', text: msg });
+            } else {
+              alert(msg);
+            }
+          } finally {
+            reportSubmitting = false;
+            submitBtn.disabled = false;
+            submitBtn.textContent = originalText;
+          }
+        });
+      }
+    });
+    // keep hiddenQty in sync with visible quantity input
+    (function(){
+      var qtyInput = document.getElementById('quantity');
+      var hiddenQty = document.getElementById('hiddenQty');
+      var addBtn = document.querySelector('.cart-actions .btn-add');
+      var checkoutBtn = document.querySelector('.checkout-actions .btn-checkout');
+      var minus = document.querySelector('.qty-btn.minus');
+      var plus = document.querySelector('.qty-btn.plus');
+      var availableStock = 0;
+      try {
+        var maxAttr = qtyInput ? (qtyInput.getAttribute('max') || '0') : '0';
+        availableStock = parseInt(document.body.dataset.productStock || maxAttr || '0', 10) || 0;
+      } catch (e) {
+        availableStock = 0;
+      }
+      function setInvalid(invalid){
+        try{
+          var err = document.querySelector('.qty-error');
+          if (invalid){
+            qtyInput.classList.add('qty-invalid');
+            qtyInput.setAttribute('aria-invalid','true');
+            if (err) err.style.display = 'block';
+          } else {
+            qtyInput.classList.remove('qty-invalid');
+            qtyInput.removeAttribute('aria-invalid');
+            if (err) err.style.display = 'none';
+          }
+          if (addBtn) addBtn.disabled = invalid;
+          if (checkoutBtn) checkoutBtn.disabled = invalid;
+        }catch(e){}
+      }
+      function showStockExceeded(){
+        if (availableStock <= 0) return;
+        var msg = 'Requested quantity exceeds available stock (' + availableStock + ').';
+        if (window.Swal) {
+          Swal.fire({ icon: 'warning', title: 'Insufficient stock', text: msg });
+        } else if (window.confirmAction) {
+          window.confirmAction({ title: 'Insufficient stock', text: msg, icon: 'warning', confirmButtonText: 'OK', showCancelButton: false });
+        } else {
+          alert(msg);
+        }
+      }
+      if (qtyInput && hiddenQty) {
+        var sync = function(){ hiddenQty.value = qtyInput.value; };
+        qtyInput.addEventListener('input', function(){
+          var v = parseInt(qtyInput.value||'0',10);
+          var invalid = Number.isNaN(v) || v < 1;
+          if (!invalid && availableStock > 0 && v > availableStock){
+            qtyInput.value = String(availableStock);
+            sync();
+            showStockExceeded();
+            v = availableStock;
+          }
+          setInvalid(invalid);
+          sync();
+        });
+        qtyInput.addEventListener('change', function(ev){
+          var v = parseInt(qtyInput.value||'0',10);
+          var invalid = Number.isNaN(v) || v < 1;
+          setInvalid(invalid);
+          if (invalid){
+            console.warn('Invalid quantity prevented on product detail', { value: qtyInput.value });
+            ev.preventDefault();
+            return;
+          }
+          if (availableStock > 0 && v > availableStock){
+            qtyInput.value = String(availableStock);
+            sync();
+            showStockExceeded();
+            return;
+          }
+          sync();
+        });
+        if (minus){ minus.addEventListener('click', function(){ var v = parseInt(qtyInput.value||'1',10)||1; v = Math.max(1, v-1); qtyInput.value = String(v); setInvalid(false); sync(); }); }
+        if (plus){ plus.addEventListener('click', function(){ var max = parseInt(qtyInput.getAttribute('max')||'9999',10)||9999; var v = parseInt(qtyInput.value||'1',10)||1; var next = Math.min(max, v+1); if (availableStock > 0 && next >= availableStock && v >= availableStock){ showStockExceeded(); next = availableStock; } qtyInput.value = String(next); setInvalid(false); sync(); }); }
+        sync();
+      }
+      var addForm = document.querySelector('.cart-actions[action^="/add_to_cart"]') || document.querySelector('.cart-actions');
+      if (addForm){ addForm.addEventListener('submit', function(ev){ var v = parseInt(qtyInput.value||'0',10); var invalid = Number.isNaN(v) || v < 1; if (invalid){ ev.preventDefault(); setInvalid(true); alert('Quantity must be at least 1'); console.warn('Blocked add to cart from product detail'); return; } if (availableStock > 0 && v > availableStock){ ev.preventDefault(); showStockExceeded(); console.warn('Blocked add to cart from product detail: exceeds stock', { requested: v, stock: availableStock }); qtyInput.value = String(availableStock); hiddenQty.value = String(availableStock); return; } hiddenQty.value = String(v); }); }
+      if (checkoutBtn){
+        checkoutBtn.addEventListener('click', function(ev){
+          var v = parseInt(qtyInput.value||'0',10);
+          var invalid = Number.isNaN(v) || v < 1;
+          if (invalid){ ev.preventDefault(); setInvalid(true); alert('Quantity must be at least 1'); return; }
+          ev.preventDefault();
+          var stock = availableStock;
+          if (stock <= 0){
+            var msg = 'This product is currently out of stock and cannot be checked out.';
+            if (window.Swal){ Swal.fire({ icon:'info', title:'Out of stock', text: msg }); }
+            else { alert(msg); }
+            return;
+          }
+          if (stock > 0 && v > stock){
+            showStockExceeded();
+            qtyInput.value = String(stock);
+            hiddenQty.value = String(stock);
+            return;
+          }
+          var logged = document.body.dataset.userLoggedIn === 'true';
+          if (!logged){
+            if (typeof showLoginPrompt === 'function'){ showLoginPrompt(); }
+            else { window.location.href = '/login'; }
+            return;
+          }
+          var productId = parseInt(document.body.dataset.productId || '0', 10) || null;
+          if (!productId){
+            console.error('Missing product id for checkout redirect');
+            var emsg = 'Unable to start checkout for this product. Please try again from the cart page.';
+            if (window.Swal){ Swal.fire({ icon:'error', title:'Checkout unavailable', text: emsg }); }
+            else { alert(emsg); }
+            return;
+          }
+          var url = '/checkout?product_id=' + encodeURIComponent(productId) + '&qty=' + encodeURIComponent(v);
+          window.location.href = url;
+        });
+      }
+    })();
+
+    // Function to show login prompt for non-authenticated users
+    async function showLoginPrompt() {
+      try{
+        // If product is out of stock, inform the user instead of redirecting
+        const productStock = parseInt(document.body.dataset.productStock || 0, 10);
+        if (productStock === 0) {
+          const msg = 'This product is currently out of stock and cannot be added to the cart.';
+          if (window.Swal) {
+            Swal.fire({ icon: 'info', title: 'Out of stock', text: msg });
+          } else if (window.confirmAction) {
+            window.confirmAction({ title: 'Out of stock', text: msg, icon: 'info', confirmButtonText: 'OK', showCancelButton: false });
+          } else {
+            alert(msg);
+          }
+          return;
+        }
+
+        var ok = false;
+        if (window.confirmAction) {
+          ok = await window.confirmAction({ title: 'You need to log in to add items to your cart.', text: 'Would you like to go to the login page?', icon: 'question', confirmButtonText: 'Login', cancelButtonText: 'Cancel' });
+        } else {
+          ok = window.confirm('You need to log in to add items to your cart. Would you like to go to the login page?');
+        }
+        if (ok) window.location.href = '/login';
+      }catch(e){ if (window.confirm('You need to log in to add items to your cart. Would you like to go to the login page?')) window.location.href = '/login'; }
+    }
+  </script>
+  <!-- Socket.IO client (CDN). Required for realtime chat. -->
+  <script src="https://cdn.socket.io/4.6.1/socket.io.min.js"></script>
+  <!-- SweetAlert2 + confirm helper -->
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script src="{{ url_for('static', filename='js/confirm_helper.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/cart.js') }}" defer></script>
+  <script src="{{ url_for('static', filename='js/index.js') }}" defer></script>
+  <script src="{{ url_for('static', filename='js/product_detail.js') }}" defer></script>
+  <script src="{{ url_for('static', filename='js/sidebar_toggle.js') }}" defer></script>
+
+  {% if user %}
+  <!-- User Chats Modal/Overlay: conversations list + chat panel -->
+  <div id="userChatsOverlay" style="display:none;position:fixed;inset:0;z-index:10000;align-items:center;justify-content:center;background:rgba(0,0,0,0.45);">
+      <div style="width:920px;max-width:96%;height:80vh;background:#fff;border-radius:18px;display:flex;overflow:hidden;box-shadow:0 18px 45px rgba(15,23,42,0.28);">
+          <div id="userConvoList" style="width:300px;border-right:1px solid #eef2f7;overflow:auto;padding:12px;background:#f9fafb;display:flex;flex-direction:column;">
+              <div style="font-weight:700;padding:10px 8px;border-bottom:1px solid #f1f5f9;font-size:14px;display:flex;align-items:center;justify-content:space-between;">
+                <span>Messages</span>
+              </div>
+              <div id="userConvoItems" style="margin-top:6px;flex:1;overflow:auto;"></div>
+          </div>
+          <div id="userChatPanel" style="flex:1;display:flex;flex-direction:column;background:#ffffff;">
+              <div id="userChatHeader" style="padding:12px 16px;border-bottom:1px solid #f1f5f9;display:flex;align-items:center;justify-content:space-between;gap:10px;">
+                <div style="display:flex;align-items:center;gap:10px;min-width:0;">
+                  <div id="userChatAvatar" style="width:36px;height:36px;border-radius:50%;background:#eef2ff;display:flex;align-items:center;justify-content:center;font-weight:600;color:#0b2545;flex-shrink:0;">S</div>
+                  <div style="min-width:0;">
+                    <div id="userChatSellerName" style="font-weight:600;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Select a seller</div>
+                    <div id="userChatSellerInfo" style="font-size:12px;color:#64748b;">Chat with your seller about this order</div>
+                  </div>
+                </div>
+                <button id="userChatClose" type="button" aria-label="Close chat" style="border:none;background:transparent;color:#64748b;cursor:pointer;font-size:16px;flex-shrink:0;">&times;</button>
+              </div>
+              <div id="userChatMessages" class="chat-messages" style="flex:1;overflow:auto;padding:14px 16px;background:#fbfdff;"></div>
+              <div style="padding:10px 16px 12px;border-top:1px solid #f1f5f9;display:flex;gap:8px;align-items:flex-end;background:#ffffff;">
+                  <input id="userChatInput" class="chat-input" type="text" placeholder="Type a message..." style="flex:1;padding:10px 12px;border-radius:999px;border:1px solid #e6eef8;font-size:13px;" />
+                  <button id="userChatSend" class="btn-primary chat-send" style="border-radius:999px;padding:8px 14px;font-weight:600;">Send</button>
+              </div>
+          </div>
+      </div>
+  </div>
+  <button id="userChatBtn" style="display:none;"></button>
+  {% endif %}
+
+  <div id="productGalleryModal" class="gallery-modal" aria-hidden="true" hidden>
+    <div class="gallery-modal-backdrop" data-role="modal-close"></div>
+    <div class="gallery-modal-dialog" role="dialog" aria-modal="true" aria-label="Full-size product images">
+      <button type="button" class="gallery-modal-close" data-role="modal-close" aria-label="Close gallery">
+        <i class="fas fa-times"></i>
+      </button>
+      <div class="gallery-modal-stage">
+        <button type="button" class="gallery-modal-nav prev" data-role="modal-prev" aria-label="Show previous image">
+          <i class="fas fa-chevron-left"></i>
+        </button>
+        <img data-role="modal-image" alt="{{ product.name }} full-size preview" loading="lazy">
+        <button type="button" class="gallery-modal-nav next" data-role="modal-next" aria-label="Show next image">
+          <i class="fas fa-chevron-right"></i>
+        </button>
+      </div>
+      <div class="gallery-modal-thumbnails" data-role="modal-thumbnails" aria-label="Gallery preview thumbnails"></div>
+    </div>
+  </div>
+</body>
+</html>

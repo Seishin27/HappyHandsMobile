@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Become a Seller - BabyBloom Marketplace</title>
+    <link rel="icon" href="{{ url_for('static', filename='images/favicon.png') }}?v={{ range(1,9999)|random }}" type="image/png">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/seller_homepage.css') }}?v=seller-{{ range(1,9999)|random }}">
+     <link rel="stylesheet" href="{{ url_for('static', filename='css/rider_homepage.css') }}?v=rider-{{ range(1,9999)|random }}">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="seller-nav">
+        <div class="nav-container">
+            <a href="/" class="nav-logo">
+                <span class="logo-text">Happy Hands</span>
+            </a>
+            <div class="nav-links">
+                <a href="/" class="nav-link">Back to Store</a>
+                <a href="/seller_login" class="nav-link">Login</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+     <section class="rider-hero">
+        <div class="hero-container">
+            <div class="hero-content">
+                <h1 class="hero-title">Sell Joy to Families — Earn on Your Schedule</h1>
+                <p class="hero-subtitle">Join Happy Hands as a seller. Flexible hours, competitive pay, and friendly support — get started in minutes.</p>
+                <div class="hero-cta">
+                    <a href="/seller_signup" class="cta-primary">Sign Up to Sell</a>
+                </div>
+                <div class="hero-stats">
+               
+                    <div class="stat">Fast onboarding</div>
+                    <div class="stat">Supportive community</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Benefits Section -->
+    <section id="benefits" class="benefits-section">
+        <div class="container">
+            <h2 class="section-title">Why Sell on Happy Hands?</h2>
+            <p class="section-subtitle">Everything you need to build and grow your baby products business</p>
+            
+            <div class="benefits-grid">
+                <div class="benefit-card">
+                    <div class="benefit-icon">💰</div>
+                    <h3>Low Fees</h3>
+                    <p>Keep more of what you earn with our competitive 3% selling fee - one of the lowest in the industry</p>
+                </div>
+                
+                <div class="benefit-card">
+                    <div class="benefit-icon">🚀</div>
+                    <h3>Easy Setup</h3>
+                    <p>Get started in minutes! Upload products, set prices, and start selling immediately</p>
+                </div>
+                
+                <div class="benefit-card">
+                    <div class="benefit-icon">📈</div>
+                    <h3>Marketing Support</h3>
+                    <p>We promote your products through social media, email campaigns, and featured listings</p>
+                </div>
+                
+                <div class="benefit-card">
+                    <div class="benefit-icon">🛡️</div>
+                    <h3>Secure Payments</h3>
+                    <p>Fast, secure payments directly to your account. Get paid within 24 hours of delivery</p>
+                </div>
+                
+                <div class="benefit-card">
+                    <div class="benefit-icon">📊</div>
+                    <h3>Sales Analytics</h3>
+                    <p>Track your performance with detailed analytics and insights to grow your business</p>
+                </div>
+                
+                <div class="benefit-card">
+                    <div class="benefit-icon">💬</div>
+                    <h3>24/7 Support</h3>
+                    <p>Our dedicated seller support team is here to help you succeed every step of the way</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Success Stories -->
+    <section class="success-section">
+        <div class="container">
+            <h2 class="section-title">Success Stories</h2>
+            <p class="section-subtitle">See how other sellers are thriving on Happy Hands</p>
+            
+            <div class="stories-grid">
+                <div class="story-card">
+                    <div class="story-header">
+                        <div class="story-info">
+                            <h4>Maria's Organic Baby</h4>
+                            <div class="story-rating">⭐⭐⭐⭐⭐ 4.9</div>
+                        </div>
+                    </div>
+                    <blockquote>
+                        "I started with just 10 products and now I'm making more monthly! Happy Hands's customer base is amazing."
+                    </blockquote>
+                    <div class="story-stats">
+                        <span class="stat">2,500+ Sales</span>
+                        <span class="stat">18 Months</span>
+                    </div>
+                </div>
+                
+                <div class="story-card">
+                    <div class="story-header">
+                        <div class="story-info">
+                            <h4>David's Toy Corner</h4>
+                            <div class="story-rating">⭐⭐⭐⭐⭐ 4.8</div>
+                        </div>
+                    </div>
+                    <blockquote>
+                        "The platform is so easy to use. I can manage everything from my phone while taking care of my own kids!"
+                    </blockquote>
+                    <div class="story-stats">
+                        <span class="stat">1,800+ Sales</span>
+                        <span class="stat">12 Months</span>
+                    </div>
+                </div>
+
+                 <div class="story-card">
+                    <div class="story-header">
+                        <div class="story-info">
+                            <h4>David's Toy Corner</h4>
+                            <div class="story-rating">⭐⭐⭐⭐⭐ 4.8</div>
+                        </div>
+                    </div>
+                    <blockquote>
+                        "The platform is so easy to use. I can manage everything while taking care of my own kids!"
+                    </blockquote>
+                    <div class="story-stats">
+                        <span class="stat">1,800+ Sales</span>
+                        <span class="stat">12 Months</span>
+                    </div>
+                </div>
+                
+                <div class="story-card">
+                    <div class="story-header">
+                        <div class="story-info">
+                            <h4>Little Wonders Boutique</h4>
+                            <div class="story-rating">⭐⭐⭐⭐⭐ 5.0</div>
+                        </div>
+                    </div>
+                    <blockquote>
+                        "Happy Hands helped me turn my passion into a full-time business. The support team is incredible!"
+                    </blockquote>
+                    <div class="story-stats">
+                        <span class="stat">3,200+ Sales</span>
+                        <span class="stat">24 Months</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+
+    <section class="how-it-works">
+        <div class="container">
+            <h2 class="section-title">How It Works</h2>
+            <p class="section-subtitle">Start selling in 3 simple steps</p>
+            
+            <div class="steps-container">
+                <div class="step-item">
+                    <div class="step-number">1</div>
+                    <div class="step-content">
+                        <h3>Sign Up</h3>
+                        <p>Create your seller account with basic business information. Takes less than 5 minutes!</p>
+                    </div>
+                </div>
+                
+                <div class="step-arrow">→</div>
+                
+                <div class="step-item">
+                    <div class="step-number">2</div>
+                    <div class="step-content">
+                        <h3>Add Products</h3>
+                        <p>Upload your baby products with photos and descriptions. Our tools make it super easy!</p>
+                    </div>
+                </div>
+                
+                <div class="step-arrow">→</div>
+                
+                <div class="step-item">
+                    <div class="step-number">3</div>
+                    <div class="step-content">
+                        <h3>Start Earning</h3>
+                        <p>Watch orders come in and get paid automatically. We handle payments and customer service!</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Final CTA -->
+    <section class="final-cta">
+        <div class="container">
+            <div class="cta-content">
+                <h2>Ready to Start Your Journey?</h2>
+                <p>Join thousands of successful sellers and start building your baby products business today</p>
+                <a href="/seller_signup" class="cta-primary large">Get Started - It's Free!</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer (Simple) -->
+    <footer class="seller-footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-left">
+                    <div class="footer-logo">
+                        <span class="logo-text">HappyHands</span>
+                    </div>
+                    <p>Building the future of baby products commerce</p>
+                </div>
+                <div class="footer-right">
+                    <a href="/about#help">Seller Support</a>
+                    <a href="/about#terms">Terms &amp; Conditions</a>
+                    <a href="/about#contact">Contact Us</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+</body>
+</html>

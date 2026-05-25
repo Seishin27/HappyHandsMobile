@@ -1,0 +1,851 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Your Profile • HappyHands</title>
+    <link rel="icon" href="{{ url_for('static', filename='images/favicon.png') }}?v={{ range(1,9999)|random }}" type="image/png">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/profile_shared.css') }}">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body class="profile-body">
+    <header>
+        <nav class="navbar">
+            <div class="logo">
+                <a href="/">
+                  <span class="logo-text">HappyHands</span>
+                </a>
+            </div>
+           
+            <div class="nav-actions">
+                {% if user %}
+                <div class="user-dropdown">
+                    <button class="action-btn account-btn dropdown-toggle" aria-label="Account" id="ActBtn" data-logged-in="1">
+                        {% if user.avatar %}
+                            <img src="{{ user.avatar }}" alt="Profile" style="width:36px; height:36px; border-radius:50%; object-fit:cover;">
+                        {% else %}
+                            <div class="profile-initials" title="{{ user.username }}" style="width:36px;height:36px;border-radius:50%;background:#f3f4f6;display:flex;align-items:center;justify-content:center;font-weight:600;color:#111;">{{ (user.username[:1] if user.username) |upper }}</div>
+                        {% endif %}
+                        <i class="fas fa-chevron-down dropdown-arrow"></i>
+                    </button>
+                </div>
+                {% endif %}
+            </div>
+        </nav>
+    </header>
+
+    <main class="profile-main-wrapper">
+        <div style="margin-bottom: 1.5rem;">
+            <a href="/" style="display: inline-flex; align-items: center; gap: 0.5rem; color: #4b5563; text-decoration: none; font-weight: 500; transition: color 0.2s;">
+                <i class="fas fa-arrow-left"></i>
+                <span>Back to Shop</span>
+            </a>
+        </div>
+        <div class="profile-dashboard">
+            <aside class="profile-sidebar">
+                <div class="profile-sidebar-header">
+                    <div class="profile-sidebar-avatar">
+                        {% if user.avatar %}
+                            <img src="{{ user.avatar }}" alt="Profile picture">
+                        {% else %}
+                            <div class="profile-sidebar-avatar-initial">
+                                <i class="fas fa-user" style="font-size: 3rem; color: #d1d5db;"></i>
+                            </div>
+                        {% endif %}
+                    </div>
+                    <div class="profile-sidebar-name">
+                        {{ user.username or 'Your Name' }}
+                    </div>
+                    <div class="profile-sidebar-email">
+                        {{ user.email or '' }}
+                    </div>
+                </div>
+
+                <nav class="profile-sidebar-nav">
+                    <button type="button" class="profile-nav-button profile-nav-button--active" data-target="#profile-info">
+                        <span class="profile-nav-button-icon">
+                            <span class="material-icons" style="font-size:18px;">person</span>
+                        </span>
+                        <span>Edit Profile</span>
+                    </button>
+                    <button type="button" class="profile-nav-button" data-target="#profile-orders">
+                        <span class="profile-nav-button-icon">
+                            <span class="material-icons" style="font-size:18px;">shopping_bag</span>
+                        </span>
+                        <span>My Orders</span>
+                    </button>
+                    <button type="button" class="profile-nav-button" data-target="#profile-messages">
+                        <span class="profile-nav-button-icon">
+                            <span class="material-icons" style="font-size:18px;">chat</span>
+                        </span>
+                        <span>Messages</span>
+                    </button>
+                    <button type="button" class="profile-nav-button" data-target="#profile-recent-products">
+                        <span class="profile-nav-button-icon">
+                            <span class="material-icons" style="font-size:18px;">history</span>
+                        </span>
+                        <span>Recent Products Viewed</span>
+                    </button>
+                    <button type="button" class="profile-nav-button" data-target="#profile-recent-shops">
+                        <span class="profile-nav-button-icon">
+                            <span class="material-icons" style="font-size:18px;">storefront</span>
+                        </span>
+                        <span>Recent Shops Viewed</span>
+                    </button>
+                    <button type="button" class="profile-nav-button" data-target="#profile-settings">
+                        <span class="profile-nav-button-icon">
+                            <span class="material-icons" style="font-size:18px;">settings</span>
+                        </span>
+                        <span>Settings</span>
+                    </button>
+                    <button type="button" class="profile-nav-button" id="profileLogoutBtn" style="margin-top:auto;color:#ef4444;">
+                        <span class="profile-nav-button-icon" style="color:#ef4444;">
+                            <span class="material-icons" style="font-size:18px;">logout</span>
+                        </span>
+                        <span>Logout</span>
+                    </button>
+                </nav>
+            </aside>
+
+            <section class="profile-main">
+                <header>
+                    <div class="profile-page-title">Your Profile</div>
+                    <div class="profile-page-subtitle">
+                        Manage your account details, recent orders, and activity in one place.
+                    </div>
+
+                    {% with messages = get_flashed_messages(with_categories=true) %}
+                      {% if messages %}
+                        {% for cat, msg in messages %}
+                          <div class="alert alert-{{ 'success' if cat=='success' else 'danger' }}">{{ msg }}</div>
+                        {% endfor %}
+                      {% endif %}
+                    {% endwith %}
+                </header>
+
+                <section id="profile-info" class="profile-card profile-card--primary profile-section">
+                    <div class="profile-card-header">
+                        <h2>Profile Information</h2>
+                        <p>Basic details and avatar used across your BabyBloom experience.</p>
+                    </div>
+
+                    <form class="profile-form" method="post" enctype="multipart/form-data">
+                        <div class="profile-form-row">
+                            <div class="profile-form-group">
+                                <label for="username">Display name</label>
+                                <input id="username" name="username" type="text" class="profile-input" value="{{ user.username or '' }}" required>
+                            </div>
+                            <div class="profile-form-group">
+                                <label for="email">Email</label>
+                                <input id="email" name="email" type="email" class="profile-input" value="{{ user.email or '' }}" required>
+                            </div>
+                        </div>
+
+                        <div class="profile-form-group">
+                            <label for="avatar">Profile picture (optional)</label>
+                            <div class="profile-avatar-upload-row">
+                                <div class="profile-avatar-preview">
+                                    <img id="avatarPreview" src="{{ user.avatar if user.avatar else '' }}" alt="Avatar preview" style="width:100%;height:100%;object-fit:cover; {% if not user.avatar %}display:none;{% endif %}">
+                                    <div id="avatarPlaceholder" style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:#f9fafb; {% if user.avatar %}display:none;{% endif %}">
+                                        <i class="fas fa-user" style="font-size: 2.5rem; color: #d1d5db;"></i>
+                                    </div>
+                                </div>
+                                <input id="avatar" name="avatar" type="file" accept="image/*" class="profile-input-file">
+                            </div>
+                        </div>
+
+                        <div class="profile-form-actions">
+                            <button type="submit" class="profile-btn-primary">Save changes</button>
+                        </div>
+                    </form>
+                </section>
+
+                <section id="profile-orders" class="profile-card profile-section profile-section-hidden">
+                    <div class="profile-card-header">
+                        <h2>Your Orders</h2>
+                        <p>Track all of your purchases and their status.</p>
+                    </div>
+
+                    {% set orders_list = orders if orders is defined else recent_orders %}
+                    {% if orders_list %}
+                        <div class="profile-orders-list">
+                            {% for order in orders_list %}
+                            <article class="profile-order-card">
+                                <div class="profile-order-thumb">
+                                    {% if order.product_image %}
+                                        <img src="{{ order.product_image }}" alt="Product image">
+                                    {% else %}
+                                        <img src="{{ url_for('static', filename='images/default.png') }}" alt="Product image">
+                                    {% endif %}
+                                </div>
+                                <div class="profile-order-main">
+                                    <div class="profile-order-title">{{ order.product_name or 'Order item' }}</div>
+                                    <div class="profile-order-meta">
+                                        Order #{{ order.order_number or order.id }} · {{ order.date|default('', true) }}
+                                    </div>
+                                </div>
+                                <div class="profile-order-actions">
+                                    <div class="profile-order-status">{{ order.status|default('Processing', true) }}</div>
+                                    {% if order.detail_url %}
+                                      <a href="{{ order.detail_url }}" class="profile-order-view-btn">View Order</a>
+                                    {% endif %}
+                                </div>
+                            </article>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <p class="profile-empty-state">You don’t have any orders yet. When you place an order, it will show up here.</p>
+                    {% endif %}
+                </section>
+
+                    <section id="profile-messages" class="profile-card profile-section profile-section-hidden">
+                        <div class="profile-card-header">
+                            <h2>Messages</h2>
+                            <p>Chat with sellers and riders.</p>
+                        </div>
+                        <div id="userChatContainer" style="min-height:300px;display:flex;flex-direction:column;">
+                            <div style="padding:20px;text-align:center;color:#64748b;">
+                                <p>Select a conversation to start chatting.</p>
+                                <button id="openChatOverlayBtn" class="profile-btn-primary" style="margin-top:10px;">Open Chat</button>
+                            </div>
+                        </div>
+                    </section>
+
+                    <section id="profile-recent-products" class="profile-card profile-section profile-section-hidden">
+                        <div class="profile-card-header">
+                            <h2>Recent Products</h2>
+                            <p>Items you’ve checked out recently.</p>
+                        </div>
+
+                        {% if recent_products %}
+                          <div class="profile-badge-list">
+                            {% for p in recent_products %}
+                              <a href="{{ p.url }}" class="profile-badge-pill">{{ p.name }}</a>
+                            {% endfor %}
+                          </div>
+                        {% else %}
+                          <p class="profile-empty-state">Browse around – products you view will appear here as a quick jump-back list.</p>
+                        {% endif %}
+                    </section>
+
+                <section id="profile-recent-shops" class="profile-card profile-section profile-section-hidden">
+                    <div class="profile-card-header">
+                        <h2>Recent Shops</h2>
+                        <p>Stores you’ve recently visited on Happy Hands.</p>
+                    </div>
+                    {% if recent_shops %}
+                      <div class="profile-badge-list">
+                        {% for s in recent_shops %}
+                          <a href="{{ s.url }}" class="profile-badge-pill">{{ s.name }}</a>
+                        {% endfor %}
+                      </div>
+                    {% else %}
+                      <p class="profile-empty-state">When you explore different sellers, their shops will be listed here for quick access.</p>
+                    {% endif %}
+                </section>
+
+                <section id="profile-settings" class="profile-card profile-section profile-section-hidden">
+                    <div class="profile-card-header">
+                        <h2>Settings</h2>
+                        <p>Manage your addresses and account security.</p>
+                    </div>
+                    
+                    <!-- Address Section -->
+                    <div class="settings-group" style="margin-bottom: 2rem;">
+                        <h3 style="font-size: 1.1rem; margin-bottom: 1rem; color: #111827;">My Addresses</h3>
+                        <div id="addressList" class="address-list" style="display: grid; gap: 1rem; margin-bottom: 1rem;">
+                            <!-- JS will populate this -->
+                        </div>
+                        <button type="button" class="profile-btn-secondary" id="btnAddAddress">
+                            <i class="fas fa-plus"></i> Add New Address
+                        </button>
+                        
+                        <!-- Hidden Address Form -->
+                        <div id="addressFormContainer" style="display:none; margin-top:1.5rem; padding: 1.5rem; background: #f9fafb; border-radius: 12px; border: 1px solid #e5e7eb;">
+                            <h4 style="margin-top: 0; margin-bottom: 1rem;">Address Details</h4>
+                            <form id="addressForm" class="profile-form">
+                                <div class="profile-form-row">
+                                    <div class="profile-form-group">
+                                        <label for="region">Region</label>
+                                        <select id="region" name="region" class="profile-input" required>
+                                            <option value="">Select Region</option>
+                                        </select>
+                                    </div>
+                                    <div class="profile-form-group">
+                                        <label for="province">Province</label>
+                                        <select id="province" name="province" class="profile-input" required>
+                                            <option value="">Select Province</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="profile-form-row">
+                                    <div class="profile-form-group">
+                                        <label for="city">City / Municipality</label>
+                                        <select id="city" name="city" class="profile-input" required>
+                                            <option value="">Select City/Municipality</option>
+                                        </select>
+                                    </div>
+                                    <div class="profile-form-group">
+                                        <label for="barangay">Barangay</label>
+                                        <select id="barangay" name="barangay" class="profile-input" required>
+                                            <option value="">Select Barangay</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="profile-form-group">
+                                    <label for="homeAddress">Home Address / Landmark</label>
+                                    <input type="text" id="homeAddress" name="home_address" class="profile-input" placeholder="House, street, village, or landmark" required>
+                                </div>
+                                <div class="profile-form-group">
+                                    <label for="contactNumber">Contact Number</label>
+                                    <input type="tel" id="contactNumber" name="contact_number" class="profile-input" placeholder="09XX-XXX-XXXX" required>
+                                </div>
+                                <div class="profile-form-actions" style="margin-top: 1rem;">
+                                    <button type="submit" class="profile-btn-primary">Save Address</button>
+                                    <button type="button" class="profile-btn-secondary" id="btnCancelAddress">Cancel</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+
+                    <hr style="margin: 2rem 0; border: 0; border-top: 1px solid #e5e7eb;">
+
+                    <!-- Password Section -->
+                    <div class="settings-group">
+                        <h3 style="font-size: 1.1rem; margin-bottom: 1rem; color: #111827;">Change Password</h3>
+                        <form id="changePasswordForm" class="profile-form">
+                            <div class="profile-form-group">
+                                <label for="current_password">Current Password</label>
+                                <input type="password" id="current_password" name="current_password" class="profile-input" required>
+                            </div>
+                            <div class="profile-form-row">
+                                <div class="profile-form-group">
+                                    <label for="new_password">New Password</label>
+                                    <input type="password" id="new_password" name="new_password" class="profile-input" required>
+                                </div>
+                                <div class="profile-form-group">
+                                    <label for="confirm_password">Confirm New Password</label>
+                                    <input type="password" id="confirm_password" name="confirm_password" class="profile-input" required>
+                                </div>
+                            </div>
+                            <div class="profile-form-actions">
+                                <button type="submit" class="profile-btn-primary">Update Password</button>
+                            </div>
+                        </form>
+                    </div>
+                </section>
+            </section>
+        </div>
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            var navButtons = document.querySelectorAll('.profile-nav-button');
+            var sections = document.querySelectorAll('.profile-section');
+
+            function showSection(target) {
+                sections.forEach(function (sec) {
+                    sec.classList.add('profile-section-hidden');
+                });
+                if (target) {
+                    target.classList.remove('profile-section-hidden');
+                    target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
+            }
+
+            // Initial state: show profile-info only
+            var initial = document.querySelector('#profile-info');
+            if (initial) {
+                showSection(initial);
+            }
+
+            navButtons.forEach(function (btn) {
+                btn.addEventListener('click', function () {
+                    var targetSelector = btn.getAttribute('data-target');
+                    var target = targetSelector ? document.querySelector(targetSelector) : null;
+
+                    navButtons.forEach(function (b) {
+                        b.classList.remove('profile-nav-button--active');
+                    });
+                    btn.classList.add('profile-nav-button--active');
+
+                    if (target) {
+                        showSection(target);
+                    }
+                });
+            });
+
+            var avatarInput = document.getElementById('avatar');
+            var avatarPreview = document.getElementById('avatarPreview');
+            var avatarPlaceholder = document.getElementById('avatarPlaceholder');
+
+            if (avatarInput && avatarPreview) {
+                avatarInput.addEventListener('change', function (e) {
+                    var file = e.target.files && e.target.files[0];
+                    if (!file) return;
+                    var url = URL.createObjectURL(file);
+                    avatarPreview.src = url;
+                    avatarPreview.style.display = 'block';
+                    if (avatarPlaceholder) {
+                        avatarPlaceholder.style.display = 'none';
+                    }
+                });
+            }
+
+            // Address form handling
+            const btnAddAddress = document.getElementById('btnAddAddress');
+            const addressFormContainer = document.getElementById('addressFormContainer');
+            const addressList = document.getElementById('addressList');
+
+            if (btnAddAddress) {
+                btnAddAddress.addEventListener('click', function() {
+                    addressFormContainer.style.display = 'block';
+                    btnAddAddress.style.display = 'none';
+                });
+            }
+
+            const btnCancelAddress = document.getElementById('btnCancelAddress');
+            if (btnCancelAddress) {
+                btnCancelAddress.addEventListener('click', function() {
+                    addressFormContainer.style.display = 'none';
+                    btnAddAddress.style.display = 'inline-flex';
+                });
+            }
+
+            // Populate address list (JS simulation)
+            function populateAddressList(addresses) {
+                addressList.innerHTML = '';
+                if (addresses.length === 0) {
+                    addressList.innerHTML = '<p class="profile-empty-state">No addresses found. Add a new address.</p>';
+                } else {
+                    addresses.forEach(function(address, index) {
+                        var addressItem = document.createElement('div');
+                        addressItem.className = 'address-item';
+                        addressItem.style = 'padding: 1rem; background: #ffffff; border-radius: 10px; border: 1px solid #e5e7eb; display: flex; flex-direction: column; gap: 0.5rem;';
+                        addressItem.innerHTML = `
+                            <div style="font-size: 0.9rem; color: #111827;">
+                                <strong>Address ${index + 1}</strong>
+                            </div>
+                            <div class="text-sm" style="color: #6b7280;">
+                                ${address.home_address}, ${address.barangay}, ${address.city}, ${address.province}, ${address.region}
+                            </div>
+                            <div class="text-sm" style="color: #6b7280;">
+                                Contact: ${address.contact_number}
+                            </div>
+                        `;
+                        addressList.appendChild(addressItem);
+                    });
+                }
+            }
+
+            // Simulated address data (replace with real data from server)
+            const simulatedAddresses = [
+                {
+                    home_address: '123 Happy St',
+                    barangay: 'Sampaloc',
+                    city: 'Manila',
+                    province: 'NCR',
+                    region: 'Metro Manila',
+                    contact_number: '0917-123-4567'
+                },
+                {
+                    home_address: '456 Joy Ave',
+                    barangay: 'San Antonio',
+                    city: 'Pasig',
+                    province: 'Rizal',
+                    region: 'Calabarzon',
+                    contact_number: '0922-234-5678'
+                }
+            ];
+
+            // Initially populate address list
+            populateAddressList(simulatedAddresses);
+
+
+        });
+
+        // Logout logic for sidebar button
+        const profileLogoutBtn = document.getElementById('profileLogoutBtn');
+        if (profileLogoutBtn) {
+            profileLogoutBtn.addEventListener('click', async function() {
+                try {
+                    const response = await fetch('/logout', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        }
+                    });
+                    if (response.ok) {
+                        window.location.href = '/';
+                    } else {
+                        console.error('Logout failed');
+                    }
+                } catch (error) {
+                    console.error('Error during logout:', error);
+                }
+            });
+        }
+
+        // Open chat overlay from profile messages section
+        const openChatOverlayBtn = document.getElementById('openChatOverlayBtn');
+        if (openChatOverlayBtn) {
+            openChatOverlayBtn.addEventListener('click', function() {
+                if (window.openUserChats) {
+                    window.openUserChats();
+                    if (window.loadUserConversations) window.loadUserConversations();
+                } else {
+                    // Fallback if global function not available (e.g. index.js not loaded or different scope)
+                    const overlay = document.getElementById('userChatsOverlay');
+                    if (overlay) overlay.style.display = 'flex';
+                }
+            });
+        }
+
+
+        // Profile Settings Logic (Address & Password)
+        (function() {
+            const userId = "{{ user.userID if user else 'guest' }}";
+            const STORAGE_KEY = 'hh_checkout_addresses_' + userId;
+
+            function $(sel) { return document.querySelector(sel); }
+            function safeParseJSON(str, fallback) {
+                if (!str) return fallback;
+                try { return JSON.parse(str); } catch (e) { return fallback; }
+            }
+
+            // --- Address Management ---
+            function loadLocalAddresses() {
+                try {
+                    const raw = window.localStorage.getItem(STORAGE_KEY);
+                    const data = safeParseJSON(raw, []);
+                    return Array.isArray(data) ? data : [];
+                } catch (e) { return []; }
+            }
+
+            function saveLocalAddresses(addrs) {
+                try { window.localStorage.setItem(STORAGE_KEY, JSON.stringify(addrs || [])); } catch (e) {}
+            }
+
+            async function loadBackendAddressIntoLocal() {
+                try {
+                    const resp = await fetch('/api/user/address', { credentials: 'same-origin' });
+                    const data = await resp.json().catch(() => null);
+                    if (!data || !data.success || !data.address) return loadLocalAddresses();
+                    const addr = data.address;
+                    const local = loadLocalAddresses();
+                    const exists = local.some(a =>
+                        a.home_address === (addr.home_address || '') &&
+                        a.contact_number === (addr.contact_number || '') &&
+                        a.region === (addr.region || '') &&
+                        a.province === (addr.province || '') &&
+                        a.city === (addr.city || '') &&
+                        a.barangay === (addr.barangay || '')
+                    );
+                    if (!exists) {
+                        local.unshift({
+                            id: Date.now(),
+                            label: addr.home_address || 'Saved address',
+                            region: addr.region || '',
+                            province: addr.province || '',
+                            city: addr.city || '',
+                            barangay: addr.barangay || '',
+                            home_address: addr.home_address || '',
+                            contact_number: addr.contact_number || ''
+                        });
+                        saveLocalAddresses(local);
+                    }
+                    return local;
+                } catch (e) {
+                    return loadLocalAddresses();
+                }
+            }
+
+            async function saveAddressToBackend(addr) {
+                try {
+                    const payload = {
+                        region: addr.region || '',
+                        province: addr.province || '',
+                        city: addr.city || '',
+                        barangay: addr.barangay || '',
+                        home_address: addr.home_address || '',
+                        contact_number: addr.contact_number || ''
+                    };
+                    const resp = await fetch('/api/user/address', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        credentials: 'same-origin',
+                        body: JSON.stringify(payload)
+                    });
+                    await resp.json().catch(() => null);
+                } catch (e) {}
+            }
+
+            function renderAddressList() {
+                const list = document.getElementById('addressList');
+                if (!list) return;
+                const addresses = loadLocalAddresses();
+                list.innerHTML = '';
+
+                if (!addresses || !addresses.length) {
+                    list.innerHTML = '<p class="profile-empty-state">No saved addresses yet.</p>';
+                    return;
+                }
+
+                addresses.forEach(addr => {
+                    const card = document.createElement('div');
+                    card.className = 'profile-order-card'; // Reuse existing card style
+                    card.style.gridTemplateColumns = '1fr auto';
+                    
+                    const content = document.createElement('div');
+                    content.innerHTML = `
+                        <div class="profile-order-title">${addr.home_address || 'Address'}</div>
+                        <div class="profile-order-meta">
+                            ${[addr.barangay, addr.city, addr.province, addr.region].filter(Boolean).join(', ')}
+                        </div>
+                        <div class="profile-order-meta" style="margin-top:4px;">
+                            <i class="fas fa-phone-alt" style="font-size:0.8rem;margin-right:4px;"></i> ${addr.contact_number || 'No contact'}
+                        </div>
+                    `;
+
+                    const actions = document.createElement('div');
+                    actions.className = 'profile-order-actions';
+                    
+                    const delBtn = document.createElement('button');
+                    delBtn.className = 'profile-btn-secondary';
+                    delBtn.style.padding = '0.4rem 0.8rem';
+                    delBtn.style.fontSize = '0.8rem';
+                    delBtn.style.color = '#ef4444';
+                    delBtn.style.borderColor = '#fee2e2';
+                    delBtn.innerHTML = '<i class="fas fa-trash"></i> Delete';
+                    delBtn.onclick = function() {
+                        if (confirm('Are you sure you want to delete this address?')) {
+                            const updated = loadLocalAddresses().filter(a => String(a.id) !== String(addr.id));
+                            saveLocalAddresses(updated);
+                            renderAddressList();
+                        }
+                    };
+
+                    actions.appendChild(delBtn);
+                    card.appendChild(content);
+                    card.appendChild(actions);
+                    list.appendChild(card);
+                });
+            }
+
+            // --- Geo Dropdowns ---
+            function selectOptionByText(select, text) {
+                if (!select || !text) return;
+                const target = String(text).trim().toLowerCase();
+                for (let i = 0; i < select.options.length; i++) {
+                    if (select.options[i].textContent.trim().toLowerCase() === target) {
+                        select.selectedIndex = i;
+                        break;
+                    }
+                }
+            }
+
+            async function loadRegions() {
+                const sel = $('#region');
+                if (!sel) return;
+                sel.innerHTML = '<option value="">Select Region</option>';
+                try {
+                    const resp = await fetch('/get_regions');
+                    const data = await resp.json();
+                    (data || []).forEach(r => {
+                        const opt = document.createElement('option');
+                        opt.value = r.code;
+                        opt.textContent = r.name;
+                        sel.appendChild(opt);
+                    });
+                } catch (e) { console.error(e); }
+            }
+
+            async function loadProvinces() {
+                const regionSel = $('#region');
+                const provSel = $('#province');
+                const citySel = $('#city');
+                const brgySel = $('#barangay');
+                if (!regionSel || !provSel) return;
+                
+                provSel.innerHTML = '<option value="">Select Province</option>';
+                if(citySel) citySel.innerHTML = '<option value="">Select City/Municipality</option>';
+                if(brgySel) brgySel.innerHTML = '<option value="">Select Barangay</option>';
+                
+                if (!regionSel.value) return;
+                try {
+                    const resp = await fetch('/get_provinces/' + encodeURIComponent(regionSel.value));
+                    const data = await resp.json();
+                    (data || []).forEach(p => {
+                        const opt = document.createElement('option');
+                        opt.value = p.code;
+                        opt.textContent = p.name;
+                        provSel.appendChild(opt);
+                    });
+                } catch (e) { console.error(e); }
+            }
+
+            async function loadCities() {
+                const provSel = $('#province');
+                const citySel = $('#city');
+                const brgySel = $('#barangay');
+                if (!provSel || !citySel) return;
+
+                citySel.innerHTML = '<option value="">Select City/Municipality</option>';
+                if(brgySel) brgySel.innerHTML = '<option value="">Select Barangay</option>';
+
+                if (!provSel.value) return;
+                try {
+                    const resp = await fetch('/get_cities/' + encodeURIComponent(provSel.value));
+                    const data = await resp.json();
+                    (data || []).forEach(c => {
+                        const opt = document.createElement('option');
+                        opt.value = c.code;
+                        opt.textContent = c.name;
+                        citySel.appendChild(opt);
+                    });
+                } catch (e) { console.error(e); }
+            }
+
+            async function loadBarangays() {
+                const citySel = $('#city');
+                const brgySel = $('#barangay');
+                if (!citySel || !brgySel) return;
+
+                brgySel.innerHTML = '<option value="">Select Barangay</option>';
+                if (!citySel.value) return;
+                try {
+                    const resp = await fetch('/get_barangays/' + encodeURIComponent(citySel.value));
+                    const data = await resp.json();
+                    (data || []).forEach(b => {
+                        const opt = document.createElement('option');
+                        opt.value = b.code;
+                        opt.textContent = b.name;
+                        brgySel.appendChild(opt);
+                    });
+                } catch (e) { console.error(e); }
+            }
+
+            // --- Initialization ---
+            document.addEventListener('DOMContentLoaded', async function() {
+                // Init Address List
+                await loadBackendAddressIntoLocal();
+                renderAddressList();
+
+                // Init Dropdowns
+                const regionSel = $('#region');
+                const provSel = $('#province');
+                const citySel = $('#city');
+                if (regionSel) {
+                    loadRegions();
+                    regionSel.addEventListener('change', loadProvinces);
+                    provSel.addEventListener('change', loadCities);
+                    citySel.addEventListener('change', loadBarangays);
+                }
+
+                // Toggle Address Form
+                const btnAdd = $('#btnAddAddress');
+                const btnCancel = $('#btnCancelAddress');
+                const formContainer = $('#addressFormContainer');
+                
+                if (btnAdd && formContainer) {
+                    btnAdd.addEventListener('click', () => {
+                        formContainer.style.display = 'block';
+                        btnAdd.style.display = 'none';
+                    });
+                }
+                if (btnCancel && formContainer) {
+                    btnCancel.addEventListener('click', () => {
+                        formContainer.style.display = 'none';
+                        btnAdd.style.display = 'inline-flex';
+                        $('#addressForm').reset();
+                    });
+                }
+
+                // Handle Address Submit
+                const addrForm = $('#addressForm');
+                if (addrForm) {
+                    addrForm.addEventListener('submit', async function(e) {
+                        e.preventDefault();
+                        const regionSel = $('#region');
+                        const provSel = $('#province');
+                        const citySel = $('#city');
+                        const brgySel = $('#barangay');
+                        
+                        const addr = {
+                            id: Date.now(),
+                            region: regionSel.options[regionSel.selectedIndex].text,
+                            province: provSel.options[provSel.selectedIndex].text,
+                            city: citySel.options[citySel.selectedIndex].text,
+                            barangay: brgySel.options[brgySel.selectedIndex].text,
+                            home_address: $('#homeAddress').value,
+                            contact_number: $('#contactNumber').value
+                        };
+
+                        let list = loadLocalAddresses();
+                        list.unshift(addr);
+                        saveLocalAddresses(list);
+                        renderAddressList();
+                        
+                        // Save to backend
+                        await saveAddressToBackend(addr);
+
+                        // Reset UI
+                        formContainer.style.display = 'none';
+                        btnAdd.style.display = 'inline-flex';
+                        addrForm.reset();
+                        
+                        if (window.Swal) Swal.fire('Success', 'Address saved successfully', 'success');
+                        else alert('Address saved successfully');
+                    });
+                }
+
+                // Handle Password Change
+                const pwdForm = $('#changePasswordForm');
+                if (pwdForm) {
+                    pwdForm.addEventListener('submit', async function(e) {
+                        e.preventDefault();
+                        const current = $('#current_password').value;
+                        const newPwd = $('#new_password').value;
+                        const confirmPwd = $('#confirm_password').value;
+
+                        if (newPwd !== confirmPwd) {
+                            if (window.Swal) Swal.fire('Error', 'New passwords do not match', 'error');
+                            else alert('New passwords do not match');
+                            return;
+                        }
+
+                        try {
+                            const resp = await fetch('/api/change-password', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({
+                                    current_password: current,
+                                    new_password: newPwd,
+                                    confirm_password: confirmPwd
+                                })
+                            });
+                            const data = await resp.json();
+                            
+                            if (data.success) {
+                                if (window.Swal) Swal.fire('Success', data.msg, 'success');
+                                else alert(data.msg);
+                                pwdForm.reset();
+                            } else {
+                                if (window.Swal) Swal.fire('Error', data.msg, 'error');
+                                else alert(data.msg);
+                            }
+                        } catch (err) {
+                            console.error(err);
+                            if (window.Swal) Swal.fire('Error', 'An error occurred', 'error');
+                            else alert('An error occurred');
+                        }
+                    });
+                }
+            });
+        })();
+    </script>
+</body>
+</html>

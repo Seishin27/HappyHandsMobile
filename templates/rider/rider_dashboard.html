@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rider Dashboard - Happy Hands</title>
+    <link rel="icon" href="{{ url_for('static', filename='images/favicon.png') }}?v={{ range(1,9999)|random }}" type="image/png">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/rider_dashboard.css') }}?v=rider-dash-{{ range(1,9999)|random }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/ai_chat.css') }}?v=rider-dash-{{ range(1,9999)|random }}">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body class="admin-body" data-rider-id="{{ (session.get('rider') or {}).get('riderID') or (session.get('rider') or {}).get('id') or '' }}">
+  <aside class="admin-sidebar">
+    <div class="sidebar-header">
+      <div class="logo-container">
+        <img src="{{ url_for('static', filename='images/favicon.png') }}" alt="Happy Hands" style="height: 40px; margin-right: 10px;">
+        <span class="logo-text">Happy Hands</span>
+      </div>
+    </div>
+
+    <div class="sidebar-content">
+      <div class="store-info">
+        <div class="store-avatar">
+          {% set rider_img = (session.get('rider') or {}).get('profile_path') or (session.get('rider') or {}).get('avatar') %}
+          {% if rider_img %}
+            <img src="{{ url_for('uploaded_file', filename=rider_img) if not (rider_img|string).startswith('http') else rider_img }}" alt="Rider Avatar" style="width:48px;height:48px;border-radius:50%;object-fit:cover;border:1px solid #d0e0ff;" />
+          {% else %}
+            <i class="fas fa-user"></i>
+          {% endif %}
+        </div>
+        <div class="store-details">
+          <h4>{{ session.get('rider').get('ridername') if session.get('rider') else 'Rider' }}</h4>
+          <div class="text-muted">Status: {{ session.get('rider').get('status') if session.get('rider') else 'Pending' }}</div>
+        </div>
+      </div>
+
+      <nav class="sidebar-nav">
+        <ul class="nav-list">
+          <li class="nav-item active">
+            <a href="#" class="nav-link" data-tab="dashboard">
+              <i class="fas fa-tachometer-alt"></i>
+              <span>Dashboard</span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="#" class="nav-link" data-tab="available-orders">
+              <i class="fas fa-shopping-bag"></i>
+              <span>Available Orders</span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="#" class="nav-link" data-tab="my-orders">
+              <i class="fas fa-truck"></i>
+              <span>My Orders</span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="#" class="nav-link" data-tab="earnings">
+              <i class="fas fa-dollar-sign"></i>
+              <span>Earnings</span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="#" class="nav-link" data-tab="messages" style="display:flex;justify-content:space-between;align-items:center;">
+              <div style="display:flex;align-items:center;gap:10px;">
+                  <i class="fas fa-comments"></i>
+                  <span>Messages</span>
+              </div>
+              <span id="riderMsgBadge" class="nav-badge" style="display:none;background:#ef4444;color:#fff;font-size:11px;padding:2px 6px;border-radius:10px;font-weight:600;">0</span>
+            </a>
+          </li>
+        </ul>
+      </nav>
+    </div>
+  </aside>
+
+ 
+  {% set rider_status = session.get('rider').get('status') if session.get('rider') else None %}
+  <div id="pendingOverlay" aria-hidden="true" class="{% if rider_status and rider_status|lower|trim in ['pending','awaiting_approval'] %}visible{% endif %}">
+    <div class="panel" role="dialog" aria-modal="true" aria-labelledby="pendingTitle">
+      <h2 id="pendingTitle">Your rider account needs admin approval</h2>
+      <p>Please wait for an administrator to approve your account. You’ll be able to accept orders once approved.</p>
+      <div class="actions"><button id="refreshStatusBtn" class="btn btn-view" type="button">Check status now</button></div>
+    </div>
+  </div>
+
+
+    <main class="admin-main">
+      
+        <header class="admin-header">
+  <div class="header-content">
+    <h1 class="page-title">Rider <span class="title-accent">Dashboard</span></h1>
+      <div class="header-actions">
+    
+      <button id="supportChatBtn" class="action-btn" aria-label="Customer Support Chat" style="background:#fff;border:1px solid #e6eef8;display:flex;align-items:center;justify-content:center;width:40px;height:40px;border-radius:50%;margin-right:16px;cursor:pointer;position:relative;z-index:10;">
+          <i class="fas fa-comment-dots" style="color:#2c5aa0;font-size:1.1rem;"></i>
+      </button>
+
+    
+      <div class="notif-bell-wrapper" style="margin-right:16px;">
+        <button id="riderNotifBtn" class="action-btn notif-btn" aria-label="Notifications" type="button" style="background:#fff;border:1px solid #e6eef8;display:flex;align-items:center;gap:8px;">
+          <i class="fas fa-bell"></i>
+          <span class="notif-badge" id="riderNotifCount">0</span>
+        </button>
+        <div class="notif-menu" id="riderNotifMenu">
+          <div class="notif-menu-header">
+            <span>Notifications</span>
+            <button class="notif-mark-read" id="riderNotifMarkAll" type="button">Mark all read</button>
+          </div>
+          <div class="notif-menu-body" id="riderNotifList">
+            <div class="notif-empty">No notifications</div>
+          </div>
+        </div>
+      </div>
+      
+   
+      {% if session.get('rider') %}
+      <div class="user-dropdown" style="position:relative;">
+        <button class="action-btn account-btn dropdown-toggle" aria-label="Account" id="ActBtnRider" data-logged-in="1" type="button">
+          {% set rider_img = (session.get('rider') or {}).get('profile_path') or (session.get('rider') or {}).get('avatar') %}
+          {% if rider_img %}
+            <img src="{{ url_for('uploaded_file', filename=rider_img) if not (rider_img|string).startswith('http') else rider_img }}" alt="Profile" style="width:36px; height:36px; border-radius:50%; object-fit:cover;">
+          {% else %}
+            <div class="profile-initials" title="{{ session.get('rider').get('ridername') }}" style="width:36px;height:36px;border-radius:50%;background:#f3f4f6;display:flex;align-items:center;justify-content:center;font-weight:600;color:#111;">
+              {{ (session.get('rider').get('ridername')[:1] if session.get('rider').get('ridername'))|upper }}
+            </div>
+          {% endif %}
+          <i class="fas fa-chevron-down dropdown-arrow" style="margin-left:8px;"></i>
+        </button>
+
+        <div class="dropdown-menu" id="riderDropdown" style="display:none; position:absolute; right:0; margin-top:8px; background:#fff; border:1px solid #e6eef8; border-radius:6px; box-shadow:0 6px 18px rgba(0,0,0,0.06); min-width:180px; z-index:50;">
+          <div class="dropdown-header" style="padding:10px 14px;">
+            <span class="user-name">{{ session.get('rider').get('ridername') or 'Rider' }}</span>
+          </div>
+          <div class="dropdown-divider" style="height:1px;background:#f1f1f1;margin:6px 0;"></div>
+
+          <a class="dropdown-item" href="/rider/profile" style="display:block;padding:10px 14px;text-decoration:none;color:inherit;">Profile</a>
+          <button class="dropdown-item logout-btn" id="riderLogoutBtn" type="button" style="width:100%;text-align:left;padding:10px 14px;border:none;background:none;cursor:pointer;">
+            <i class="fas fa-sign-out-alt" style="margin-right:8px;"></i>
+            Logout
+          </button>
+        </div>
+      </div>
+      {% else %}
+      <button class="action-btn" aria-label="Account" id="ActBtnRider" data-logged-in="0" type="button">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+          <circle cx="12" cy="7" r="4"></circle>
+        </svg>
+      </button>
+      {% endif %}
+
+    </div>
+  </div>
+</header>
+
+        <!-- Dashboard Content -->
+      <section id="dashboard" class="tab-section active">
+          <div class="dashboard-content">
+              <!-- Stats Cards -->
+              <div class="stats-grid">
+                  <div class="stat-card">
+                      <div class="stat-content">
+                            <div class="stat-number" id="riderTotalDeliveries">0</div>
+                            <div class="stat-label">Total Deliveries</div>
+                      </div>
+                      <div class="stat-icon">
+                            <i class="fas fa-truck"></i>
+                      </div>
+                  </div>
+
+                  <div class="stat-card">
+                      <div class="stat-content">
+                            <div class="stat-number" id="riderTotalEarnings">₱0</div>
+                          <div class="stat-label">Total Earnings</div>
+                      </div>
+                      <div class="stat-icon">
+                          <i class="fas fa-dollar-sign"></i>
+                      </div>
+                  </div>
+
+                  <div class="stat-card">
+                      <div class="stat-content">
+                            <div class="stat-number" id="riderPendingOrders">0</div>
+                            <div class="stat-label">Pending Orders</div>
+                      </div>
+                      <div class="stat-icon">
+                            <i class="fas fa-clock"></i>
+                      </div>
+                  </div>
+
+                  <div class="stat-card">
+                      <div class="stat-content">
+                            <div class="stat-number" id="riderCompletedToday">0</div>
+                            <div class="stat-label">Completed Today</div>
+                      </div>
+                      <div class="stat-icon">
+                            <i class="fas fa-check-circle"></i>
+                      </div>
+                  </div>
+              </div>
+
+          <div class="rider-insights-grid">
+            <div class="panel-card chart-card">
+              <div class="panel-header">
+                <div>
+                  <h3>Daily Delivery Activity</h3>
+                  <p>Completed deliveries (last 30 days)</p>
+                </div>
+              </div>
+              <div class="chart-area">
+                <div id="dailyDeliveriesState" class="chart-state">Loading daily deliveries…</div>
+                <canvas id="dailyDeliveriesChart" aria-label="Daily deliveries activity"></canvas>
+              </div>
+            </div>
+
+            <div class="panel-card chart-card">
+              <div class="panel-header">
+                <div>
+                  <h3>Delivery Acceptance Overview</h3>
+                  <p>Accepted vs declined requests</p>
+                </div>
+              </div>
+              <div class="chart-area">
+                <div id="acceptanceOverviewState" class="chart-state">Loading acceptance data…</div>
+                <canvas id="acceptanceOverviewChart" aria-label="Delivery acceptance overview"></canvas>
+              </div>
+            </div>
+          </div>
+
+          <div class="panel-card recent-deliveries-card">
+            <div class="panel-header">
+              <div>
+                <h3>Recent Deliveries</h3>
+                <p>Latest assigned orders with delivery details</p>
+              </div>
+            </div>
+            <div class="table-responsive">
+              <table class="data-table" id="recentDeliveriesTable">
+                <thead>
+                  <tr>
+                    <th>orderID</th>
+                    <th>userID</th>
+                    <th>order_number</th>
+                    <th>status</th>
+                    <th>total_amount</th>
+                    <th>shipping_address</th>
+                    <th>contact_number</th>
+                    <th>payment_method</th>
+                    <th>created_at</th>
+                    <th>updated_at</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td colspan="10" class="no-data" id="recentDeliveriesState">Loading recent deliveries…</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+                <!-- Assigned Orders were previously shown here; moved into Available Orders tab -->
+          </div>
+      </section>
+      <!-- Available Orders: tabbed section (populated via JS) -->
+      <section id="available-orders" class="tab-section" style="display:none;">
+        <div class="panel-card orders-panel">
+          <h2 class="title">Available Orders</h2>
+          <div id="availableOrders" class="orders-list">
+            <!-- Assigned orders container (moved here from dashboard). The existing JS targets #riderOrders so keep that id. -->
+            <div id="riderOrders" class="orders-list">
+              <div class="empty-orders">No assigned orders</div>
+            </div>
+
+            <!-- Available orders placeholder (kept for potential separate list of unassigned/available orders) -->
+            <div class="available-only empty-orders" style="margin-top:1.25rem;">No available orders</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- My Orders: rider's accepted/past orders (server-side rendered delivered orders) -->
+      <section id="my-orders" class="tab-section" style="display:none;">
+        <div class="panel-card my-orders-panel">
+          <h2 class="title">My Orders</h2>
+          <div id="myOrdersList">
+            {% if my_orders %}
+              <div class="orders-list">
+                {% for o in my_orders %}
+                  <div class="order-card">
+                    <div class="order-head">
+                      <strong>#{{ o.order_number }}</strong>
+                      <span class="badge">{{ (o.status or 'delivered')|replace('_',' ')|title }}</span>
+                    </div>
+                    <div class="order-shop">Shop: {{ o.shop_name }}</div>
+                    <div class="order-user">Customer: {{ o.user_name }}</div>
+                    <div class="order-meta">Amount: ₱{{ '%.2f'|format(o.total_amount) }}</div>
+                    <div class="order-time">Updated: {{ o.updated_at }}</div>
+                  </div>
+                {% endfor %}
+              </div>
+            {% else %}
+              <div class="empty-orders">
+                <div class="empty-icon"><i class="fas fa-box-open"></i></div>
+                <h3>No Delivered Orders</h3>
+                <p>Delivered orders will appear here in "My Orders".</p>
+              </div>
+            {% endif %}
+          </div>
+        </div>
+      </section>
+
+      <!-- Earnings: rider earnings overview -->
+      <section id="earnings" class="tab-section" style="display:none;">
+        <div class="panel-card earnings-panel">
+          <h2 class="title">Earnings</h2>
+          <div class="stats-grid">
+            <div class="stat-card">
+              <div class="stat-content">
+                <div class="stat-number" id="riderEarningsWeek">₱{{ '%.2f'|format(earnings_week or 0) }}</div>
+                <div class="stat-label">This week</div>
+              </div>
+              <div class="stat-icon"><i class="fas fa-wallet"></i></div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-content">
+                <div class="stat-number" id="riderEarningsMonth">₱{{ '%.2f'|format(earnings_month or 0) }}</div>
+                <div class="stat-label">This month</div>
+              </div>
+              <div class="stat-icon"><i class="fas fa-calendar-alt"></i></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="messages" class="tab-section" style="display:none;">
+        <div class="panel-card messages-panel">
+          <div class="panel-header">
+            <div>
+              <h2 class="title" style="margin-bottom:4px;">Messages</h2>
+              <p style="color:#64748b;margin:0;">Chat directly with sellers and customers.</p>
+            </div>
+          </div>
+          <div class="messages-layout">
+            <div class="messages-sidebar">
+              <div class="messages-sidebar-header">Conversations</div>
+              <div id="riderConvoItems" class="messages-convo-list">
+                <div style="padding:12px;color:#64748b;">Select a conversation.</div>
+              </div>
+            </div>
+            <div class="messages-chat">
+              <div id="riderChatHeader" class="messages-chat-header">
+                <div class="chat-header-info">
+                  <div class="chat-header-text">
+                    <div id="riderChatHeaderTitle" class="chat-header-title">Choose a conversation</div>
+                    <div id="riderChatHeaderSubtitle" class="chat-header-sub">Select a seller or user to start chatting</div>
+                  </div>
+                  <div id="riderChatModes" class="rider-chat-modes">
+                    <button type="button" class="rider-chat-mode-btn active" data-mode="all">All</button>
+                    <button type="button" class="rider-chat-mode-btn" data-mode="seller">Seller</button>
+                    <button type="button" class="rider-chat-mode-btn" data-mode="user">Customer</button>
+                  </div>
+                </div>
+                <div class="chat-target-icons" id="riderChatTargets" aria-label="Active chat participants"></div>
+              </div>
+              <div id="riderChatMessages" class="messages-chat-body"></div>
+              <div class="messages-chat-input">
+                <input id="riderChatInput" type="text" placeholder="Type a message..." />
+                <button id="riderChatSend" class="btn-primary">Send</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <!-- Customer Support Chat widget -->
+    <div id="supportChatModal" class="ai-chat-modal" role="dialog" aria-modal="true" aria-label="Customer Support Chat" style="display:none;">
+        <div class="ai-chat-header">
+            <div class="ai-chat-title">Support Chat</div>
+            <button id="supportChatCloseBtn" class="ai-chat-close" aria-label="Close">✕</button>
+        </div>
+        <div id="supportChatPanel" data-chat-box class="ai-chat-content" style="display:flex;flex-direction:column;height:100%;">
+            <div id="supportChatMessages" class="ai-chat-messages chat-messages" style="flex:1;">
+                <div class="ai-chat-empty">Hello! How can we help you today?</div>
+            </div>
+            <div class="ai-chat-input-row" style="display:flex;gap:8px;">
+                <textarea id="supportChatInput" class="ai-chat-input chat-input" rows="1" placeholder="Type a message..."></textarea>
+                <button id="supportChatSendBtn" class="ai-chat-send chat-send" aria-label="Send">Send</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+      // Sidebar tab switcher (same behavior as seller dashboard)
+      document.addEventListener('DOMContentLoaded', function(){
+        const links = document.querySelectorAll('.sidebar-nav .nav-link');
+        const sections = document.querySelectorAll('.tab-section');
+        function show(tab){
+          sections.forEach(s=>{ s.style.display = (s.id === tab) ? '' : 'none'; s.classList.toggle('active', s.id===tab); });
+          document.querySelectorAll('.sidebar-nav .nav-item').forEach(li=>li.classList.remove('active'));
+          const activeLink = document.querySelector(`.sidebar-nav .nav-link[data-tab="${tab}"]`);
+          if (activeLink) activeLink.parentElement.classList.add('active');
+          window.scrollTo({top:0, behavior:'smooth'});
+          document.dispatchEvent(new CustomEvent('riderTabChange', { detail: { tab } }));
+        }
+        window.showRiderTab = show;
+        links.forEach(a=>{
+          a.addEventListener('click', function(e){
+            const tab = a.getAttribute('data-tab');
+            if (tab){ e.preventDefault(); show(tab); }
+          });
+        });
+        const initial = (location.hash||'').replace('#','');
+        if (initial && document.getElementById(initial)) show(initial);
+        else show('dashboard');
+      });
+    </script>
+  <script src="{{ url_for('static', filename='js/rider_dashboard.js') }}?v=rider-dash-{{ range(1,9999)|random }}"></script>
+  <script src="https://cdn.socket.io/4.6.1/socket.io.min.js"></script>
+  <script src="{{ url_for('static', filename='js/support_chat.js') }}?v=rider-dash-{{ range(1,9999)|random }}"></script>
+  <div id="riderData" style="display:none" data-rider-id="{{ (session.get('rider').get('riderID') if session.get('rider') and session.get('rider').get('riderID') is not none else (session.get('rider').get('id') if session.get('rider') else '')) }}"></div>
+  
+  <style>
+    /* Rider chat panel styles matching seller */
+    #riderConvoItems .convoItem { position:relative; display:flex;gap:10px;align-items:center;padding:10px;border-radius:8px;border:0;background:transparent;width:100%;text-align:left;cursor:pointer; }
+    #riderConvoItems .convoItem:hover { background:#f1f5f9; }
+    #riderConvoItems .avatar { width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;flex:0 0 40px; }
+    #riderConvoItems .avatar.seller { background:#eef2ff;color:#0b2545; }
+    #riderConvoItems .avatar.user { background:#ecfeff;color:#155e75; }
+    #riderConvoItems .convo-copy { flex:1;display:flex;flex-direction:column;gap:2px; }
+    #riderConvoItems .convo-name { font-weight:600;color:#0f1724; }
+    #riderConvoItems .convo-meta { color:#64748b;font-size:13px; }
+    .unread-badge { position:absolute; top:-2px; right:-2px; background:#ef4444; color:#fff; border-radius:999px; padding:2px 6px; font-size:11px; font-weight:600; border:2px solid #fff; min-width:18px; text-align:center; line-height:1; }
+    #riderChatMessages div[data-message-id] { max-width: 78%; padding:8px 12px; border-radius:12px; font-size:14px; line-height:1.3; }
+    #riderChatMessages div[data-message-id][data-sender='rider'],
+    #riderChatMessages div.rider-bubble { background:#0b73ff; color:#fff; align-self:flex-end; }
+    #riderChatMessages div[data-message-id][data-sender='seller'],
+    #riderChatMessages div[data-message-id][data-sender='user'],
+    #riderChatMessages div.seller-bubble,
+    #riderChatMessages div.user-bubble { background:#f1f5f9; color:#0f1724; align-self:flex-start; }
+    .rider-insights-grid { display:grid; grid-template-columns: repeat(auto-fit, minmax(440px, 1fr)); gap:18px; margin-top:24px; }
+    @media (max-width: 900px) { .rider-insights-grid { grid-template-columns: 1fr; } }
+    .recent-deliveries-card { margin-top:32px; }
+    .chart-card .panel-header h3 { margin:0; font-size:1rem; }
+    .chart-card .panel-header p { margin:4px 0 0; color:#64748b; font-size:0.9rem; }
+    .chart-area { position:relative; min-height:300px; padding:8px 0; }
+    .chart-area canvas { width:100% !important; height:300px !important; }
+    .chart-state { position:absolute; inset:0; display:flex; align-items:center; justify-content:center; font-size:0.95rem; color:#94a3b8; background:rgba(255,255,255,0.92); border-radius:12px; text-align:center; padding:12px; }
+    .chart-state.hidden { display:none; }
+    .recent-deliveries-card .table-responsive { overflow-x:auto; margin-top:12px; }
+    .recent-deliveries-card table { width:100%; border-collapse:collapse; font-size:0.9rem; }
+    .recent-deliveries-card th, .recent-deliveries-card td { border:1px solid #e6eef8; padding:10px 12px; text-align:left; vertical-align:top; }
+    .recent-deliveries-card th { background:#f8fafc; font-weight:600; white-space:nowrap; }
+    .recent-deliveries-card .no-data { text-align:center; color:#94a3b8; font-weight:500; }
+    .messages-layout { display:flex; gap:16px; flex-wrap:nowrap; height: 75vh; min-height: 500px; }
+    .messages-sidebar { width:320px; flex-shrink: 0; border:1px solid #eef2f7; border-radius:12px; overflow:hidden; background:#fff; display:flex; flex-direction:column; height: 100%; }
+    .messages-sidebar-header { font-weight:700; padding:14px; border-bottom:1px solid #f1f5f9; background: #fff; }
+    .messages-convo-list { flex:1; overflow-y:auto; }
+    .messages-chat { flex:1; min-width:0; border:1px solid #eef2f7; border-radius:12px; background:#fff; display:flex; flex-direction:column; height: 100%; overflow: hidden; }
+    .messages-chat-header { padding:16px; border-bottom:1px solid #f1f5f9; display:flex; align-items:center; justify-content:space-between; gap:12px; background: #fff; }
+    .messages-chat-body { flex:1; overflow-y:auto; padding:16px; background:#fbfdff; display:flex; flex-direction:column; gap:8px; }
+    .messages-chat-input { padding:12px; border-top:1px solid #f1f5f9; display:flex; gap:8px; background: #fff; }
+    .messages-chat-input input { flex:1; padding:10px; border-radius:8px; border:1px solid #e6eef8; }
+    @media (max-width: 960px) {
+      .messages-sidebar { width:100%; }
+      .messages-chat { min-height:360px; }
+    }
+  </style>
+  <script src="{{ url_for('static', filename='js/sidebar_toggle.js') }}" defer></script>
+
+    <div id="orderDetailsModal" class="modal">
+      <div id="orderDetailsContent" class="modal-content"></div>
+    </div>
+
+</body>
+</html>

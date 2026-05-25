@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Add Product - Seller</title>
+  <link rel="icon" href="{{ url_for('static', filename='images/favicon.png') }}?v={{ range(1,9999)|random }}" type="image/png">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}?v=add-product">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+  <header>
+    <nav class="navbar">
+      <div class="logo">
+        <a href="/seller-dashboard">
+          <span class="logo-icon">🏪</span>
+          <span class="logo-text">Seller Dashboard</span>
+        </a>
+      </div>
+      <div class="nav-center">
+        <a href="/seller-dashboard" class="nav-link">Dashboard</a>
+        <a href="/seller/orders" class="nav-link">Orders</a>
+        <a href="/seller/add-product" class="nav-link active">Add Product</a>
+        <a href="/seller/manage-product" class="nav-link">Manage Products</a>
+      </div>
+      <div class="nav-actions">
+        <div class="user-dropdown">
+          <button class="action-btn account-btn dropdown-toggle" aria-label="Account">
+            <i class="fas fa-store"></i>
+            <span>{{ seller.name if seller else 'Seller' }}</span>
+            <i class="fas fa-chevron-down dropdown-arrow"></i>
+          </button>
+          <div class="dropdown-menu" id="userDropdown">
+            <div class="dropdown-header">
+              <span class="user-name">{{ seller.name if seller else 'Seller' }}</span>
+            </div>
+            <div class="dropdown-divider"></div>
+            <a href="/seller-dashboard" class="dropdown-item"><i class="fas fa-tachometer-alt"></i> Dashboard</a>
+            <a href="/seller/orders" class="dropdown-item"><i class="fas fa-shopping-bag"></i> Orders</a>
+            <div class="dropdown-divider"></div>
+            <a href="/seller-logout" class="dropdown-item"><i class="fas fa-sign-out-alt"></i> Logout</a>
+          </div>
+        </div>
+      </div>
+    </nav>
+  </header>
+
+  <main class="container" style="max-width:980px; margin:20px auto;">
+    <section id="add-product">
+      <style>
+        #add-product { color:#0f1724; font-family: Inter, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial; }
+        #add-product .title { text-align:center; font-weight:700; color:#2c5aa0; margin:0 0 1rem 0; font-size:1.25rem; }
+        #add-product .image-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-bottom:14px; }
+        #add-product .image-box { background:#fff; border:1px dashed #e6eef8; border-radius:8px; padding:10px; text-align:center; cursor:pointer; min-height:92px; display:flex; align-items:center; justify-content:center; flex-direction:column; transition: box-shadow .12s ease; }
+        #add-product .image-box:hover { box-shadow: 0 6px 18px rgba(44,90,160,0.06); }
+        #add-product .image-box input[type=file]{ display:none; }
+        #add-product .image-placeholder { color:#94a3b8; font-size:.9rem; }
+        #add-product .form-row { display:flex; gap:12px; margin-bottom:10px; }
+        #add-product .form-col { flex:1; min-width:0; }
+        .form-label { display:block; font-weight:600; margin-bottom:6px; color:#334155; }
+        .form-input, .form-textarea, .form-select { width:100%; padding:10px 12px; border:1px solid #e6eef8; border-radius:8px; background:#fff; box-sizing:border-box; font-size:.95rem; color:#0f1724; }
+        .form-textarea { min-height:96px; resize:vertical; }
+        .small-note { color:#6b7280; font-size:.9rem; margin-top:6px; }
+        .actions { display:flex; gap:8px; justify-content:flex-end; margin-top:12px; }
+        .btn-primary { background:#2c5aa0; color:#fff; border:none; padding:9px 14px; border-radius:8px; font-weight:600; cursor:pointer; }
+        .btn-ghost { background:transparent; border:1px solid #e6eef8; color:#2c5aa0; padding:8px 12px; border-radius:8px; cursor:pointer; }
+        .success-message { color:#059669; font-size:.95rem; margin-top:10px; display:none; }
+        @media (max-width:880px){ #add-product .image-grid{ grid-template-columns:repeat(2,1fr);} #add-product .form-row{ flex-direction:column;} }
+      </style>
+
+      <h2 class="title">Add New Products</h2>
+      <form id="addProductForm" enctype="multipart/form-data" novalidate>
+        <label class="form-label">Product Images</label>
+        <div class="image-grid" role="group" aria-label="Product images">
+          <label class="image-box" data-index="0">
+            <input type="file" accept="image/*" name="image0" />
+            <div class="image-placeholder">Click to upload<br><small class="small-note">Main image</small></div>
+          </label>
+          <label class="image-box" data-index="1">
+            <input type="file" accept="image/*" name="image1" />
+            <div class="image-placeholder">Click to upload<br><small class="small-note">Image 2</small></div>
+          </label>
+          <label class="image-box" data-index="2">
+            <input type="file" accept="image/*" name="image2" />
+            <div class="image-placeholder">Click to upload<br><small class="small-note">Image 3</small></div>
+          </label>
+          <label class="image-box" data-index="3">
+            <input type="file" accept="image/*" name="image3" />
+            <div class="image-placeholder">Click to upload<br><small class="small-note">Image 4</small></div>
+          </label>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Name</label>
+          <input class="form-input" name="name" type="text" placeholder="e.g. Soft Baby Romper" required />
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Description</label>
+          <textarea class="form-textarea" name="description" placeholder="Short description about the product"></textarea>
+        </div>
+
+        <div class="form-row">
+          <div class="form-col">
+            <label class="form-label">Price</label>
+            <input class="form-input" name="price" type="number" step="0.01" placeholder="0.00" required />
+          </div>
+          <div class="form-col">
+            <label class="form-label">Stock</label>
+            <input class="form-input" name="stock" type="number" step="1" placeholder="0" required />
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Category</label>
+          {% if not categories %}
+            <div class="small-note" style="color:#b91c1c; font-weight:600;">
+              No categories are assigned to your store yet. Please contact support to complete your onboarding.
+            </div>
+          {% elif categories|length == 1 %}
+            <input type="hidden" name="category" value="{{ categories[0].id or categories[0].categoryID }}">
+            <input class="form-input" type="text" value="{{ categories[0].name }}" readonly style="background-color: #f3f4f6; cursor: not-allowed;">
+          {% else %}
+            <select class="form-select" name="category" id="productCategory" title="Product Category" required>
+              <option value="">Select a category</option>
+              {% for cat in categories %}
+                <option value="{{ cat.id or cat.categoryID }}" data-slug="{{ cat.slug }}">{{ cat.name }}</option>
+              {% endfor %}
+            </select>
+          {% endif %}
+
+          <div id="sizeWrapper" class="form-group size-wrapper" aria-hidden="true" style="display:none;">
+            <label class="form-label">Select size</label>
+            <select class="form-select" name="size" id="productSize">
+              <option value="">Select size</option>
+              <option value="Small">Small</option>
+              <option value="Medium">Medium</option>
+              <option value="Large">Large</option>
+            </select>
+            <div class="small-note">Sizes appear only for Baby Clothes &amp; Accessories.</div>
+          </div>
+        </div>
+
+        <div class="form-group checkbox-group">
+          <input type="checkbox" id="requestFeatured" name="request_featured" value="1" />
+          <label for="requestFeatured" class="form-label checkbox-label">Request to be featured on homepage</label>
+        </div>
+
+        <div class="actions">
+          <button type="reset" class="btn-ghost">Reset</button>
+          <button type="submit" class="btn-primary" {% if not categories %}disabled title="Assign categories before adding products"{% endif %}>Create Product</button>
+        </div>
+
+        <div id="addProductMsg" class="success-message"></div>
+      </form>
+    </section>
+  </main>
+
+  <script src="{{ url_for('static', filename='js/seller_dashboard.js') }}" defer></script>
+</body>
+</html>

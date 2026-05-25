@@ -1,0 +1,550 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - BabyBloom</title>
+    <link rel="icon" href="{{ url_for('static', filename='images/favicon.png') }}?v={{ range(1,9999)|random }}" type="image/png">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}?v=auth-fixed-{{ range(1,9999)|random }}">
+     <link rel="stylesheet" href="{{ url_for('static', filename='css/login.css') }}?v=auth-fixed-{{ range(1,9999)|random }}">
+     <link rel="stylesheet" href="{{ url_for('static', filename='css/terms_modal.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc; /* Light background for the whole page */
+        }
+        .split-layout {
+            display: flex;
+            height: 100vh;
+            width: 100%;
+            overflow: hidden;
+            background-color: #f1f5f9;
+        }
+        .left-panel {
+            width: 70%;
+            background-color: #f1f5f9; 
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            position: relative;
+        }
+        .brand-large {
+            font-size: 5rem;
+            font-weight: 800;
+            color: #2563eb; 
+            letter-spacing: -2px;
+            z-index: 1;
+        }
+        .right-panel {
+            width: 30%;
+            min-width: 380px;
+            background: transparent;
+            display: flex;
+            align-items: flex-start;
+            justify-content: center;
+            padding: 2rem;
+            overflow-y: auto;
+            height: 100vh;
+            box-sizing: border-box;
+            position: relative;
+            z-index: 10;
+            box-shadow: none;
+            border-radius: 0;
+        }
+        .form-container-centered {
+            width: 100%;
+            max-width: 380px;
+            background: #ffffff;
+            padding: 2rem;
+            border-radius: 24px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-direction: column;
+            margin: auto 0;
+        }
+        
+        /* Form Styling Updates */
+        .auth-form .form-group {
+            margin-bottom: 1.25rem; /* Consistent spacing */
+        }
+        .auth-form label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            font-size: 0.85rem; /* Slightly smaller body text */
+            color: #334155;
+            text-transform: uppercase;
+            letter-spacing: 0.02em;
+        }
+        .input-wrapper {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+        .input-wrapper input {
+            width: 100%;
+            padding: 0.85rem 1rem 0.85rem 2.75rem; 
+            border: 1px solid #e2e8f0;
+            border-radius: 12px; 
+            font-size: 0.95rem;
+            transition: all 0.2s;
+            background: #f8fafc;
+        }
+        .input-wrapper input:focus {
+            outline: none;
+            border-color: #2563eb;
+            background: #fff;
+            box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1);
+        }
+        .input-icon {
+            position: absolute;
+            left: 1rem;
+            color: #94a3b8;
+            pointer-events: none;
+        }
+        .auth-btn {
+            width: 100%;
+            padding: 1rem; /* Proportional button size */
+            background-color: #2563eb;
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: background-color 0.2s, transform 0.1s;
+            margin-top: 1.5rem;
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
+        }
+        .auth-btn:hover {
+            background-color: #1d4ed8;
+            transform: translateY(-1px);
+        }
+        .auth-btn:active {
+            transform: translateY(0);
+        }
+        .forgot-link-container {
+            text-align: center;
+            margin-top: 1.25rem;
+        }
+        .forgot-link {
+            color: #64748b;
+            font-size: 0.85rem;
+            text-decoration: none;
+            font-weight: 500;
+        }
+        .forgot-link:hover {
+            color: #2563eb;
+            text-decoration: underline;
+        }
+        .form-header {
+            text-align: center;
+            margin-bottom: 2.5rem;
+        }
+        .form-header h2 {
+            font-size: 2rem; /* Larger header */
+            font-weight: 800;
+            color: #1e293b;
+            margin: 0 0 0.5rem 0;
+            letter-spacing: -0.02em;
+        }
+        .form-header p {
+            color: #64748b;
+            margin: 0;
+            font-size: 0.9rem;
+            line-height: 1.5;
+        }
+        .password-toggle {
+            position: absolute;
+            right: 0.75rem;
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: #94a3b8;
+            padding: 0;
+            display: flex;
+            align-items: center;
+        }
+
+        /* Compact Register Form */
+        #register-form .form-group {
+            margin-bottom: 0.65rem;
+        }
+        #register-form .form-header {
+            margin-bottom: 1rem;
+        }
+        #register-form .form-header h2 {
+            font-size: 1.5rem;
+            margin-bottom: 0.25rem;
+        }
+        #register-form .form-header p {
+            font-size: 0.85rem;
+        }
+        #register-form label {
+            margin-bottom: 0.25rem;
+            font-size: 0.8rem;
+        }
+        #register-form .auth-btn {
+            margin-top: 0.75rem;
+            padding: 0.75rem;
+            font-size: 0.95rem;
+        }
+        #register-form .input-wrapper input {
+            padding: 0.6rem 1rem 0.6rem 2.5rem; /* Left padding for icon */
+            font-size: 0.9rem;
+        }
+        #register-form select {
+            width: 100%;
+            padding: 0.6rem 1rem;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            font-size: 0.9rem;
+            font-family: 'Inter', sans-serif;
+            background: #f8fafc;
+            color: #0f172a;
+            transition: all 0.2s;
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 0.9rem center;
+            cursor: pointer;
+        }
+        #register-form select:focus {
+            outline: none;
+            border-color: #2563eb;
+            background-color: #fff;
+            box-shadow: 0 0 0 4px rgba(37,99,235,0.1);
+        }
+        #register-form select:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        #register-form .form-footer {
+            margin-top: 1rem !important; /* Override inline style */
+            font-size: 0.85rem !important;
+        }
+
+        /* Mobile Responsive */
+        @media (max-width: 1024px) {
+             .left-panel { width: 50%; }
+             .right-panel { width: 50%; min-width: auto; }
+        }
+        @media (max-width: 768px) {
+            .split-layout {
+                flex-direction: column;
+                overflow-y: auto;
+            }
+            .left-panel {
+                width: 100%;
+                height: auto;
+                padding: 3rem 1rem 1rem;
+                flex: 0 0 auto;
+            }
+            .right-panel {
+                width: 100%;
+                height: auto;
+                min-height: auto;
+                padding: 1rem 1.5rem 3rem;
+                align-items: flex-start;
+                justify-content: center;
+            }
+            .form-container-centered {
+                max-width: 100%;
+                box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+            }
+            .brand-large {
+                font-size: 2.5rem;
+            }
+        }
+        
+        /* Extra small screens */
+        @media (max-width: 480px) {
+            .right-panel {
+                padding: 1rem;
+            }
+            .brand-large {
+                font-size: 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="split-layout">
+        <!-- Left Side (70%) -->
+        <div class="left-panel">
+            <img src="{{ url_for('static', filename='images/favicon.png') }}" alt="Happy Hands" style="max-width: 600px; width: 90%; height: auto;">
+        </div>
+
+        <!-- Right Side (30%) -->
+        <div class="right-panel">
+            <div class="form-container-centered">
+                
+                <!-- Flash Messages -->
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                    {% if messages %}
+                        {% for category, message in messages %}
+                            <div class="alert alert-{{ category }}" style="margin-bottom: 1rem; padding: 0.75rem; border-radius: 8px; font-size: 0.9rem; 
+                                {% if category == 'success' %}
+                                    background: #d1fae5; color: #065f46; border: 1px solid #a7f3d0;
+                                {% else %}
+                                    background: #fee2e2; color: #991b1b; border: 1px solid #fecaca;
+                                {% endif %}">
+                                {{ message }}
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+                {% endwith %}
+
+                <!-- LOGIN FORM -->
+                <div id="login-form" class="form-section active">
+                    <div class="form-header">
+                        <h2>Welcome Back</h2>
+                        <p>Please enter your details to sign in.</p>
+                    </div>
+                    
+                    <form method="POST" action="/login" class="auth-form">
+                        <div class="form-group">
+                            <label for="username">Email</label>
+                            <div class="input-wrapper">
+                                <svg class="input-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+                                    <polyline points="22,6 12,13 2,6"></polyline>
+                                </svg>
+                                <input type="text" name="username" id="username" placeholder="Enter your email" required>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="password">Password</label>
+                            <div class="input-wrapper">
+                                <svg class="input-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                                    <circle cx="12" cy="16" r="1"></circle>
+                                    <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                                </svg>
+                                <input type="password" name="password" id="password" placeholder="Enter your password" required>
+                                <button type="button" class="password-toggle" onclick="togglePassword('password', this)">
+                                    <svg class="eye-open" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                                        <circle cx="12" cy="12" r="3"></circle>
+                                    </svg>
+                                    <svg class="eye-closed" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display: none;">
+                                        <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
+                                        <line x1="1" y1="1" x2="23" y2="23"></line>
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <button type="submit" class="auth-btn">Sign in</button>
+                        
+                        <div class="forgot-link-container">
+                            <a href="{{ url_for('forgot_password') }}" class="forgot-link">Forgot Password?</a>
+                        </div>
+                    </form>
+                    
+                    <div class="form-footer" style="text-align: center; margin-top: 2rem; font-size: 0.9rem; color: #64748b;">
+                        <p>Don't have an account? <a href="#" onclick="showRegister(); return false;" style="color: #2563eb; font-weight: 600; text-decoration: none;">Sign up</a></p>
+                        <p style="margin-top: 0.5rem;"><a href="/home" style="color: #64748b; text-decoration: none;">Back to home</a></p>
+                    </div>
+                </div>
+
+                <!-- REGISTER FORM (Hidden by default) -->
+                <div id="register-form" class="form-section" style="display: none;">
+                    <div class="form-header">
+                        <h2>Create Account</h2>
+                        <p>Join HappyHands today</p>
+                    </div>
+                    
+                    <form method="POST" action="/register" class="auth-form">
+                        <div class="form-group">
+                            <label for="reg-email">Email</label>
+                            <div class="input-wrapper">
+                                <svg class="input-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+                                    <polyline points="22,6 12,13 2,6"></polyline>
+                                </svg>
+                                <input type="email" name="reg-email" id="reg-email" placeholder="Enter your email" required>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="reg-username">Username</label>
+                            <div class="input-wrapper">
+                                <svg class="input-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                                    <circle cx="12" cy="7" r="4"></circle>
+                                </svg>
+                                <input type="text" name="reg-username" id="reg-username" placeholder="Choose a username" required>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="reg-password">Password</label>
+                            <div class="input-wrapper">
+                                <svg class="input-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                                    <circle cx="12" cy="16" r="1"></circle>
+                                    <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                                </svg>
+                                <input type="password" name="reg-password" id="reg-password" placeholder="Create a password" required>
+                                <button type="button" class="password-toggle" onclick="togglePassword('reg-password', this)">
+                                    <svg class="eye-open" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                                        <circle cx="12" cy="12" r="3"></circle>
+                                    </svg>
+                                    <svg class="eye-closed" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display: none;">
+                                        <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
+                                        <line x1="1" y1="1" x2="23" y2="23"></line>
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="reg-confirm-password">Confirm Password</label>
+                            <div class="input-wrapper">
+                                <svg class="input-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                                    <circle cx="12" cy="16" r="1"></circle>
+                                    <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                                </svg>
+                                <input type="password" name="reg-confirm-password" id="reg-confirm-password" placeholder="Confirm password" required>
+                                <button type="button" class="password-toggle" onclick="togglePassword('reg-confirm-password', this)">
+                                    <svg class="eye-open" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                                        <circle cx="12" cy="12" r="3"></circle>
+                                    </svg>
+                                    <svg class="eye-closed" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display: none;">
+                                        <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
+                                        <line x1="1" y1="1" x2="23" y2="23"></line>
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="reg-region">Region</label>
+                            <select name="reg-region" id="reg-region" required>
+                                <option value="" disabled selected>Loading regions...</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="reg-province">Province</label>
+                            <select name="reg-province" id="reg-province" required disabled>
+                                <option value="" disabled selected>Select region first</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="reg-city">City / Municipality</label>
+                            <select name="reg-city" id="reg-city" required disabled>
+                                <option value="" disabled selected>Select province first</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="reg-barangay">Barangay</label>
+                            <select name="reg-barangay" id="reg-barangay" required disabled>
+                                <option value="" disabled selected>Select city first</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="reg-home-address">Home Address</label>
+                            <div class="input-wrapper">
+                                <input type="text" name="reg-home-address" id="reg-home-address" placeholder="House no., street, landmark" required>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="reg-contact-number">Contact Number</label>
+                            <div class="input-wrapper">
+                                <input type="tel" name="reg-contact-number" id="reg-contact-number" placeholder="09XXXXXXXXX" required>
+                            </div>
+                        </div>
+
+                        <div class="form-terms-checkbox">
+                            <input type="checkbox" id="formTermsCheckbox" name="terms" required>
+                            <label for="formTermsCheckbox">I agree to the <a href="#" class="terms-trigger-link">Terms and Conditions</a></label>
+                        </div>
+                        
+                        <button type="submit" class="auth-btn">Sign up</button>
+                    </form>
+                    
+                    <div class="form-footer" style="text-align: center; margin-top: 2rem; font-size: 0.9rem; color: #64748b;">
+                        <p>Already have an account? <a href="#" onclick="showLogin(); return false;" style="color: #2563eb; font-weight: 600; text-decoration: none;">Sign in</a></p>
+                        <p style="margin-top: 0.5rem;"><a href="/home" style="color: #64748b; text-decoration: none;">Back to home</a></p>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- Terms Modal -->
+    <div class="terms-modal-overlay" id="termsModalOverlay">
+        <div class="terms-modal">
+            <div class="terms-header">
+                <h3>Terms and Conditions</h3>
+                <button class="terms-close" id="termsCloseBtn">&times;</button>
+            </div>
+            <div class="terms-content" id="termsContent">
+                <h4>1. Introduction</h4>
+                <p>Welcome to HappyHands. By using our website and services, you agree to comply with and be bound by the following terms and conditions.</p>
+                
+                <h4>2. User Accounts</h4>
+                <p>To access certain features of the platform, you must register for an account. You agree to provide accurate, current, and complete information during the registration process and to update such information to keep it accurate, current, and complete.</p>
+                
+                <h4>3. Privacy Policy</h4>
+                <p>Your use of the platform is also governed by our Privacy Policy. Please review our Privacy Policy, which also governs the Site and informs users of our data collection practices.</p>
+                
+                <h4>4. User Conduct</h4>
+                <p>You agree not to use the platform for any unlawful purpose or any purpose prohibited under this clause. You agree not to use the platform in any way that could damage the platform, the services, or the general business of HappyHands.</p>
+                
+                <h4>5. Termination</h4>
+                <p>We may terminate your access to the Site, without cause or notice, which may result in the forfeiture and destruction of all information associated with you.</p>
+                
+                <h4>6. Changes to Terms</h4>
+                <p>HappyHands reserves the right to change these conditions from time to time as it sees fit and your continued use of the site will signify your acceptance of any adjustment to these terms.</p>
+                
+                <p style="margin-top: 2rem; margin-bottom: 2rem;">&nbsp;</p> <!-- Spacer for scrolling -->
+            </div>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/terms_modal.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/user_signup_geo.js') }}"></script>
+    <script>
+        function showRegister() {
+            document.getElementById('login-form').style.display = 'none';
+            document.getElementById('register-form').style.display = 'block';
+        }
+        function showLogin() {
+            document.getElementById('register-form').style.display = 'none';
+            document.getElementById('login-form').style.display = 'block';
+        }
+        function togglePassword(inputId, btn) {
+            const input = document.getElementById(inputId);
+            const eyeOpen = btn.querySelector('.eye-open');
+            const eyeClosed = btn.querySelector('.eye-closed');
+            
+            if (input.type === 'password') {
+                input.type = 'text';
+                eyeOpen.style.display = 'none';
+                eyeClosed.style.display = 'block';
+            } else {
+                input.type = 'password';
+                eyeOpen.style.display = 'block';
+                eyeClosed.style.display = 'none';
+            }
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,24 @@
+{# Expects `product` object (dict or object) #}
+{% set product_id = product.productID if product.productID is defined else (product.id if product.id is defined else product.get('productID') or product.get('id')) %}
+<article class="product-card product-card--category" data-product-id="{{ product_id }}">
+  <a class="product-card-link" href="{{ url_for('product_detail', product_id=product_id) }}">
+    <div class="product-card-media">
+      {% set raw = product.get('image_path') or product.get('image') or product.get('main_image') or product.get('imageurl') %}
+      {% if raw and raw is string and ',' in raw %}
+          {% set raw = raw.split(',')[0] %}
+      {% endif %}
+      {% if product.get('image_url') %}
+        <img src="{{ product.get('image_url') }}" alt="{{ product.get('name') or product.get('title') }}" loading="lazy">
+      {% elif raw %}
+        <img src="{{ url_for('uploaded_file', filename=raw) }}" alt="{{ product.get('name') or product.get('title') }}" loading="lazy">
+      {% else %}
+        <img src="{{ url_for('static', filename='images/default.png') }}" alt="{{ product.get('name') or product.get('title') }}" loading="lazy">
+      {% endif %}
+    </div>
+    <h3 class="product-card-title">{{ product.get('name') or product.get('title') }}</h3>
+    <div class="product-card-price">₱{{ ('%.2f'|format( (product.get('price') or 0)|float )) }}</div>
+  </a>
+  <div class="product-card-stock">
+    Stock: {{ (product.get('stock') or product.stock or 0)|int }}
+  </div>
+</article>

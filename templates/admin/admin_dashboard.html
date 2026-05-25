@@ -1,0 +1,2031 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - HappyHands</title>
+    <link rel="icon" href="{{ url_for('static', filename='images/favicon.png') }}?v={{ range(1,9999)|random }}" type="image/png">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}?v=admin-{{ range(1,9999)|random }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/admin_responsive.css') }}?v={{ range(1,9999)|random }}">
+     <link rel="stylesheet" href="{{ url_for('static', filename='css/rider_dashboard.css') }}?v=rider-dash-{{ range(1,9999)|random }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+      .tab-content { display: none; }
+      .tab-content.active { display: block; }
+      .nav-item.active > .nav-link { background: rgba(0,0,0,0.04); border-radius:6px; }
+      .notif-bell-wrapper { position: relative; }
+      .notif-btn { position: relative; border: none; background: none; color: #0f172a; cursor: pointer; padding: 10px; border-radius: 50%; transition: background 0.2s; font-size: 18px; }
+      .notif-btn:hover { background: rgba(15, 23, 42, 0.08); }
+      .notif-badge { position: absolute; top: 6px; right: 6px; min-width: 18px; height: 18px; padding: 0 5px; border-radius: 9px; background: #ef4444; color: #fff; font-size: 11px; font-weight: 600; display: none; align-items: center; justify-content: center; }
+      .notif-menu { position: absolute; right: 0; margin-top: 10px; width: 320px; max-height: 420px; background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; box-shadow: 0 14px 40px rgba(15, 23, 42, 0.15); overflow: hidden; display: none; z-index: 120; }
+      .notif-menu-header { display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; border-bottom: 1px solid #eef2f7; font-weight: 600; color: #0f172a; }
+      .notif-menu-body { max-height: 360px; overflow-y: auto; }
+      .notif-empty { padding: 16px; color: #64748b; text-align: center; font-size: 13px; }
+      .notif-section-title { padding: 10px 16px 4px; font-size: 12px; font-weight: 600; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.04em; }
+      .notif-card { padding: 12px 16px; border-bottom: 1px solid #f1f5f9; display: flex; flex-direction: column; gap: 6px; }
+      .notif-card:last-child { border-bottom: none; }
+      .notif-card-title { font-weight: 600; color: #1e293b; font-size: 14px; }
+      .notif-card-body { font-size: 13px; color: #475569; line-height: 1.4; }
+      .notif-card-meta { font-size: 12px; color: #94a3b8; }
+      .notif-highlight { background: #fef3c7; color: #b45309; font-weight: 600; padding: 2px 8px; border-radius: 999px; font-size: 11px; align-self: flex-start; }
+      .notif-pill { margin: 10px 16px 6px; padding: 10px 12px; border-radius: 10px; font-size: 13px; font-weight: 500; color: #0f172a; background: #e0f2fe; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+      .notif-pill.alert { background: #fee2e2; color: #b91c1c; }
+      .notif-mark-read { border: none; background: none; color: var(--admin-primary); font-size: 12px; font-weight: 600; cursor: pointer; }
+      .notif-mark-read:hover { text-decoration: underline; }
+
+      /* Messages Panel Styles from Seller Dashboard */
+      .messages-layout { display:flex; gap:16px; flex-wrap:nowrap; height: 75vh; min-height: 500px; }
+      .messages-sidebar { width:320px; flex-shrink: 0; border:1px solid #eef2f7; border-radius:12px; overflow:hidden; background:#fff; display:flex; flex-direction:column; height: 100%; }
+      .messages-sidebar-header { font-weight:700; padding:14px; border-bottom:1px solid #f1f5f9; background: #fff; }
+      .messages-convo-list { flex:1; overflow-y:auto; }
+
+      .messages-chat { flex:1; min-width:0; border:1px solid #eef2f7; border-radius:12px; background:#fff; display:flex; flex-direction:column; height: 100%; overflow: hidden; }
+      .messages-chat-header { padding:16px; border-bottom:1px solid #f1f5f9; display:flex; align-items:center; justify-content:space-between; gap:12px; background: #fff; }
+      .messages-chat-body { flex:1; overflow-y:auto; padding:16px; background:#fbfdff; display:flex; flex-direction:column; gap:8px; }
+      .messages-chat-input { padding:12px; border-top:1px solid #f1f5f9; display:flex; gap:8px; background: #fff; }
+      .messages-chat-input input { flex:1; padding:10px; border-radius:8px; border:1px solid #e6eef8; }
+      
+      .panel-card {
+        background: #ffffff;
+        border: 1px solid #e2e8f0;
+        border-radius: 12px;
+        padding: 24px;
+        width: 100%;
+        box-sizing: border-box;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+      }
+      
+      /* Conversation Item Styles */
+      .conversation-item { padding: 12px; border-bottom: 1px solid #f1f5f9; cursor: pointer; transition: background 0.2s; }
+      .conversation-item:hover { background: #f8fafc; }
+      .conversation-item.active { background: var(--admin-primary-soft); border-left: 3px solid var(--admin-primary); }
+      .conversation-item.unread { background-color: #e3f2fd; font-weight: bold; }
+
+      /* Fix for user dropdown to match image */
+      .user-dropdown .action-btn {
+          background: transparent !important;
+          border: none !important;
+          padding: 0 !important;
+          display: flex;
+          align-items: center;
+          gap: 6px !important;
+          cursor: pointer;
+          box-shadow: none !important;
+      }
+      .user-dropdown .profile-initials {
+          width: 36px;
+          height: 36px;
+          border-radius: 50%;
+          background: #f3f4f6;
+          color: #111;
+          font-weight: 600;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 14px;
+      }
+      .user-dropdown .dropdown-arrow {
+          color: #64748b;
+          font-size: 12px;
+          margin-left: 0 !important;
+      }
+    </style>
+</head>
+{% set admin_info = session.get('admin') or session.get('user') %}
+<body class="admin-body admin-dashboard" data-admin-id="{{ (admin_info or {}).get('adminID') or (admin_info or {}).get('id') or (admin_info or {}).get('userID') or 0 }}">
+    <!-- Sidebar -->
+    <aside class="admin-sidebar">
+        <div class="sidebar-header">
+            <div class="logo-container">
+                <img src="{{ url_for('static', filename='images/favicon.png') }}" alt="Happy Hands" style="height: 40px; margin-right: 10px;">
+                <span class="logo-text">Happy Hands</span>
+            </div>
+        </div>
+
+        <div class="sidebar-content">
+            <div class="store-info">
+                <div class="store-avatar">
+                    <img src="{{ url_for('static', filename='images/favicon.png') }}" alt="Admin" style="width: 32px; height: 32px; object-fit: contain;">
+                </div>
+                <div class="store-details">
+                    <h4>Admin</h4>
+                </div>
+            </div>
+
+            <nav class="sidebar-nav">
+                <ul class="nav-list">
+                    <li class="nav-section-label">Overview</li>
+                    <li class="nav-item active">
+                        <a href="#dashboard" class="nav-link" data-target="dashboard">
+                            <i class="fas fa-chart-line"></i>
+                            <span>Dashboard</span>
+                        </a>
+                    </li>
+
+                    <li class="nav-section-label">Store Management</li>
+                    <li class="nav-item">
+                        <a href="#stores" class="nav-link" data-target="stores">
+                            <i class="fas fa-store"></i>
+                            <span>Stores</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#approve-store" class="nav-link" data-target="approve-store">
+                            <i class="fas fa-check-circle"></i>
+                            <span>Approve Store</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                      <a href="#manage-categories" class="nav-link" data-target="manage-categories">
+                        <i class="fas fa-tags"></i>
+                        <span>Manage Categories</span>
+                      </a>
+                    </li>
+                    <li class="nav-item">
+                      <a href="#featured-requests" class="nav-link" data-target="featured-requests">
+                        <i class="fas fa-star"></i>
+                        <span>Featured Requests</span>
+                      </a>
+                    </li>
+
+                    <li class="nav-section-label">Riders</li>
+                    <li class="nav-item">
+                      <a href="#riders" class="nav-link" data-target="riders">
+                        <i class="fas fa-motorcycle"></i>
+                        <span>Riders</span>
+                      </a>
+                    </li>
+                    <li class="nav-item">
+                      <a href="#approve-riders" class="nav-link" data-target="approve-riders">
+                        <i class="fas fa-user-check"></i>
+                        <span>Approve Riders</span>
+                      </a>
+                    </li>
+                    <li class="nav-item">
+                      <a href="#delete-riders" class="nav-link" data-target="delete-riders">
+                        <i class="fas fa-motorcycle"></i>
+                        <span>Delete Riders</span>
+                      </a>
+                    </li>
+
+                    <li class="nav-section-label">Moderation &amp; Reports</li>
+                    <li class="nav-item">
+                      <a href="#delete-sellers" class="nav-link" data-target="delete-sellers">
+                        <i class="fas fa-user-slash"></i>
+                        <span>Delete Sellers</span>
+                      </a>
+                    </li>
+                    <li class="nav-item">
+                      <a href="#reports" class="nav-link" data-target="reports">
+                        <i class="fas fa-flag"></i>
+                        <span>Reports</span>
+                      </a>
+                    </li>
+
+                    <li class="nav-section-label">Conversations</li>
+                    <li class="nav-item">
+                      <a href="#support-chat" class="nav-link" data-target="support-chat" style="display:flex;justify-content:space-between;align-items:center;">
+                        <div style="display:flex;align-items:center;gap:10px;">
+                            <i class="fas fa-headset"></i>
+                            <span>Support Chat</span>
+                        </div>
+                        <span id="adminMsgBadge" class="nav-badge" style="display:none;background:#ef4444;color:#fff;font-size:11px;padding:2px 6px;border-radius:10px;font-weight:600;">0</span>
+                      </a>
+                    </li>
+                </ul>
+
+            </nav>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="admin-main">
+
+        <!-- Header -->
+        <header class="admin-header">
+  <div class="header-content">
+    <div class="page-title-group">
+      <h1 class="page-title">Admin <span class="title-accent">Dashboard</span></h1>
+      <span class="role-badge role-badge--admin">
+        <span class="role-badge-dot"></span>
+        <span>Admin</span>
+      </span>
+    </div>
+    <div class="header-actions">
+      <div class="notif-bell-wrapper">
+        <button class="action-btn notif-btn" id="adminNotifBtn" type="button" aria-label="Notifications">
+          <i class="fas fa-bell"></i>
+          <span class="notif-badge" id="adminNotifBadge">0</span>
+        </button>
+        <div class="notif-menu" id="adminNotifMenu">
+          <div class="notif-menu-header">
+            <span>Notifications</span>
+            <button class="notif-mark-read" id="adminNotifMarkAll" type="button">Mark all read</button>
+          </div>
+          <div class="notif-menu-body" id="adminNotifList">
+            <div class="notif-empty">No notifications</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- index-style user dropdown (uses admin session if present) -->
+      {% if admin_info %}
+      <div class="user-dropdown" style="position:relative;">
+        <button class="action-btn account-btn dropdown-toggle" aria-label="Account" id="ActBtn" data-logged-in="1" type="button">
+            <div class="profile-initials" title="{{ admin_info.get('username') }}" style="width:36px;height:36px;border-radius:50%;background:#f3f4f6;display:flex;align-items:center;justify-content:center;font-weight:600;color:#111;">
+              {{ (admin_info.get('username')[:1] if admin_info.get('username') else '') | upper }}
+            </div>
+          <i class="fas fa-chevron-down dropdown-arrow" style="margin-left:8px;"></i>
+        </button>
+
+        <div class="dropdown-menu" id="userDropdown" style="display:none; position:absolute; right:0; margin-top:8px; background:#fff; border:1px solid #e6e6e6; border-radius:6px; box-shadow:0 6px 18px rgba(0,0,0,0.06); min-width:180px; z-index:50;">
+          <div class="dropdown-header" style="padding:10px 14px;">
+            <span class="user-name">{{ admin_info.get('username') or 'Admin' }}</span>
+          </div>
+          <div class="dropdown-divider" style="height:1px;background:#f1f1f1;margin:6px 0;"></div>
+
+          <button class="dropdown-item logout-btn" id="adminLogoutBtn" type="button" style="width:100%;text-align:left;padding:10px 14px;border:none;background:none;cursor:pointer;">
+            <i class="fas fa-sign-out-alt" style="margin-right:8px;"></i>
+            Logout
+          </button>
+        </div>
+      </div>
+      {% else %}
+      <button class="action-btn" aria-label="Account" id="ActBtn" data-logged-in="0" type="button">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+          <circle cx="12" cy="7" r="4"></circle>
+        </svg>
+      </button>
+      {% endif %}
+
+    </div>
+  </div>
+</header>
+
+        <!-- CONTENT AREAS (all inside the same file, toggled with JS) -->
+
+        <!-- Dashboard tab -->
+        <section id="dashboard" class="tab-content active">
+            <div class="dashboard-content">
+                <!-- Stats Cards -->
+                <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-content">
+              <div class="stat-number">{{ metrics.total_products or 0 }}</div>
+              <div class="stat-label">Total Products</div>
+            </div>
+            <div class="stat-icon">
+              <i class="fas fa-box"></i>
+            </div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-content">
+              <div class="stat-number" id="adminRevenueBase">₱{{ '%.2f'|format(metrics.total_revenue or 0.0) }}</div>
+              <div class="stat-label">Total Revenue (commissions)</div>
+            </div>
+            <div class="stat-icon">
+              <i class="fas fa-dollar-sign"></i>
+            </div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-content">
+              <div class="stat-number">{{ metrics.total_riders or 0 }}</div>
+              <div class="stat-label">Total Riders</div>
+            </div>
+            <div class="stat-icon">
+              <i class="fas fa-motorcycle"></i>
+            </div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-content">
+              <div class="stat-number">{{ metrics.total_sellers or 0 }}</div>
+              <div class="stat-label">Total Stores</div>
+            </div>
+            <div class="stat-icon">
+              <i class="fas fa-store-alt"></i>
+            </div>
+          </div>
+                </div>
+
+                <!-- Charts Section -->
+                <div class="charts-section">
+                    <div class="chart-container">
+                        <div class="chart-header">
+                            <h3>Orders & Revenue (Daily)</h3>
+                        </div>
+                        <div class="chart-wrapper">
+                            <canvas id="ordersChart"></canvas>
+                            <div class="chart-state hidden" id="ordersChartState">Loading orders &amp; revenue…</div>
+                        </div>
+                    </div>
+                    <div class="chart-container">
+                      <div class="chart-header">
+                        <h3>Delivered Parcels (Daily)</h3>
+                      </div>
+                      <div class="chart-wrapper">
+                        <canvas id="deliveredChart"></canvas>
+                        <div class="chart-state hidden" id="deliveredChartState">Loading delivered parcels…</div>
+                      </div>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+        
+
+        <!-- Stores tab (approved stores) -->
+        <section id="stores" class="tab-content">
+            <div class="panel">
+                <h2>Approved Stores</h2>
+                <div id="storesList">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Store ID</th>
+                                <th>Store Name</th>
+                                <th>Owner</th>
+                                <th>Seller Category</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="approvedSellersTbody">
+                            {% for s in approved_sellers %}
+                            <tr data-id="{{ s.sellerID }}">
+                                <td>{{ s.sellerID }}</td>
+                                <td><strong>{{ s.storename }}</strong></td>
+                                <td>{{ s.sellername }}<br><small>{{ s.selleremail }}</small></td>
+                                <td>{{ s.seller_category or 'N/A' }}</td>
+                                <td class="status-cell">{{ s.status }}</td>
+                                <td>
+                                    <div class="action-stack">
+                                        <button class="btn-view-details" 
+                                            data-id="{{ s.sellerID }}" 
+                                            data-storename="{{ s.storename }}"
+                                            data-sellername="{{ s.sellername }}"
+                                            data-email="{{ s.selleremail }}"
+                                            data-contact="{{ s.contactnumber }}"
+                                            data-desc="{{ s.storedesc }}"
+                                            data-category="{{ s.seller_category or 'N/A' }}"
+                                            data-region="{{ s.region }}"
+                                            data-province="{{ s.province }}"
+                                            data-city="{{ s.city }}"
+                                            data-barangay="{{ s.barangay }}"
+                                            type="button">View Details</button>
+                                        {% if s.businesspermit_path %}
+                                            <button class="btn-view-permit" data-src="{{ url_for('admin_uploaded_file', filename=s.businesspermit_path) }}" type="button">View Permit</button>
+                                        {% endif %}
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                            {% if not approved_sellers %}
+                            <tr>
+                                <td colspan="5" style="text-align: center; padding: 20px; color: #666;">No approved stores yet</td>
+                            </tr>
+                            {% endif %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- Approve store tab -->
+        <section id="approve-store" class="tab-content">
+          <div class="panel">
+            <h2>Pending Store Approvals</h2>
+            <div id="approveList">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>Store ID</th>
+                    <th>Store Name</th>
+                    <th>Owner</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="pendingSellersTbody">
+                  {% for s in pending_sellers %}
+                  <tr data-id="{{ s.sellerID }}">
+                    <td>{{ s.sellerID }}</td>
+                    <td><strong>{{ s.storename }}</strong></td>
+                    <td>{{ s.sellername }}<br><small>{{ s.selleremail }}</small></td>
+                    <td class="status-cell">{{ s.status }}</td>
+                    <td>
+                      <div class="action-stack">
+                        <button class="btn-approve" data-id="{{ s.sellerID }}" type="button">Approve</button>
+                        <button class="btn-reject" data-id="{{ s.sellerID }}" type="button">Reject</button>
+                        {% if s.businesspermit_path %}
+                          <button class="btn-view-permit" data-src="{{ url_for('admin_uploaded_file', filename=s.businesspermit_path) }}" type="button">View Permit</button>
+                        {% endif %}
+                      </div>
+                    </td>
+                  </tr>
+                  {% endfor %}
+                  {% if not pending_sellers %}
+                  <tr>
+                    <td colspan="5" style="text-align: center; padding: 20px; color: #666;">No pending store approvals</td>
+                  </tr>
+                  {% endif %}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <!-- Coupons tab -->
+        <section id="coupons" class="tab-content">
+            <div class="panel">
+                <h2>Coupons</h2>
+                <p>Manage coupons here.</p>
+                <div id="couponsList">
+                    <!-- example -->
+                    <div class="coupon-row"><strong>WELCOME10</strong> — 10% off</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Featured Requests tab -->
+        <section id="featured-requests" class="tab-content">
+          <div class="panel">
+            <h2>Featured Product Requests</h2>
+            <div id="featuredRequestsList">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>Product ID</th>
+                    <th>Name</th>
+                    <th>Price</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% if featured_requests %}
+                    {% for r in featured_requests %}
+                    <tr data-id="{{ r.productID }}">
+                      <td>{{ r.productID }}</td>
+                      <td>{{ r.name }}</td>
+                      <td>{{ r.price }}</td>
+                      <td>
+                        <button class="btn-approve-featured" data-id="{{ r.productID }}" type="button">Approve</button>
+                        <button class="btn-reject-featured" data-id="{{ r.productID }}" type="button">Reject</button>
+                      </td>
+                    </tr>
+                    {% endfor %}
+                  {% else %}
+                    <tr>
+                      <td colspan="4" style="text-align:center;padding:20px;color:#666;">No requests</td>
+                    </tr>
+                  {% endif %}
+                </tbody>
+              </table>
+            </div>
+
+            <h3 style="margin-top:20px;">Currently Featured</h3>
+            <div id="featuredApprovedList">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>Product ID</th>
+                    <th>Name</th>
+                    <th>Price</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% if featured_approved %}
+                    {% for r in featured_approved %}
+                    <tr data-id="{{ r.productID }}">
+                      <td>{{ r.productID }}</td>
+                      <td>{{ r.name }}</td>
+                      <td>{{ r.price }}</td>
+                      <td>
+                        <button class="btn-remove-featured" data-id="{{ r.productID }}" type="button" style="background:#ef4444;color:#fff;border:none;padding:6px 10px;border-radius:6px;">Remove</button>
+                      </td>
+                    </tr>
+                    {% endfor %}
+                  {% else %}
+                    <tr>
+                      <td colspan="4" style="text-align:center;padding:20px;color:#666;">No featured products</td>
+                    </tr>
+                  {% endif %}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <!-- Riders (approved) -->
+        <section id="riders" class="tab-content">
+          <div class="panel">
+            <h2>Approved Riders</h2>
+            <div>
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>ID</th>
+                    <th>Name</th>
+                    <th>Contact</th>
+                    <th>Vehicle Type</th>
+                    <th>Status</th>
+                    <th>Available</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% if approved_riders %}
+                    {% for r in approved_riders %}
+                      <tr data-id="{{ r.riderID }}">
+                        <td>{{ r.riderID }}</td>
+                        <td>{{ r.ridername }}<br><small>{{ r.rideremail }}</small></td>
+                        <td>{{ r.phone or '—' }}</td>
+                        <td>{{ r.vehicle_type or '—' }}</td>
+                        <td>{{ r.status }}</td>
+                        <td>{{ 'Yes' if (r.is_available or 0) == 1 else 'No' }}</td>
+                      </tr>
+                    {% endfor %}
+                  {% else %}
+                    <tr><td colspan="6" style="text-align:center;padding:20px;color:#666;">No approved riders</td></tr>
+                  {% endif %}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <!-- Approve riders (pending) -->
+        <section id="approve-riders" class="tab-content">
+          <div class="panel">
+            <h2>Pending Rider Approvals</h2>
+            <div>
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>ID</th>
+                    <th>Name</th>
+                    <th>Contact</th>
+                    <th>Vehicle Type</th>
+                    <th>License</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% if pending_riders %}
+                    {% for r in pending_riders %}
+                      <tr data-id="{{ r.riderID }}">
+                        <td>{{ r.riderID }}</td>
+                        <td>{{ r.ridername }}<br><small>{{ r.rideremail }}</small></td>
+                        <td>{{ r.phone or '—' }}</td>
+                        <td>{{ r.vehicle_type or '—' }}</td>
+                        <td>
+                          {% if r.driverlicense_path %}
+                            <button class="btn-view-license" data-src="{{ url_for('admin_uploaded_file', filename=r.driverlicense_path) }}" type="button">View License</button>
+                          {% else %}
+                            <span style="color:#94a3b8;font-style:italic;">No license</span>
+                          {% endif %}
+                        </td>
+                        <td>
+                          <button class="btn-approve-rider" data-id="{{ r.riderID }}" type="button">Approve</button>
+                          <button class="btn-reject-rider" data-id="{{ r.riderID }}" type="button">Reject</button>
+                        </td>
+                      </tr>
+                    {% endfor %}
+                  {% else %}
+                    <tr><td colspan="6" style="text-align:center;padding:20px;color:#666;">No pending rider approvals</td></tr>
+                  {% endif %}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <!-- Delete riders tab -->
+        <section id="delete-riders" class="tab-content">
+          <div class="panel">
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:16px;flex-wrap:wrap;">
+              <div>
+                <h2>Delete Riders</h2>
+                <p style="color:#64748b;max-width:640px;margin-top:6px;">
+                  Remove a rider account, clear their delivery chat history, and unassign them from outstanding orders.
+                  This cannot be undone, so verify the license details and activity before deleting.
+                </p>
+              </div>
+              <div style="background:#eff6ff;border:1px solid #bfdbfe;color:#1d4ed8;padding:12px 16px;border-radius:10px;max-width:320px;">
+                <strong>Reminder:</strong> deleting a rider instantly frees any deliveries tied to their ID for reassignment.
+              </div>
+            </div>
+            <div style="margin-top:16px;overflow-x:auto;">
+              <table class="data-table" id="deleteRidersTable">
+                <thead>
+                  <tr>
+                    <th>ID</th>
+                    <th>Rider</th>
+                    <th>Driver's License</th>
+                    <th>Account Status</th>
+                    <th>Vehicle</th>
+                    <th style="text-align:center;">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% if all_riders %}
+                    {% for rider in all_riders %}
+                      <tr data-id="{{ rider.riderID }}" class="delete-rider-row">
+                        <td><strong>#{{ rider.riderID }}</strong></td>
+                        <td>
+                          <div style="font-weight:600;">{{ rider.ridername or '—' }}</div>
+                          <small style="color:#475569;display:block;">{{ rider.rideremail or 'No email' }}</small>
+                          <small style="color:#94a3b8;">{{ rider.phone or 'No contact' }}</small>
+                        </td>
+                        <td>
+                          {% if rider.driverlicense_path %}
+                            <button class="btn-view-license" data-src="{{ url_for('admin_uploaded_file', filename=rider.driverlicense_path) }}" type="button">View License</button>
+                          {% else %}
+                            <span style="color:#94a3b8;font-style:italic;">No upload</span>
+                          {% endif %}
+                        </td>
+                        <td>
+                          {% set rst = (rider.status or 'pending')|lower %}
+                          {% if rst in ['active', 'approved'] %}
+                            <span style="background:#dcfce7;color:#15803d;padding:4px 10px;border-radius:999px;font-size:12px;font-weight:600;display:inline-flex;align-items:center;gap:6px;">
+                              <i class="fas fa-check"></i> {{ rider.status or 'Active' }}
+                            </span>
+                          {% elif rst in ['pending'] %}
+                            <span style="background:#fef9c3;color:#a16207;padding:4px 10px;border-radius:999px;font-size:12px;font-weight:600;display:inline-flex;align-items:center;gap:6px;">
+                              <i class="fas fa-clock"></i> Pending
+                            </span>
+                          {% elif rst in ['suspended','inactive','banned'] %}
+                            <span style="background:#fee2e2;color:#b91c1c;padding:4px 10px;border-radius:999px;font-size:12px;font-weight:600;display:inline-flex;align-items:center;gap:6px;">
+                              <i class="fas fa-ban"></i> {{ rider.status or 'Inactive' }}
+                            </span>
+                          {% else %}
+                            <span style="background:#e2e8f0;color:#475569;padding:4px 10px;border-radius:999px;font-size:12px;font-weight:600;display:inline-flex;align-items:center;gap:6px;">
+                              {{ rider.status or 'Unknown' }}
+                            </span>
+                          {% endif %}
+                        </td>
+                        <td>
+                          {{ rider.vehicle_type or 'Not set' }}
+                        </td>
+                        <td style="text-align:center;">
+                          <button type="button"
+                                  class="btn btn-danger btn-delete-rider"
+                                  data-id="{{ rider.riderID }}"
+                                  data-name="{{ rider.ridername or 'Rider #' ~ rider.riderID }}"
+                                  style="background:#dc2626;color:#fff;border:none;padding:8px 14px;border-radius:8px;cursor:pointer;">
+                            Delete
+                          </button>
+                        </td>
+                      </tr>
+                    {% endfor %}
+                  {% else %}
+                    <tr>
+                      <td colspan="6" style="padding:24px;text-align:center;color:#94a3b8;">
+                        No riders found.
+                      </td>
+                    </tr>
+                  {% endif %}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <!-- Delete sellers tab -->
+        <section id="delete-sellers" class="tab-content">
+          <div class="panel">
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:16px;flex-wrap:wrap;">
+              <div>
+                <h2>Delete Sellers</h2>
+                <p style="color:#64748b;max-width:640px;margin-top:6px;">
+                  Permanently remove a seller account and every record tied to it (products, chats, orders, notifications, restrictions).
+                  This action cannot be undone, so double-check before proceeding.
+                </p>
+              </div>
+              <div style="background:#fff7ed;border:1px solid #fed7aa;color:#c2410c;padding:12px 16px;border-radius:10px;max-width:320px;">
+                <strong>Heads up:</strong> deleting a seller also erases customer chats, featured listings, and financial records linked to that sellerID.
+              </div>
+            </div>
+            <div style="margin-top:16px;overflow-x:auto;">
+              <table class="data-table" id="deleteSellersTable">
+                <thead>
+                  <tr>
+                    <th>ID</th>
+                    <th>Store</th>
+                    <th>Owner &amp; Contact</th>
+                    <th>Status</th>
+                    <th>Created</th>
+                    <th style="text-align:center;">Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="allSellersTbody">
+                  {% if all_sellers %}
+                    {% for seller in all_sellers %}
+                      <tr data-id="{{ seller.sellerID }}" class="delete-seller-row">
+                        <td><strong>#{{ seller.sellerID }}</strong></td>
+                        <td>
+                          <div>{{ seller.storename or '—' }}</div>
+                          <small style="color:#94a3b8;">{{ seller.seller_category or 'Uncategorized' }}</small>
+                        </td>
+                        <td>
+                          <div>{{ seller.sellername or '—' }}</div>
+                          <small style="color:#475569;">{{ seller.selleremail }}</small>
+                        </td>
+                        <td>
+                          {% set st = (seller.status or 'pending')|lower %}
+                          {% if st == 'approved' %}
+                            <span style="background:#dcfce7;color:#15803d;padding:4px 10px;border-radius:999px;font-size:12px;font-weight:600;display:inline-flex;align-items:center;gap:6px;">
+                              <i class="fas fa-check"></i> Approved
+                            </span>
+                          {% elif st == 'pending' %}
+                            <span style="background:#fef9c3;color:#a16207;padding:4px 10px;border-radius:999px;font-size:12px;font-weight:600;display:inline-flex;align-items:center;gap:6px;">
+                              <i class="fas fa-clock"></i> Pending
+                            </span>
+                          {% elif st == 'rejected' %}
+                            <span style="background:#fee2e2;color:#b91c1c;padding:4px 10px;border-radius:999px;font-size:12px;font-weight:600;display:inline-flex;align-items:center;gap:6px;">
+                              <i class="fas fa-ban"></i> Rejected
+                            </span>
+                          {% else %}
+                            <span style="background:#e2e8f0;color:#475569;padding:4px 10px;border-radius:999px;font-size:12px;font-weight:600;display:inline-flex;align-items:center;gap:6px;">
+                              {{ seller.status or 'Unknown' }}
+                            </span>
+                          {% endif %}
+                        </td>
+                        <td>
+                          {% if seller.created_at %}
+                            {% if seller.created_at.__class__.__name__ == 'datetime' %}
+                              {{ seller.created_at.strftime('%Y-%m-%d %H:%M') }}
+                            {% else %}
+                              {{ seller.created_at }}
+                            {% endif %}
+                          {% else %}—{% endif %}
+                        </td>
+                        <td style="text-align:center;">
+                          <button type="button"
+                                  class="btn btn-danger btn-delete-seller"
+                                  data-id="{{ seller.sellerID }}"
+                                  data-name="{{ seller.storename or 'Seller #' ~ seller.sellerID }}"
+                                  style="background:#dc2626;color:#fff;border:none;padding:8px 14px;border-radius:8px;cursor:pointer;">
+                            Delete
+                          </button>
+                        </td>
+                      </tr>
+                    {% endfor %}
+                  {% else %}
+                    <tr>
+                      <td colspan="6" style="padding:24px;text-align:center;color:#94a3b8;">
+                        No sellers found.
+                      </td>
+                    </tr>
+                  {% endif %}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <!-- Reports tab -->
+        <section id="reports" class="tab-content">
+          <div class="panel">
+            <h2>Reports Management</h2>
+            <p style="color:#666;margin-bottom:20px;">Review and manage all reports submitted by users</p>
+
+            <!-- Unified Reports Table -->
+            <div style="overflow-x:auto;">
+              <table class="data-table" style="width:100%;border-collapse:collapse;">
+                <thead>
+                  <tr style="background:#f8f9fa;border-bottom:2px solid #e9ecef;">
+                    <th style="padding:12px;text-align:left;font-weight:600;">ID</th>
+                    <th style="padding:12px;text-align:left;font-weight:600;">Reporter</th>
+                    <th style="padding:12px;text-align:left;font-weight:600;">Complaint Type</th>
+                    <th style="padding:12px;text-align:left;font-weight:600;">Target</th>
+                    <th style="padding:12px;text-align:left;font-weight:600;">Status</th>
+                    <th style="padding:12px;text-align:left;font-weight:600;">Offense Level</th>
+                    <th style="padding:12px;text-align:left;font-weight:600;">Date</th>
+                    <th style="padding:12px;text-align:center;font-weight:600;">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% set all_reports = (user_reports or []) + (seller_reports or []) + (rider_reports or []) %}
+                  {% if all_reports %}
+                    {% for r in all_reports %}
+                      {% set target_type = 'seller' if r.reported_shop_id else ('product' if r.reported_product_id else 'none') %}
+                      <tr class="report-row" style="border-bottom:1px solid #e9ecef;"
+                          data-report-id="{{ r.id }}"
+                          data-seller-id="{{ r.reported_shop_id or '' }}"
+                          data-target-product-id="{{ r.reported_product_id or '' }}"
+                          data-offense-level="{{ r.offense_level or 0 }}"
+                          data-report-status="{{ r.status or 'open' }}">
+                        <td style="padding:12px;" data-col="id">{{ r.id }}</td>
+                        <td style="padding:12px;" data-col="reporter">{{ r.reporter_name or 'Unknown' }}</td>
+                        <td style="padding:12px;" data-col="complaint">
+                          <span style="background:#e3f2fd;color:#1976d2;padding:4px 8px;border-radius:4px;font-size:12px;">
+                            {{ r.complaint_type or 'N/A' }}
+                          </span>
+                        </td>
+                        <td style="padding:12px;" data-col="target" data-target-type="{{ target_type }}" data-target-id="{{ r.reported_shop_id or r.reported_product_id or '' }}" data-seller-name="{{ r.seller_name or '' }}" data-product-name="{{ r.product_name or '' }}">
+                          {% if r.reported_shop_id %}
+                            {% set seller_label = r.seller_name or ('Seller #' ~ r.reported_shop_id) %}
+                            <span style="color:#f57c00;">{{ seller_label }}</span>
+                          {% elif r.reported_product_id %}
+                            {% set product_label = r.product_name or ('Product #' ~ r.reported_product_id) %}
+                            <span style="color:#388e3c;">{{ product_label }}</span>
+                          {% else %}
+                            <span style="color:#666;">—</span>
+                          {% endif %}
+                        </td>
+                        <td style="padding:12px;" data-col="status">
+                          {% if r.status == 'resolved' %}
+                            <span style="background:#c8e6c9;color:#2e7d32;padding:4px 8px;border-radius:4px;font-size:12px;font-weight:500;">Resolved</span>
+                          {% else %}
+                            <span style="background:#ffecb3;color:#f57c00;padding:4px 8px;border-radius:4px;font-size:12px;font-weight:500;">Open</span>
+                          {% endif %}
+                        </td>
+                        <td style="padding:12px;" data-col="offense">
+                          {% if r.offense_level == 0 %}
+                            <span style="color:#666;">None</span>
+                          {% elif r.offense_level == 1 %}
+                            <span style="background:#fff3cd;color:#856404;padding:4px 8px;border-radius:4px;font-size:12px;font-weight:600;">Level 1</span>
+                          {% elif r.offense_level == 2 %}
+                            <span style="background:#ffe0b2;color:#e65100;padding:4px 8px;border-radius:4px;font-size:12px;font-weight:600;">Level 2</span>
+                          {% elif r.offense_level == 3 %}
+                            <span style="background:#ffcdd2;color:#c62828;padding:4px 8px;border-radius:4px;font-size:12px;font-weight:600;">Level 3</span>
+                          {% else %}
+                            <span style="color:#666;">None</span>
+                          {% endif %}
+                        </td>
+                        <td style="padding:12px;color:#666;font-size:13px;" data-col="date">
+                          {%- if r.created_at -%}
+                            {%- if r.created_at.__class__.__name__ == 'datetime' -%}
+                              {{ r.created_at.strftime('%Y-%m-%d') }}
+                            {%- else -%}
+                              {{ (r.created_at|string)[:10] }}
+                            {%- endif -%}
+                          {%- else -%}
+                            —
+                          {%- endif -%}
+                        </td>
+                        <td style="padding:12px;text-align:center;" data-col="actions">
+                          <div style="display:flex;flex-direction:column;align-items:center;gap:8px;">
+                            <button class="btn-view-report" data-id="{{ r.id }}" data-seller-id="{{ r.reported_shop_id or '' }}" data-product-id="{{ r.reported_product_id or '' }}" type="button" style="background:#1976d2;color:#fff;border:none;padding:6px 12px;border-radius:4px;cursor:pointer;font-size:13px;">View</button>
+                            {% if r.offense_level == 3 and r.reported_shop_id and (r.seller_status and r.seller_status|lower == 'frozen') %}
+                              <button class="btn-unfreeze-report" data-report-id="{{ r.id }}" type="button" style="background:#10b981;color:#fff;border:none;padding:6px 12px;border-radius:4px;cursor:pointer;font-size:13px;">Unfreeze</button>
+                            {% endif %}
+                          </div>
+                        </td>
+                      </tr>
+                    {% endfor %}
+                  {% else %}
+                    <tr>
+                      <td colspan="8" style="text-align:center;padding:40px;color:#666;">
+                        <p style="margin:0;">No reports found</p>
+                      </td>
+                    </tr>
+                  {% endif %}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <!-- add section (place after Coupons tab sections) -->
+        <section id="manage-categories" class="tab-content">
+          <div class="panel">
+            <h2>Manage Categories</h2>
+
+            <div style="display:flex;gap:.5rem;align-items:center;margin-bottom:12px;">
+              <input id="newCategoryName" type="text" placeholder="New category name" style="flex:1;padding:.6rem;border:1px solid #e6e6e6;border-radius:8px;">
+              <button id="createCategoryBtn" class="btn" type="button" style="padding:.6rem .9rem;">Create</button>
+            </div>
+
+            <div>
+              <h4 class="section-title" style="margin-top:0">Existing categories</h4>
+              <ul id="adminCategoriesList" style="list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:.5rem;">
+                <!-- optionally render server-provided list if you pass `categories` to template -->
+                {% if categories %}
+                  {% for c in categories %}
+                    <li data-id="{{ c.categoryID or c.id or '' }}" data-slug="{{ c.slug or '' }}" style="padding:.5rem;border:1px solid #f1f1f1;border-radius:8px;background:#fff;display:flex;justify-content:space-between;align-items:center;gap:.75rem;">
+                      <div style="display:flex;flex-direction:column;gap:2px;">
+                        <span>{{ c.name }}</span>
+                        <small class="muted" style="font-size:.85rem;color:#666;">{{ c.categoryID or c.id or c.slug }}</small>
+                      </div>
+                      <div>
+                        <button class="btn btn-danger btn-delete-category" type="button" data-id="{{ c.categoryID or c.id }}" data-slug="{{ c.slug }}" data-name="{{ c.name }}" style="padding:.35rem .6rem;background:#ef4444;color:#fff;border:none;border-radius:6px;cursor:pointer;">Delete</button>
+                      </div>
+                    </li>
+                  {% endfor %}
+                {% endif %}
+              </ul>
+            </div>
+          </div>
+        </section>
+
+        <!-- Support Chat tab -->
+        <section id="support-chat" class="tab-content">
+          <div class="panel-card messages-panel">
+            <div class="panel-header">
+              <div>
+                <h2 class="title" style="margin-bottom:4px;">Customer Support</h2>
+                <p style="color:#64748b;margin:0;">Chat directly with customers.</p>
+              </div>
+            </div>
+            <div class="messages-layout">
+              <div class="messages-sidebar">
+                <div class="messages-sidebar-header">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                        <span>Conversations</span>
+                    </div>
+                    <div class="rider-chat-modes" style="display:flex; gap:5px;">
+                        <button type="button" class="rider-chat-mode-btn active filter-btn" data-filter="all" style="padding:4px 8px; border-radius:4px; border:1px solid #e2e8f0; background:#fff; cursor:pointer; font-size:12px;">All</button>
+                        <button type="button" class="rider-chat-mode-btn filter-btn" data-filter="user" style="padding:4px 8px; border-radius:4px; border:1px solid #e2e8f0; background:#fff; cursor:pointer; font-size:12px;">Users</button>
+                        <button type="button" class="rider-chat-mode-btn filter-btn" data-filter="seller" style="padding:4px 8px; border-radius:4px; border:1px solid #e2e8f0; background:#fff; cursor:pointer; font-size:12px;">Sellers</button>
+                        <button type="button" class="rider-chat-mode-btn filter-btn" data-filter="rider" style="padding:4px 8px; border-radius:4px; border:1px solid #e2e8f0; background:#fff; cursor:pointer; font-size:12px;">Riders</button>
+                    </div>
+                </div>
+                <ul id="supportConversationsList" class="messages-convo-list" style="list-style:none; padding:0; margin:0;">
+                  <li style="padding:12px;color:#64748b;text-align:center;">Loading conversations...</li>
+                </ul>
+              </div>
+              <div class="messages-chat" id="adminChatBox" data-chat-box>
+                <div id="adminChatHeader" class="messages-chat-header" style="display:none;">
+                  <div class="chat-header-info">
+                    <div class="chat-header-text">
+                      <div class="chat-header-title" style="font-weight:bold;">Chatting with: <span id="currentChatUser">User</span></div>
+                    </div>
+                  </div>
+                </div>
+                <div id="adminChatMessages" class="messages-chat-body chat-messages">
+                  <div style="text-align: center; color: #999; margin-top: 50px;">Select a conversation to start chatting</div>
+                </div>
+                <div id="adminChatInputArea" class="messages-chat-input" style="display:none;">
+                  <input id="adminChatInput" type="text" class="chat-input" placeholder="Type a reply..." />
+                  <button id="adminChatSendBtn" class="btn chat-send" style="background:#0b73ff; color:white; border:none; padding:0 20px; border-radius:8px; cursor:pointer;">Send</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+    </main>
+
+  <!-- Reports modal -->
+  <div id="viewReportModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.4);align-items:center;justify-content:center;z-index:12000;">
+    <div style="width:900px;max-width:96%;max-height:90vh;overflow-y:auto;background:#fff;padding:24px;border-radius:12px;box-shadow:0 10px 30px rgba(0,0,0,0.2);">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;border-bottom:2px solid #e9ecef;padding-bottom:12px;">
+        <h3 id="reportModalTitle" style="margin:0;font-size:20px;font-weight:700;">Report Details</h3>
+        <button id="closeViewReport" type="button" style="border:none;background:transparent;font-size:24px;cursor:pointer;color:#666;">&times;</button>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:20px;">
+        <div>
+          <dl style="margin:0;display:grid;gap:12px;">
+            <div>
+              <dt style="font-weight:600;color:#666;font-size:13px;margin-bottom:4px;">Report ID</dt>
+              <dd id="r_id" style="margin:0;font-size:15px;color:#111;">—</dd>
+            </div>
+            <div>
+              <dt style="font-weight:600;color:#666;font-size:13px;margin-bottom:4px;">Reporter</dt>
+              <dd id="r_reporter" style="margin:0;font-size:15px;color:#111;">—</dd>
+            </div>
+            <div>
+              <dt style="font-weight:600;color:#666;font-size:13px;margin-bottom:4px;">Complaint Type</dt>
+              <dd id="r_complaint_type" style="margin:0;font-size:15px;color:#111;">—</dd>
+            </div>
+            <div>
+              <dt style="font-weight:600;color:#666;font-size:13px;margin-bottom:4px;">Product ID</dt>
+              <dd id="r_product" style="margin:0;font-size:15px;color:#111;">—</dd>
+            </div>
+            <div>
+              <dt style="font-weight:600;color:#666;font-size:13px;margin-bottom:4px;">Shop/Seller ID</dt>
+              <dd id="r_shop" style="margin:0;font-size:15px;color:#111;">—</dd>
+            </div>
+            <div>
+              <dt style="font-weight:600;color:#666;font-size:13px;margin-bottom:4px;">Submitted At</dt>
+              <dd id="r_time" style="margin:0;font-size:15px;color:#111;">—</dd>
+            </div>
+            <div>
+              <dt style="font-weight:600;color:#666;font-size:13px;margin-bottom:4px;">Status</dt>
+              <dd id="r_status" style="margin:0;font-size:15px;color:#111;">—</dd>
+            </div>
+          </dl>
+        </div>
+        <div>
+          <h4 style="margin:0 0 8px 0;font-size:16px;font-weight:600;">Description</h4>
+          <div id="r_description" style="white-space:pre-wrap;color:#111;margin-bottom:16px;padding:12px;background:#f8f9fa;border-radius:6px;min-height:80px;">—</div>
+          <h4 style="margin:0 0 8px 0;font-size:16px;font-weight:600;">Additional Message</h4>
+          <div id="r_message" style="color:#111;margin-bottom:16px;padding:12px;background:#f8f9fa;border-radius:6px;min-height:60px;">—</div>
+          <div id="r_image_container" style="margin-top:12px;"></div>
+        </div>
+      </div>
+      
+      <!-- Report Status Section -->
+      <div style="border-top:2px solid #e9ecef;padding-top:20px;margin-top:20px;">
+        <h4 style="margin:0 0 12px 0;font-size:16px;font-weight:600;">Report Status</h4>
+        <div style="display:flex;gap:12px;align-items:center;">
+            <select id="reportStatusSelect" style="flex:1;padding:10px;border:1px solid #ddd;border-radius:6px;font-size:14px;">
+                <option value="open">Open</option>
+                <option value="reviewed">Reviewed</option>
+                <option value="resolved">Resolved</option>
+                <option value="dismissed">Dismissed</option>
+            </select>
+            <button id="updateReportStatusBtn" type="button" style="background:#64748b;color:#fff;border:none;padding:10px 20px;border-radius:6px;cursor:pointer;font-weight:600;font-size:14px;">Update Status</button>
+        </div>
+      </div>
+
+      <!-- Offense Level Section -->
+      <div style="border-top:2px solid #e9ecef;padding-top:20px;margin-top:20px;">
+        <h4 style="margin:0 0 12px 0;font-size:16px;font-weight:600;">Set Offense Level</h4>
+        <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;">
+          <div style="flex:1;min-width:200px;">
+            <label for="offenseLevelSelect" style="display:block;margin-bottom:6px;font-weight:500;font-size:14px;">Offense Level:</label>
+            <select id="offenseLevelSelect" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:6px;font-size:14px;">
+              <option value="0">No Offense (0)</option>
+              <option value="1">Level 1 - Warning</option>
+              <option value="2">Level 2 - Restrict Posting (1 week)</option>
+              <option value="3">Level 3 - Freeze Account (1 month)</option>
+            </select>
+            <small style="display:block;margin-top:6px;color:#666;font-size:12px;">
+              <strong>Level 1:</strong> Warning notification<br>
+              <strong>Level 2:</strong> Cannot post products for 1 week + explanation required<br>
+              <strong>Level 3:</strong> Account frozen for 1 month
+            </small>
+          </div>
+          <div style="display:flex;align-items:flex-end;">
+            <button id="saveOffenseLevelBtn" type="button" style="background:#1976d2;color:#fff;border:none;padding:10px 20px;border-radius:6px;cursor:pointer;font-weight:600;font-size:14px;">Apply Offense</button>
+          </div>
+        </div>
+        
+        <div style="margin-top:16px;">
+          <label for="offenseReasonInput" style="display:block;margin-bottom:6px;font-weight:500;font-size:14px;">Offense Reason</label>
+          <textarea id="offenseReasonInput" rows="3" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:6px;font-size:14px;resize:vertical;" placeholder="Summarize the policy violation or instructions for the seller"></textarea>
+        </div>
+        
+        <div style="margin-top:16px;">
+          <label for="offenseAutoResetInput" style="display:block;margin-bottom:6px;font-weight:500;font-size:14px;">Auto Reset (days)</label>
+          <input id="offenseAutoResetInput" type="number" min="0" step="1" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:6px;font-size:14px;" placeholder="Optional">
+          <small style="display:block;margin-top:6px;color:#666;font-size:12px;">Set how many days before this restriction auto-resets. Leave blank for manual review.</small>
+        </div>
+        <div id="restrictionStatusBox" style="margin-top:20px;padding:16px;border:1px solid #dde3ed;border-radius:8px;background:#f8fbff;display:none;">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap;">
+            <div style="flex:1;min-width:220px;">
+              <h4 style="margin:0 0 8px 0;font-size:16px;font-weight:600;">Current Restriction</h4>
+              <div id="restrictionStatusText" style="font-size:14px;color:#2c3e57;font-weight:500;">No active restriction</div>
+              <div id="restrictionReasonText" style="font-size:13px;color:#516079;margin-top:6px;">No offense reason recorded.</div>
+              <div id="restrictionEndText" style="font-size:13px;color:#516079;margin-top:6px;">—</div>
+            </div>
+            <div style="display:flex;align-items:flex-end;">
+              <button id="unfreezeSellerBtn" type="button" style="background:#d32f2f;color:#fff;border:none;padding:10px 20px;border-radius:6px;cursor:pointer;font-weight:600;font-size:14px;display:none;">Unfreeze Account</button>
+            </div>
+          </div>
+        </div>
+        <div style="margin-top:24px;">
+          <h4 style="margin:0 0 12px 0;font-size:16px;font-weight:600;">Seller Responses</h4>
+          <div id="sellerResponseList" style="display:flex;flex-direction:column;gap:12px;font-size:14px;color:#2c3e57;background:#f9fafc;border:1px solid #dde3ed;border-radius:8px;padding:16px;">
+            <div>No responses submitted yet.</div>
+          </div>
+        </div>
+        <input type="hidden" id="currentReportId" value="">
+        <input type="hidden" id="currentSellerId" value="">
+      </div>
+    </div>
+  </div>
+
+  <script>
+    (function(){
+      const modal = document.getElementById('viewReportModal');
+      const closeBtn = document.getElementById('closeViewReport');
+      function closeModal(){ if(modal) modal.style.display='none'; }
+      function formatDateTime(value){
+        if (!value) return '—';
+        const date = new Date(value);
+        if (!Number.isNaN(date.getTime())) {
+          return date.toLocaleString();
+        }
+        return value;
+      }
+      if (closeBtn) closeBtn.addEventListener('click', closeModal);
+      document.addEventListener('click', function(e){ if(modal && e.target===modal) closeModal(); });
+
+      function extractNumericId(value){
+        if (value === undefined || value === null) return '';
+        const text = String(value).trim();
+        if (!text) return '';
+        const match = text.match(/-?\d+/);
+        if (!match) return '';
+        const parsed = Number.parseInt(match[0], 10);
+        return Number.isFinite(parsed) ? String(parsed) : '';
+      }
+
+      function resolveNumericId(){
+        for (let i = 0; i < arguments.length; i += 1) {
+          const val = extractNumericId(arguments[i]);
+          if (val) return val;
+        }
+        return '';
+      }
+
+      const offenseLevelSelect = document.getElementById('offenseLevelSelect');
+      const offenseReasonInput = document.getElementById('offenseReasonInput');
+      const offenseAutoResetInput = document.getElementById('offenseAutoResetInput');
+      const restrictionBox = document.getElementById('restrictionStatusBox');
+      const restrictionText = document.getElementById('restrictionStatusText');
+      const restrictionReasonDisplay = document.getElementById('restrictionReasonText');
+      const restrictionEnd = document.getElementById('restrictionEndText');
+      const modalUnfreezeBtn = document.getElementById('unfreezeSellerBtn');
+
+      const offenseDefaults = {
+        0: { reason: '', autoReset: '' },
+        1: { reason: 'Warning issued for policy violation.', autoReset: '' },
+        2: { reason: 'Posting restricted for 1 week pending compliance review.', autoReset: '7' },
+        3: { reason: 'Account frozen for 30 days pending investigation.', autoReset: '30' },
+      };
+
+      if (offenseReasonInput && !('autoFilled' in offenseReasonInput.dataset)) {
+        offenseReasonInput.dataset.autoFilled = offenseReasonInput.value ? '0' : '1';
+        offenseReasonInput.dataset.defaultValue = offenseReasonInput.value || '';
+      }
+      if (offenseAutoResetInput && !('autoFilled' in offenseAutoResetInput.dataset)) {
+        offenseAutoResetInput.dataset.autoFilled = offenseAutoResetInput.value ? '0' : '1';
+        offenseAutoResetInput.dataset.defaultValue = offenseAutoResetInput.value || '';
+        offenseAutoResetInput.placeholder = offenseDefaults[Number.parseInt(offenseLevelSelect?.value || '0', 10) || 0]?.autoReset ? `${offenseDefaults[Number.parseInt(offenseLevelSelect?.value || '0', 10) || 0].autoReset} days recommended` : 'Optional';
+      }
+
+      function markManual(input){
+        if (!input) return;
+        input.dataset.autoFilled = '0';
+      }
+
+      if (offenseReasonInput) {
+        offenseReasonInput.addEventListener('input', function(){ markManual(offenseReasonInput); });
+      }
+      if (offenseAutoResetInput) {
+        offenseAutoResetInput.addEventListener('input', function(){ markManual(offenseAutoResetInput); });
+      }
+
+      function applyOffenseDefaults(level, options){
+        const defaults = offenseDefaults[level] || offenseDefaults[0];
+        const force = options && options.force === true;
+        const onlyWhenEmpty = options && options.onlyWhenEmpty === true;
+
+        if (offenseReasonInput) {
+          const current = offenseReasonInput.value.trim();
+          const autoFlag = offenseReasonInput.dataset.autoFilled !== '0';
+          const defaultValue = offenseReasonInput.dataset.defaultValue || '';
+          const shouldApply = force || (onlyWhenEmpty && !current) || (autoFlag && (!current || current === defaultValue));
+          if (shouldApply) {
+            offenseReasonInput.value = defaults.reason || '';
+            offenseReasonInput.dataset.autoFilled = '1';
+            offenseReasonInput.dataset.defaultValue = defaults.reason || '';
+          }
+        }
+
+        if (offenseAutoResetInput) {
+          const current = offenseAutoResetInput.value.trim();
+          const autoFlag = offenseAutoResetInput.dataset.autoFilled !== '0';
+          const defaultValue = offenseAutoResetInput.dataset.defaultValue || '';
+          const shouldApply = force || (onlyWhenEmpty && !current) || (autoFlag && (!current || current === defaultValue));
+          if (shouldApply) {
+            offenseAutoResetInput.value = defaults.autoReset || '';
+            offenseAutoResetInput.dataset.autoFilled = '1';
+            offenseAutoResetInput.dataset.defaultValue = defaults.autoReset || '';
+          }
+          offenseAutoResetInput.placeholder = defaults.autoReset ? `${defaults.autoReset} days recommended` : 'Optional';
+        }
+      }
+
+      function applyRestrictionMeta(meta, sellerIdValue, reportIdValue){
+        if (!restrictionBox || !restrictionText || !restrictionReasonDisplay || !restrictionEnd) {
+          return;
+        }
+        const info = meta || {};
+        const type = info.restriction_type || null;
+        if (type) {
+          const friendly = restrictionLabelMap[type] || type;
+          restrictionText.textContent = friendly;
+        } else {
+          restrictionText.textContent = 'No active restriction';
+        }
+        const reasonText = info.offense_reason || info.reason || '';
+        restrictionReasonDisplay.textContent = reasonText ? `Reason: ${reasonText}` : 'No offense reason recorded.';
+        let deadlineLabel = '—';
+        if (info.appeal_deadline) {
+          deadlineLabel = `Auto reset on: ${formatDateTime(info.appeal_deadline)}`;
+        } else if (info.restriction_end) {
+          deadlineLabel = `Restriction ends: ${formatDateTime(info.restriction_end)}`;
+        }
+        restrictionEnd.textContent = deadlineLabel;
+        restrictionBox.style.display = 'block';
+
+        if (modalUnfreezeBtn) {
+          const showUnfreeze = type === 'account_frozen';
+          modalUnfreezeBtn.style.display = showUnfreeze ? 'inline-flex' : 'none';
+          modalUnfreezeBtn.disabled = !showUnfreeze;
+          if (showUnfreeze) {
+            if (reportIdValue) {
+              modalUnfreezeBtn.dataset.reportId = reportIdValue;
+            }
+            if (sellerIdValue) {
+              modalUnfreezeBtn.dataset.sellerId = sellerIdValue;
+            }
+          } else {
+            delete modalUnfreezeBtn.dataset.reportId;
+            delete modalUnfreezeBtn.dataset.sellerId;
+          }
+        }
+      }
+
+      if (offenseLevelSelect) {
+        offenseLevelSelect.addEventListener('change', function(){
+          const level = Number.parseInt(this.value, 10);
+          applyOffenseDefaults(Number.isFinite(level) ? level : 0, { onlyWhenEmpty: true });
+        });
+      }
+
+      function buildStatusBadge(status){
+        const normalized = (status || '').toString().toLowerCase();
+        if (normalized === 'resolved') {
+          return '<span style="background:#c8e6c9;color:#2e7d32;padding:4px 8px;border-radius:4px;font-size:12px;font-weight:500;">Resolved</span>';
+        }
+        return '<span style="background:#ffecb3;color:#f57c00;padding:4px 8px;border-radius:4px;font-size:12px;font-weight:500;">Open</span>';
+      }
+
+      function buildOffenseBadge(level){
+        const numeric = Number.parseInt(level, 10);
+        if (!Number.isNaN(numeric)) {
+          if (numeric === 1) {
+            return '<span style="background:#fff3cd;color:#856404;padding:4px 8px;border-radius:4px;font-size:12px;font-weight:600;">Level 1</span>';
+          }
+          if (numeric === 2) {
+            return '<span style="background:#ffe0b2;color:#e65100;padding:4px 8px;border-radius:4px;font-size:12px;font-weight:600;">Level 2</span>';
+          }
+          if (numeric === 3) {
+            return '<span style="background:#ffcdd2;color:#c62828;padding:4px 8px;border-radius:4px;font-size:12px;font-weight:600;">Level 3</span>';
+          }
+          if (numeric <= 0) {
+            return '<span style="color:#666;">None</span>';
+          }
+        }
+        return '<span style="color:#666;">None</span>';
+      }
+
+      function updateReportRow(reportId, payload){
+        const tbody = document.querySelector('#reports .data-table tbody');
+        if (!tbody) return;
+        const row = tbody.querySelector(`tr[data-report-id="${reportId}"]`);
+        if (!row) return;
+
+        const normalizedLevel = Number.parseInt((payload && payload.offense_level) !== undefined ? payload.offense_level : row.dataset.offenseLevel || '0', 10);
+        const normalizedStatus = payload && payload.status ? payload.status : row.dataset.reportStatus || 'open';
+        const sellerId = (payload && payload.seller_id != null) ? payload.seller_id : row.dataset.sellerId || '';
+
+        row.dataset.offenseLevel = Number.isFinite(normalizedLevel) ? String(normalizedLevel) : '0';
+        row.dataset.reportStatus = normalizedStatus || 'open';
+        if (sellerId !== undefined && sellerId !== null) {
+          row.dataset.sellerId = sellerId !== '' ? String(sellerId) : '';
+        }
+
+        const statusCell = row.querySelector('[data-col="status"]');
+        if (statusCell) {
+          statusCell.innerHTML = buildStatusBadge(normalizedStatus);
+        }
+
+        const offenseCell = row.querySelector('[data-col="offense"]');
+        if (offenseCell) {
+          offenseCell.innerHTML = buildOffenseBadge(normalizedLevel);
+        }
+
+        if (sellerId !== undefined && sellerId !== null && String(sellerId) !== '') {
+          const targetCell = row.querySelector('[data-col="target"]');
+          if (targetCell) {
+            targetCell.dataset.targetType = 'seller';
+            targetCell.dataset.targetId = String(sellerId);
+            targetCell.innerHTML = `<span style="color:#f57c00;">Store #${sellerId}</span>`;
+          }
+        }
+
+        const actionsCell = row.querySelector('[data-col="actions"]');
+        if (actionsCell) {
+          const viewBtn = actionsCell.querySelector('.btn-view-report');
+          if (viewBtn) {
+            viewBtn.dataset.sellerId = sellerId != null ? String(sellerId) : '';
+          }
+
+          let unfreezeBtn = actionsCell.querySelector('.btn-unfreeze-report');
+          const sellerStatus = payload && payload.seller_status ? String(payload.seller_status).toLowerCase() : '';
+          const shouldShowUnfreeze = Number.isFinite(normalizedLevel) && normalizedLevel === 3 && sellerId && sellerStatus === 'frozen';
+
+          if (shouldShowUnfreeze) {
+            if (!unfreezeBtn) {
+              unfreezeBtn = document.createElement('button');
+              unfreezeBtn.type = 'button';
+              unfreezeBtn.className = 'btn-unfreeze-report';
+              unfreezeBtn.textContent = 'Unfreeze';
+              unfreezeBtn.style.background = '#10b981';
+              unfreezeBtn.style.color = '#fff';
+              unfreezeBtn.style.border = 'none';
+              unfreezeBtn.style.padding = '6px 12px';
+              unfreezeBtn.style.borderRadius = '4px';
+              unfreezeBtn.style.cursor = 'pointer';
+              unfreezeBtn.style.fontSize = '13px';
+              actionsCell.appendChild(unfreezeBtn);
+            }
+            unfreezeBtn.dataset.reportId = String(reportId);
+            unfreezeBtn.style.display = 'inline-flex';
+          } else if (unfreezeBtn) {
+            unfreezeBtn.remove();
+          }
+        }
+      }
+
+      const restrictionLabelMap = {
+        post_products: 'Posting restricted (Level 2)',
+        compliance_warning: 'Compliance warning (Level 2)',
+        account_frozen: 'Account frozen (Level 3)'
+      };
+
+      async function handleUnfreezeAction(reportId, button, afterSuccess){
+        const idNumber = Number.parseInt(reportId, 10);
+        if (!Number.isFinite(idNumber) || idNumber < 0) {
+          alert('Invalid report selected');
+          return;
+        }
+
+        const btnRef = button || null;
+        const originalText = btnRef ? btnRef.textContent : '';
+        if (btnRef) {
+          btnRef.disabled = true;
+          btnRef.textContent = 'Unfreezing...';
+        }
+
+        try {
+          const res = await fetch(`/admin/reports/${encodeURIComponent(String(idNumber))}/unfreeze`, {
+            method: 'POST',
+            credentials: 'same-origin'
+          });
+          const j = await res.json().catch(() => ({}));
+          if (!res.ok || !j.success) {
+            throw new Error(j.msg || 'Unfreeze failed');
+          }
+
+          const state = j.state || {};
+          const sellerIdResolved = resolveNumericId(btnRef ? btnRef.dataset?.sellerId : '', state.seller_id);
+          updateReportRow(idNumber, {
+            offense_level: 0,
+            status: 'resolved',
+            seller_id: sellerIdResolved || null,
+            seller_status: 'approved',
+            restriction_type: state.restriction_type || null,
+            restriction_end: state.restriction_end || null,
+            restriction_level: state.level || null,
+            appeal_deadline: state.appeal_deadline || null
+          });
+
+          applyRestrictionMeta(state, sellerIdResolved || '', String(idNumber));
+
+          const currentSellerInput = document.getElementById('currentSellerId');
+          if (currentSellerInput) {
+            if (sellerIdResolved) {
+              currentSellerInput.value = sellerIdResolved;
+              currentSellerInput.dataset.rawSeller = sellerIdResolved;
+            } else {
+              currentSellerInput.value = '';
+              currentSellerInput.dataset.rawSeller = '';
+            }
+          }
+
+          if (offenseLevelSelect) {
+            offenseLevelSelect.value = '0';
+          }
+          if (offenseReasonInput) {
+            offenseReasonInput.value = '';
+            offenseReasonInput.dataset.autoFilled = '1';
+            offenseReasonInput.dataset.defaultValue = '';
+          }
+          if (offenseAutoResetInput) {
+            offenseAutoResetInput.value = '';
+            offenseAutoResetInput.dataset.autoFilled = '1';
+            offenseAutoResetInput.dataset.defaultValue = '';
+            offenseAutoResetInput.placeholder = offenseDefaults[0].autoReset ? `${offenseDefaults[0].autoReset} days recommended` : 'Optional';
+          }
+
+          if (window.Swal) {
+            await Swal.fire({ icon: 'success', title: 'Account unfrozen', text: 'Restrictions have been lifted.' });
+          } else {
+            alert('Restrictions have been lifted.');
+          }
+
+          if (typeof afterSuccess === 'function') {
+            afterSuccess(state, sellerIdResolved);
+          }
+        } catch (err) {
+          console.error(err);
+          if (window.Swal) {
+            Swal.fire({ icon: 'error', title: 'Error', text: err.message || 'Failed to unfreeze seller' });
+          } else {
+            alert(err.message || 'Failed to unfreeze seller');
+          }
+        } finally {
+          if (btnRef) {
+            btnRef.disabled = false;
+            btnRef.textContent = originalText;
+          }
+        }
+      }
+
+      async function openReport(id){
+        try{
+          const requestedReportId = resolveNumericId(id);
+          const res = await fetch('/admin/reports/' + encodeURIComponent(id), { credentials: 'same-origin' });
+          if (!res.ok) { alert('Failed to load report'); return; }
+          const j = await res.json();
+          if (!j || !j.success) { alert('Report not found'); return; }
+          const r = j.report || {};
+
+          const reportIdValue = resolveNumericId(r.id, requestedReportId);
+          const sellerIdValue = resolveNumericId(r.reported_shop_id, r.seller_id);
+          const reportField = document.getElementById('currentReportId');
+          const sellerField = document.getElementById('currentSellerId');
+          if (reportField) {
+            reportField.value = reportIdValue;
+            reportField.dataset.rawId = r.id != null ? String(r.id) : '';
+          }
+          if (sellerField) {
+            sellerField.value = sellerIdValue;
+            sellerField.dataset.rawSeller = r.reported_shop_id != null ? String(r.reported_shop_id) : (r.seller_id != null ? String(r.seller_id) : '');
+          }
+
+          const offenseBtn = document.getElementById('saveOffenseLevelBtn');
+          if (offenseBtn) {
+            offenseBtn.dataset.reportId = reportIdValue;
+            offenseBtn.dataset.sellerId = sellerIdValue;
+            offenseBtn.dataset.reportIdRaw = r.id != null ? String(r.id) : '';
+            offenseBtn.dataset.sellerIdRaw = r.reported_shop_id != null ? String(r.reported_shop_id) : (r.seller_id != null ? String(r.seller_id) : '');
+            offenseBtn.disabled = false;
+          }
+
+          const modalTitle = document.getElementById('reportModalTitle');
+          if (modalTitle) {
+            const descriptor = r.complaint_type ? `Report Details · ${r.complaint_type}` : 'Report Details';
+            modalTitle.textContent = reportIdValue ? `${descriptor} (#${reportIdValue})` : descriptor;
+          }
+
+          // Update report details
+          document.getElementById('r_id').textContent = reportIdValue || '—';
+          document.getElementById('r_reporter').textContent = r.reporter_name || (r.reporter_id || 'Unknown');
+          document.getElementById('r_complaint_type').textContent = r.complaint_type || 'Not specified';
+          const productIdValue = resolveNumericId(r.reported_product_id, r.product_id);
+          const productLabel = r.product_name
+            ? (productIdValue ? `${r.product_name} (ID: ${productIdValue})` : r.product_name)
+            : (productIdValue ? `Product #${productIdValue}` : '—');
+          const sellerLabel = r.seller_name
+            ? (sellerIdValue ? `${r.seller_name} (ID: ${sellerIdValue})` : r.seller_name)
+            : (sellerIdValue ? `Store #${sellerIdValue}` : '—');
+          document.getElementById('r_product').textContent = productLabel;
+          document.getElementById('r_shop').textContent = sellerLabel;
+          document.getElementById('r_time').textContent = r.created_at ? formatDateTime(r.created_at) : '—';
+          document.getElementById('r_description').textContent = r.description || '—';
+          document.getElementById('r_message').textContent = r.message || '—';
+          
+          // Update status
+          const statusEl = document.getElementById('r_status');
+          if (statusEl) {
+            statusEl.innerHTML = buildStatusBadge(r.status);
+          }
+          
+          // Update image
+          const imgCont = document.getElementById('r_image_container');
+          if (imgCont) {
+            imgCont.innerHTML = '';
+
+            function normalisePath(value) {
+              return String(value)
+                .replace(/\\+/g, '/')
+                .split('/')
+                .map(function(segment){ return encodeURIComponent(segment); })
+                .join('/');
+            }
+
+            function resolveUrl(preferredUrl, fallbackPath) {
+              if (preferredUrl) return preferredUrl;
+              if (!fallbackPath) return '';
+              let built = normalisePath(fallbackPath);
+              if (built) {
+                if (!built.startsWith('/')) {
+                  if (!built.startsWith('uploads/')) {
+                    built = 'uploads/' + built;
+                  }
+                  built = '/' + built;
+                }
+              }
+              return built;
+            }
+
+            const evidenceUrl = resolveUrl(r.image_url, r.image_path ? String(r.image_path).split(',')[0] : r.image_path);
+            const productUrl = resolveUrl(r.product_image_url, r.product_image_path ? String(r.product_image_path).split(',')[0] : r.product_image_path);
+
+            const blocks = [
+              {
+                label: 'User Evidence',
+                url: evidenceUrl,
+                empty: 'No attachment provided.'
+              },
+              {
+                label: 'Reported Product',
+                url: productUrl,
+                empty: 'Product image unavailable.'
+              }
+            ];
+
+            const wrapper = document.createElement('div');
+            wrapper.style.display = 'grid';
+            wrapper.style.gridTemplateColumns = 'repeat(auto-fit, minmax(180px, 1fr))';
+            wrapper.style.gap = '12px';
+
+            blocks.forEach(function(block){
+              const card = document.createElement('div');
+              card.style.background = '#f8f9fa';
+              card.style.border = '1px solid #e2e8f0';
+              card.style.borderRadius = '8px';
+              card.style.padding = '12px';
+
+              const heading = document.createElement('div');
+              heading.textContent = block.label;
+              heading.style.fontWeight = '600';
+              heading.style.fontSize = '13px';
+              heading.style.marginBottom = '8px';
+              card.appendChild(heading);
+
+              if (block.url) {
+                const anchor = document.createElement('a');
+                anchor.href = block.url;
+                anchor.target = '_blank';
+                anchor.rel = 'noopener';
+                anchor.style.display = 'block';
+
+                const img = document.createElement('img');
+                img.src = block.url;
+                img.alt = block.label;
+                img.style.width = '100%';
+                img.style.height = 'auto';
+                img.style.borderRadius = '6px';
+                img.style.objectFit = 'cover';
+                img.loading = 'lazy';
+
+                anchor.appendChild(img);
+                card.appendChild(anchor);
+              } else {
+                const fallback = document.createElement('div');
+                fallback.textContent = block.empty;
+                fallback.style.fontSize = '13px';
+                fallback.style.color = '#64748b';
+                card.appendChild(fallback);
+              }
+
+              wrapper.appendChild(card);
+            });
+
+            imgCont.appendChild(wrapper);
+          }
+          
+          // Set offense level dropdown
+          if (offenseLevelSelect) {
+            const levelValue = r.offense_level != null ? r.offense_level : 0;
+            offenseLevelSelect.value = String(levelValue);
+          }
+
+          // Set report status dropdown
+          const reportStatusSelect = document.getElementById('reportStatusSelect');
+          if (reportStatusSelect) {
+            reportStatusSelect.value = r.status || 'open';
+          }
+
+          applyRestrictionMeta(
+            {
+              restriction_type: r.restriction_type || null,
+              restriction_end: r.restriction_end || null,
+              appeal_deadline: r.appeal_deadline || null,
+              offense_reason: r.offense_reason || ''
+
+            },
+            sellerIdValue || '',
+            reportIdValue || ''
+          );
+
+          if (offenseReasonInput) {
+            const serverReason = r.offense_reason || '';
+            offenseReasonInput.value = serverReason;
+            offenseReasonInput.dataset.autoFilled = serverReason ? '0' : '1';
+            offenseReasonInput.dataset.defaultValue = serverReason || '';
+          }
+          if (offenseAutoResetInput) {
+            let autoResetDaysValue = '';
+            if (r.appeal_deadline) {
+              const deadlineDate = new Date(r.appeal_deadline);
+              if (!Number.isNaN(deadlineDate.getTime())) {
+                const diffMs = deadlineDate.getTime() - Date.now();
+                const diffDays = Math.max(0, Math.round(diffMs / 86400000));
+                if (diffDays > 0) {
+                  autoResetDaysValue = String(diffDays);
+                }
+              }
+            }
+            offenseAutoResetInput.value = autoResetDaysValue;
+            offenseAutoResetInput.dataset.autoFilled = autoResetDaysValue ? '0' : '1';
+            offenseAutoResetInput.dataset.defaultValue = autoResetDaysValue;
+            const currentLevel = Number.parseInt(offenseLevelSelect ? offenseLevelSelect.value : '0', 10) || 0;
+            const recommended = offenseDefaults[currentLevel]?.autoReset;
+            offenseAutoResetInput.placeholder = recommended ? `${recommended} days recommended` : 'Optional';
+          }
+          const currentLevelNumeric = Number.parseInt(offenseLevelSelect ? offenseLevelSelect.value : '0', 10) || 0;
+          applyOffenseDefaults(currentLevelNumeric, { onlyWhenEmpty: true });
+
+          const responseList = document.getElementById('sellerResponseList');
+          if (responseList) {
+            responseList.innerHTML = '';
+            const responses = Array.isArray(r.responses) ? r.responses : [];
+            if (!responses.length) {
+              const empty = document.createElement('div');
+              empty.textContent = 'No responses submitted yet.';
+              responseList.appendChild(empty);
+            } else {
+              responses.forEach(function(resp){
+                const card = document.createElement('div');
+                card.style.border = '1px solid #d5dee9';
+                card.style.borderRadius = '6px';
+                card.style.padding = '12px';
+                card.style.background = '#fff';
+                card.style.display = 'flex';
+                card.style.flexDirection = 'column';
+                card.style.gap = '6px';
+
+                const subject = document.createElement('div');
+                subject.style.fontWeight = '600';
+                subject.style.fontSize = '14px';
+                subject.textContent = resp.subject || 'Seller response';
+                card.appendChild(subject);
+                const meta = document.createElement('div');
+                meta.style.fontSize = '12px';
+                meta.style.color = '#516079';
+                const responseLabel = (resp.response_type === 'appeal') ? 'Appeal' : 'Explanation';
+                const levelLabel = resp.offense_level ? `Level ${resp.offense_level}` : 'Unspecified level';
+                const reportLabel = resp.report_id ? ` • Report #${resp.report_id}` : '';
+                meta.textContent = `${responseLabel} • ${levelLabel}${reportLabel} • ${formatDateTime(resp.created_at)}`;
+                card.appendChild(meta);
+
+                const message = document.createElement('div');
+                message.style.fontSize = '13px';
+                message.style.color = '#2c3e57';
+                message.textContent = resp.message || '—';
+                card.appendChild(message);
+
+                if (resp.attachment_url) {
+                  const link = document.createElement('a');
+                  link.href = resp.attachment_url;
+                  link.target = '_blank';
+                  link.rel = 'noopener noreferrer';
+                  link.style.fontSize = '12px';
+                  link.style.color = '#1976d2';
+                  link.textContent = 'View attachment';
+                  card.appendChild(link);
+                }
+
+                responseList.appendChild(card);
+              });
+            }
+          }
+          
+          if (modal) modal.style.display='flex';
+        }catch(e){ console.error(e); alert('Failed to load report'); }
+      }
+      
+      // Handle offense level update
+      const saveOffenseBtn = document.getElementById('saveOffenseLevelBtn');
+      if (saveOffenseBtn) {
+        saveOffenseBtn.addEventListener('click', async function() {
+          const modal = document.getElementById('viewReportModal');
+          if (!modal || modal.style.display === 'none') {
+            alert('Open a report first');
+            return;
+          }
+          const btn = this;
+          const currentReportInput = document.getElementById('currentReportId');
+          const currentSellerInput = document.getElementById('currentSellerId');
+          const offenseLevel = Number.parseInt(offenseLevelSelect ? offenseLevelSelect.value : '0', 10) || 0;
+
+          const reportId = resolveNumericId(
+            btn.dataset.reportId,
+            btn.dataset.reportIdRaw,
+            currentReportInput ? currentReportInput.value : '',
+            currentReportInput ? currentReportInput.dataset.rawId : ''
+          );
+          if (!reportId) {
+            alert('No report selected');
+            return;
+          }
+          const reportIdNumber = Number.parseInt(reportId, 10);
+          if (!Number.isFinite(reportIdNumber) || reportIdNumber < 0) {
+            alert('Invalid report selected');
+            return;
+          }
+
+          const sellerId = resolveNumericId(
+            btn.dataset.sellerId,
+            btn.dataset.sellerIdRaw,
+            currentSellerInput ? currentSellerInput.value : '',
+            currentSellerInput ? currentSellerInput.dataset.rawSeller : ''
+          );
+          const sellerIdNumber = Number.parseInt(sellerId, 10);
+          const sellerIdPayload = Number.isFinite(sellerIdNumber) ? sellerIdNumber : null;
+
+          if (offenseLevel > 0 && sellerIdPayload == null) {
+            if (!confirm('No seller ID found. Continue anyway?')) {
+              return;
+            }
+          }
+
+          const reasonValue = offenseReasonInput ? offenseReasonInput.value.trim() : '';
+          let autoResetDays = null;
+          if (offenseAutoResetInput) {
+            const rawReset = offenseAutoResetInput.value.trim();
+            if (rawReset) {
+              const parsedReset = Number.parseInt(rawReset, 10);
+              if (!Number.isFinite(parsedReset) || parsedReset < 0) {
+                alert('Auto reset days must be a non-negative number.');
+                return;
+              }
+              autoResetDays = parsedReset;
+            }
+          }
+          if (autoResetDays === null) {
+            const defaultReset = offenseDefaults[offenseLevel]?.autoReset;
+            if (defaultReset) {
+              const parsedDefault = Number.parseInt(defaultReset, 10);
+              if (Number.isFinite(parsedDefault) && parsedDefault >= 0) {
+                autoResetDays = parsedDefault;
+                if (offenseAutoResetInput) {
+                  offenseAutoResetInput.value = String(parsedDefault);
+                  offenseAutoResetInput.dataset.autoFilled = '1';
+                  offenseAutoResetInput.dataset.defaultValue = String(parsedDefault);
+                }
+              }
+            }
+          }
+          const effectiveReason = reasonValue || (offenseDefaults[offenseLevel]?.reason || '');
+          if (!reasonValue && offenseReasonInput && effectiveReason) {
+            offenseReasonInput.value = effectiveReason;
+            offenseReasonInput.dataset.autoFilled = '1';
+            offenseReasonInput.dataset.defaultValue = effectiveReason;
+          }
+          
+          try {
+            btn.disabled = true;
+            btn.textContent = 'Applying...';
+            
+            const res = await fetch(`/admin/reports/${encodeURIComponent(String(reportIdNumber))}/update-offense`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              credentials: 'same-origin',
+              body: JSON.stringify({
+                offense_level: offenseLevel,
+                seller_id: sellerIdPayload,
+                reason: effectiveReason,
+                auto_reset_days: autoResetDays
+              })
+            });
+            
+            const j = await res.json();
+            if (res.ok && j.success) {
+              const payload = j.data || {};
+              const serverLevel = Number.parseInt(payload.offense_level, 10);
+              const appliedLevel = Number.isFinite(serverLevel) ? serverLevel : offenseLevel;
+              const sellerIdFromPayload = (payload.seller_id !== undefined && payload.seller_id !== null)
+                ? payload.seller_id
+                : sellerIdPayload;
+
+              if (window.Swal) {
+                await Swal.fire({ icon: 'success', title: 'Success', text: 'Offense level updated successfully' });
+              } else {
+                alert('Offense level updated successfully');
+              }
+
+              const normalizedLevel = Number.isFinite(appliedLevel) ? appliedLevel : offenseLevel;
+              const normalizedStatus = payload.status || (normalizedLevel > 0 ? 'resolved' : 'open');
+
+              if (offenseLevelSelect) {
+                offenseLevelSelect.value = String(normalizedLevel);
+              }
+
+              if (currentSellerInput) {
+                if (sellerIdFromPayload != null) {
+                  currentSellerInput.value = sellerIdFromPayload;
+                  currentSellerInput.dataset.rawSeller = String(sellerIdFromPayload);
+                } else {
+                  currentSellerInput.value = '';
+                  currentSellerInput.dataset.rawSeller = '';
+                }
+              }
+
+              const currentReportInput = document.getElementById('currentReportId');
+              if (currentReportInput) {
+                currentReportInput.value = reportIdNumber;
+                currentReportInput.dataset.rawId = String(reportIdNumber);
+              }
+
+              btn.dataset.sellerId = sellerIdFromPayload != null ? String(sellerIdFromPayload) : '';
+              btn.dataset.sellerIdRaw = btn.dataset.sellerId;
+              btn.dataset.reportId = String(reportIdNumber);
+              btn.dataset.reportIdRaw = String(reportIdNumber);
+
+              const statusElModal = document.getElementById('r_status');
+              if (statusElModal) {
+                statusElModal.innerHTML = buildStatusBadge(normalizedStatus);
+              }
+
+              const shopLabelEl = document.getElementById('r_shop');
+              if (shopLabelEl) {
+                if (sellerIdFromPayload != null) {
+                  shopLabelEl.textContent = `Store #${sellerIdFromPayload}`;
+                } else {
+                  shopLabelEl.textContent = '—';
+                }
+              }
+
+              applyRestrictionMeta(
+                {
+                  restriction_type: payload.restriction_type || null,
+                  restriction_end: payload.restriction_end || null,
+                  appeal_deadline: payload.appeal_deadline || null,
+                  offense_reason: payload.offense_reason || effectiveReason || ''
+                },
+                sellerIdFromPayload != null ? String(sellerIdFromPayload) : '',
+                String(reportIdNumber)
+              );
+
+              if (offenseReasonInput) {
+                const appliedReason = payload.offense_reason || effectiveReason || '';
+                offenseReasonInput.value = appliedReason;
+                offenseReasonInput.dataset.autoFilled = appliedReason ? '0' : '1';
+                offenseReasonInput.dataset.defaultValue = appliedReason || '';
+              }
+              if (offenseAutoResetInput) {
+                const appliedReset = autoResetDays != null ? String(autoResetDays) : '';
+                offenseAutoResetInput.value = appliedReset;
+                offenseAutoResetInput.dataset.autoFilled = appliedReset ? '0' : '1';
+                offenseAutoResetInput.dataset.defaultValue = appliedReset;
+                const recommended = offenseDefaults[normalizedLevel]?.autoReset;
+                offenseAutoResetInput.placeholder = recommended ? `${recommended} days recommended` : 'Optional';
+              }
+
+              updateReportRow(reportIdNumber, {
+                offense_level: normalizedLevel,
+                status: normalizedStatus,
+                seller_id: sellerIdFromPayload,
+                seller_status: payload.seller_status || null,
+                restriction_type: payload.restriction_type || null,
+                restriction_end: payload.restriction_end || null,
+                restriction_level: payload.restriction_level || null,
+                appeal_deadline: payload.appeal_deadline || null
+              });
+            } else {
+              throw new Error(j.msg || 'Update failed');
+            }
+          } catch (e) {
+            console.error(e);
+            if (window.Swal) {
+              Swal.fire({ icon: 'error', title: 'Error', text: 'Failed to update offense level' });
+            } else {
+              alert('Failed to update offense level');
+            }
+          } finally {
+            btn.disabled = false;
+            btn.textContent = 'Apply Offense';
+          }
+        });
+      }
+
+      // Handle report status update
+      const updateStatusBtn = document.getElementById('updateReportStatusBtn');
+      if (updateStatusBtn) {
+        updateStatusBtn.addEventListener('click', async function() {
+          const btn = this;
+          const currentReportInput = document.getElementById('currentReportId');
+          const reportStatusSelect = document.getElementById('reportStatusSelect');
+          
+          const reportId = currentReportInput ? currentReportInput.value : '';
+          
+          if (!reportId) {
+            alert('No report selected');
+            return;
+          }
+          
+          const newStatus = reportStatusSelect ? reportStatusSelect.value : '';
+          if (!newStatus) return;
+          
+          try {
+            btn.disabled = true;
+            btn.textContent = 'Updating...';
+            
+            const res = await fetch(`/admin/reports/${encodeURIComponent(reportId)}/update-status`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              credentials: 'same-origin',
+              body: JSON.stringify({ status: newStatus })
+            });
+            
+            const j = await res.json();
+            if (res.ok && j.success) {
+              if (window.Swal) {
+                Swal.fire('Success', 'Report status updated', 'success');
+              } else {
+                alert('Report status updated');
+              }
+              // Refresh dashboard if needed
+              if (typeof loadDashboardData === 'function') loadDashboardData();
+            } else {
+              alert('Failed to update status: ' + (j.msg || 'Unknown error'));
+            }
+          } catch (e) {
+            console.error(e);
+            alert('Error updating status');
+          } finally {
+            btn.disabled = false;
+            btn.textContent = 'Update Status';
+          }
+        });
+      }
+
+      document.addEventListener('click', function(e){
+        const btn = e.target.closest && e.target.closest('.btn-view-report');
+        if (!btn) return;
+        const id = btn.getAttribute('data-id');
+        if (!id) return;
+        openReport(id);
+      });
+
+      document.addEventListener('click', async function(e){
+        const btn = e.target.closest && e.target.closest('.btn-unfreeze-report');
+        if (!btn) return;
+        const reportId = btn.getAttribute('data-report-id');
+        if (!reportId) {
+          alert('No report selected');
+          return;
+        }
+
+        let proceed = true;
+        if (window.Swal) {
+          const res = await Swal.fire({
+            icon: 'question',
+            title: 'Unfreeze this account?',
+            text: 'This will clear current restrictions for the seller.',
+            showCancelButton: true,
+            confirmButtonText: 'Unfreeze',
+            cancelButtonText: 'Cancel'
+          });
+          proceed = res.isConfirmed;
+        } else {
+          proceed = window.confirm('Unfreeze this seller account?');
+        }
+
+        if (!proceed) return;
+
+        await handleUnfreezeAction(reportId, btn);
+      });
+    })();
+  </script>
+  <!-- SweetAlert2 for nicer confirmations; confirm_helper provides confirmAction() -->
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script src="{{ url_for('static', filename='js/confirm_helper.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/chat.js') }}" defer></script>
+  <script src="https://cdn.socket.io/4.6.1/socket.io.min.js"></script>
+  <script src="{{ url_for('static', filename='js/admin_dashboard.js') }}?v=admin-js-{{ range(1,999999)|random }}"></script>
+  <script src="{{ url_for('static', filename='js/admin_support_chat.js') }}?v={{ range(1,999999)|random }}"></script>
+
+  <!-- Permit Modal -->
+  <div id="permitModal" class="permit-modal">
+      <div class="permit-modal-content">
+          <button class="permit-modal-close">&times;</button>
+            <div class="permit-image-container">
+              <iframe id="permitFrame" class="permit-document" src="" title="Business Permit" hidden></iframe>
+            </div>
+      </div>
+  </div>
+
+  <!-- Store Details Modal -->
+  <div id="storeDetailsModal" class="permit-modal">
+      <div class="permit-modal-content" style="max-width: 500px; width: 100%;">
+          <button class="permit-modal-close">&times;</button>
+          <h3 style="margin-top: 0; margin-bottom: 1rem; color: #2c5aa0;">Store Details</h3>
+          <div id="storeDetailsContent" style="display: flex; flex-direction: column; gap: 10px;">
+              <!-- Content populated by JS -->
+          </div>
+      </div>
+  </div>
+
+</body>
+</html>

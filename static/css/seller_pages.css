@@ -1,0 +1,34 @@
+/* Simple seller/store page theme matching product page */
+:root{
+  --baby-mint:#DFF6F0;
+  --accent:#FF8FB0;
+  --muted:#6f6f6f;
+  --radius:12px;
+  --shadow: 0 8px 20px rgba(12,12,12,0.06);
+  --black:#000;
+}
+
+body.seller-page-body{
+  background: linear-gradient(180deg, #fff 0%, #FFF9FB 60%);
+  font-family: "Segoe UI", Roboto, Arial, sans-serif;
+  color:var(--black);
+  margin:0;
+  padding:1rem;
+}
+
+.seller-page{
+  max-width:900px;
+  margin:1.2rem auto;
+  padding:1rem;
+  background:#fff;
+  border-radius:var(--radius);
+  box-shadow:var(--shadow);
+}
+
+.seller-header{ display:flex; gap:1rem; align-items:center; }
+.seller-logo{ width:84px; height:84px; object-fit:cover; border-radius:12px; }
+.seller-meta h1{ margin:0; color:var(--black); font-size:1.4rem; }
+.seller-meta p{ margin:6px 0 0; color:var(--muted); }
+
+/* About section */
+.seller-about{ margin-top:1rem; color:#333; line-height:1.45; }

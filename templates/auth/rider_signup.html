@@ -1,0 +1,613 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rider Sign Up - BabyBloom</title>
+    <link rel="icon" href="{{ url_for('static', filename='images/favicon.png') }}?v={{ range(1,9999)|random }}" type="image/png">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}?v=auth-fixed-{{ range(1,9999)|random }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/terms_modal.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc;
+        }
+        .split-layout {
+            display: flex;
+            height: 100vh;
+            width: 100%;
+            overflow: hidden;
+            background-color: #f1f5f9;
+        }
+        .left-panel {
+            width: 70%;
+            background-color: #f1f5f9; 
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            position: relative;
+        }
+        .brand-large {
+            font-size: 5rem;
+            font-weight: 800;
+            color: #2563eb; 
+            letter-spacing: -2px;
+            z-index: 1;
+        }
+        .right-panel {
+            width: 30%;
+            min-width: 500px; /* Wider for signup */
+            background: transparent; 
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+            position: relative;
+            z-index: 10;
+            box-shadow: none;
+            border-radius: 0;
+        }
+        .form-container-centered {
+            width: 100%;
+            max-width: 420px; /* Slightly narrower */
+            background: #ffffff;
+            padding: 1.5rem 2rem; /* Reduced vertical padding */
+            border-radius: 24px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start; /* Align to top to allow scrolling */
+            max-height: 80vh; /* Reduced max-height to ensure float */
+            overflow-y: auto; /* Allow scrolling if form is tall */
+            scrollbar-width: thin; /* Firefox */
+            scrollbar-color: #cbd5e1 transparent;
+        }
+        /* Custom Scrollbar for Webkit */
+        .form-container-centered::-webkit-scrollbar {
+            width: 6px;
+        }
+        .form-container-centered::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .form-container-centered::-webkit-scrollbar-thumb {
+            background-color: #cbd5e1;
+            border-radius: 20px;
+        }
+        
+        .auth-form .form-group {
+            margin-bottom: 0.85rem; /* Compact spacing */
+        }
+        .auth-form label {
+            display: block;
+            margin-bottom: 0.3rem;
+            font-weight: 600;
+            font-size: 0.75rem; /* Smaller label */
+            color: #334155;
+            text-transform: uppercase;
+            letter-spacing: 0.02em;
+        }
+        .input-wrapper {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+        .input-wrapper input, .input-wrapper select {
+            width: 100%;
+            padding: 0.65rem 1rem 0.65rem 2.5rem; /* Compact padding */
+            border: 1px solid #e2e8f0;
+            border-radius: 10px; /* Slightly smaller radius */
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            background: #f8fafc;
+        }
+        .input-wrapper input:focus, .input-wrapper select:focus, .textarea-enhanced textarea:focus {
+            outline: none;
+            border-color: #2563eb;
+            background: #fff;
+            box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1);
+        }
+        .input-icon {
+            position: absolute;
+            left: 0.8rem;
+            color: #94a3b8;
+            pointer-events: none;
+            width: 16px; /* Smaller icon */
+            height: 16px;
+        }
+        
+        /* Multi-step specific */
+        .step-indicator {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 1.25rem; /* Reduced margin */
+            position: relative;
+            padding: 0 10px;
+        }
+        .step-indicator::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: #e2e8f0;
+            z-index: 0;
+            transform: translateY(-50%);
+        }
+        .step {
+            position: relative;
+            z-index: 1;
+            background: #fff;
+            padding: 0 5px;
+            font-weight: 600;
+            color: #94a3b8;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.75rem;
+        }
+        .step.active { color: #2563eb; }
+        .step.completed { color: #10b981; }
+        .step-circle {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: #f1f5f9;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 11px;
+            border: 2px solid #e2e8f0;
+            transition: all 0.3s ease;
+        }
+        .step.active .step-circle {
+            background: #2563eb;
+            color: #fff;
+            border-color: #2563eb;
+        }
+        .step.completed .step-circle {
+            background: #10b981;
+            color: #fff;
+            border-color: #10b981;
+        }
+        
+        .form-step { display: none; animation: fadeIn 0.3s ease-in-out; }
+        .form-step.active { display: block; }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .step-actions {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 1.25rem; /* Reduced margin */
+            gap: 1rem;
+        }
+        .btn-next, .btn-submit {
+            background: #2563eb;
+            color: white;
+            padding: 0.65rem 1.5rem; /* Compact button */
+            border-radius: 10px;
+            border: none;
+            font-weight: 600;
+            cursor: pointer;
+            flex: 1;
+            transition: background 0.2s;
+            font-size: 0.9rem;
+        }
+        .btn-back {
+            background: #f1f5f9;
+            color: #475569;
+            padding: 0.65rem 1.5rem; /* Compact button */
+            border-radius: 10px;
+            border: none;
+            font-weight: 600;
+            cursor: pointer;
+            flex: 1;
+            transition: background 0.2s;
+            font-size: 0.9rem;
+        }
+        .btn-next:hover, .btn-submit:hover { background: #1d4ed8; }
+        .btn-back:hover { background: #e2e8f0; }
+
+        /* File Input */
+        .file-input { position: relative; width: 100%; }
+        .file-label {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.65rem 1rem; /* Compact padding */
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 10px;
+            color: #64748b;
+            cursor: pointer;
+            font-size: 0.85rem;
+            transition: all 0.2s;
+        }
+        .file-label:hover { border-color: #cbd5e1; background: #f1f5f9; }
+        .file-preview { margin-top: 0.4rem; font-size: 0.75rem; color: #64748b; }
+        
+        .form-header {
+            text-align: center;
+            margin-bottom: 1.25rem; /* Reduced margin */
+        }
+        .form-header h2 {
+            font-size: 1.5rem; /* Smaller header */
+            font-weight: 800;
+            color: #1e293b;
+            margin: 0 0 0.4rem 0;
+            letter-spacing: -0.02em;
+        }
+        .form-header p {
+            color: #64748b;
+            margin: 0;
+            font-size: 0.85rem;
+            line-height: 1.4;
+        }
+        .password-toggle {
+            position: absolute;
+            right: 0.75rem;
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: #94a3b8;
+            padding: 0;
+            display: flex;
+            align-items: center;
+        }
+
+        /* Mobile Responsive */
+        @media (max-width: 1024px) {
+             .left-panel { width: 50%; }
+             .right-panel { width: 50%; min-width: auto; }
+        }
+        @media (max-width: 768px) {
+            .split-layout {
+                flex-direction: column;
+                overflow-y: auto;
+            }
+            .left-panel {
+                width: 100%;
+                height: auto;
+                padding: 3rem 1rem 1rem;
+                flex: 0 0 auto;
+            }
+            .right-panel {
+                width: 100%;
+                height: auto;
+                min-height: auto;
+                padding: 1rem 1.5rem 3rem;
+                align-items: flex-start;
+                justify-content: center;
+            }
+            .form-container-centered {
+                max-width: 100%;
+                box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+            }
+            .brand-large {
+                font-size: 2.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="split-layout">
+        <!-- Left Side (70%) -->
+        <div class="left-panel">
+            <img src="{{ url_for('static', filename='images/favicon.png') }}" alt="BabyBloom Logo" style="max-width: 600px; width: 90%; height: auto; object-fit: contain;">
+        </div>
+
+        <!-- Right Side (30%) -->
+        <div class="right-panel">
+            <div class="form-container-centered">
+                
+                <!-- Flash Messages -->
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                    {% if messages %}
+                        {% for category, message in messages %}
+                            <div class="alert alert-{{ category }}" style="margin-bottom: 1rem; padding: 0.75rem; border-radius: 8px; font-size: 0.9rem; 
+                                {% if category == 'success' %}
+                                    background: #d1fae5; color: #065f46; border: 1px solid #a7f3d0;
+                                {% else %}
+                                    background: #fee2e2; color: #991b1b; border: 1px solid #fecaca;
+                                {% endif %}">
+                                {{ message }}
+                                <button class="alert-close" onclick="this.parentElement.style.display='none'" style="float:right;background:none;border:none;cursor:pointer;">&times;</button>
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+                {% endwith %}
+
+                <div class="form-header">
+                    <h2>Create rider account</h2>
+                    <p>Apply as a rider</p>
+                </div>
+
+                <!-- Step Indicator -->
+                <div class="step-indicator">
+                    <div class="step active" id="indicator-1">
+                        <div class="step-circle">1</div>
+                        <span>Account</span>
+                    </div>
+                    <div class="step" id="indicator-2">
+                        <div class="step-circle">2</div>
+                        <span>Location</span>
+                    </div>
+                    <div class="step" id="indicator-3">
+                        <div class="step-circle">3</div>
+                        <span>Vehicle & License</span>
+                    </div>
+                </div>
+
+                <form method="POST" enctype="multipart/form-data" class="auth-form" action="{{ url_for('rider_signup') }}" id="multiStepForm">
+                    
+                    <!-- Step 1: Account Information -->
+                    <div class="form-step active" id="step-1">
+                        <div class="form-group">
+                            <label for="ridername">Full Name</label>
+                            <div class="input-wrapper">
+                                <svg class="input-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                                    <circle cx="12" cy="7" r="4"></circle>
+                                </svg>
+                                <input type="text" id="ridername" name="ridername" placeholder="Your full name" required>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="rideremail">Email Address</label>
+                            <div class="input-wrapper">
+                                <svg class="input-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+                                    <polyline points="22,6 12,13 2,6"></polyline>
+                                </svg>
+                                <input type="email" id="rideremail" name="rideremail" placeholder="you@example.com" required>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="phone">Contact Number</label>
+                            <div class="input-wrapper">
+                                <svg class="input-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M22 16.92V20a2 2 0 0 1-2 2 19 19 0 0 1-8.63-2.54A19 19 0 0 1 3.73 14.6 19 19 0 0 1 1 6a2 2 0 0 1 2-2h3.09a2 2 0 0 1 2 1.72c.12.9.35 1.77.69 2.59a2 2 0 0 1-.45 2.11L8.91 10.09a16 16 0 0 0 6 6l1.09-1.09a2 2 0 0 1 2.11-.45c.82.34 1.69.57 2.59.69A2 2 0 0 1 22 16.92z"></path>
+                                </svg>
+                                <input type="tel" id="phone" name="phone" placeholder="09..." 
+                                oninput="this.value = this.value.replace(/[^0-9]/g, '') " required>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="riderpass">Password</label>
+                            <div class="input-wrapper password-wrapper">
+                                <svg class="input-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                                    <circle cx="12" cy="16" r="1"></circle>
+                                    <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                                </svg>
+                                <input type="password" id="riderpass" name="riderpass" placeholder="Create a password" required>
+                                <button type="button" class="password-toggle" onclick="togglePassword('riderpass', this)">
+                                    <svg class="eye-open" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                                        <circle cx="12" cy="12" r="3"></circle>
+                                    </svg>
+                                    <svg class="eye-closed" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display: none;">
+                                        <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
+                                        <line x1="1" y1="1" x2="23" y2="23"></line>
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="confirmriderpass">Confirm Password</label>
+                            <div class="input-wrapper password-wrapper">
+                                <svg class="input-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                                    <circle cx="12" cy="16" r="1"></circle>
+                                    <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                                </svg>
+                                <input type="password" id="confirmriderpass" name="confirmriderpass" placeholder="Confirm password" required>
+                                <button type="button" class="password-toggle" onclick="togglePassword('confirmriderpass', this)">
+                                    <svg class="eye-open" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                                        <circle cx="12" cy="12" r="3"></circle>
+                                    </svg>
+                                    <svg class="eye-closed" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display: none;">
+                                        <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
+                                        <line x1="1" y1="1" x2="23" y2="23"></line>
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div class="step-actions">
+                            <button type="button" class="btn-next" onclick="nextStep(1)">Next</button>
+                        </div>
+                    </div>
+
+                    <!-- Step 2: Location -->
+                    <div class="form-step" id="step-2">
+                        <div class="location-grid">
+                            <div class="form-group">
+                                <label for="region">Region</label>
+                                <div class="input-wrapper">
+                                    <svg class="input-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M12 2a7 7 0 0 0-7 7c0 5 7 13 7 13s7-8 7-13a7 7 0 0 0-7-7z"></path>
+                                    </svg>
+                                    <select id="region" name="region" class="form-select" required>
+                                        <option value="">Loading regions...</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="province">Province</label>
+                                <div class="input-wrapper">
+                                    <svg class="input-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M3 7h6l3 6 3-12 3 6h3"></path>
+                                    </svg>
+                                    <select id="province" name="province" class="form-select" required disabled>
+                                        <option value="">Select region first</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="city">City / Municipality</label>
+                                <div class="input-wrapper">
+                                    <svg class="input-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M21 10c0 6-9 12-9 12S3 16 3 10a9 9 0 0 1 18 0z"></path>
+                                        <circle cx="12" cy="10" r="3"></circle>
+                                    </svg>
+                                    <select id="city" name="city" class="form-select" required disabled>
+                                        <option value="">Select province first</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="barangay">Barangay</label>
+                                <div class="input-wrapper">
+                                    <svg class="input-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M4 7h16v10H4z"></path>
+                                        <path d="M4 7l8 5 8-5"></path>
+                                    </svg>
+                                    <select id="barangay" name="barangay" class="form-select" required disabled>
+                                        <option value="">Select city first</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="step-actions">
+                            <button type="button" class="btn-back" onclick="prevStep(2)">Back</button>
+                            <button type="button" class="btn-next" onclick="nextStep(2)">Next</button>
+                        </div>
+                    </div>
+
+                    <!-- Step 3: Vehicle & License -->
+                    <div class="form-step" id="step-3">
+                        <div class="form-group">
+                            <label for="vehicle_type">Vehicle Type</label>
+                            <div class="input-wrapper">
+                                <svg class="input-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M14 16H9m10 0h3v-3.15M17 16v-3.6a3 3 0 0 0-3-3h-4a3 3 0 0 0-3 3v3.6m10 0h-3m-7 0H4v-3.15M7 16v-3.6a3 3 0 0 1 3-3h4a3 3 0 0 1 3 3v3.6m-10 0h3"></path>
+                                    <circle cx="6.5" cy="16.5" r="2.5"></circle>
+                                    <circle cx="17.5" cy="16.5" r="2.5"></circle>
+                                </svg>
+                                <select id="vehicle_type" name="vehicle_type" class="form-select" required>
+                                    <option value="">Select vehicle type...</option>
+                                    <option value="Motorcycle">Motorcycle</option>
+                                    <option value="Car">Car</option>
+                                    <option value="Van">Van</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="driverlicense">Driver's License</label>
+                            <div class="file-input">
+                                <label for="driverlicense" class="file-label">
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                        <rect x="3" y="3" width="18" height="14" rx="2"></rect>
+                                        <path d="M3 7h18"></path>
+                                    </svg>
+                                    Upload license
+                                </label>
+                                <input type="file" id="driverlicense" name="driverlicense" accept="image/*" hidden>
+                                <div class="file-preview" id="license-preview" aria-hidden="true">
+                                    <img src="" alt="" style="display:none;" />
+                                    <span class="file-meta">No file chosen</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-terms-checkbox" style="margin-top: 1rem;">
+                            <input type="checkbox" id="formTermsCheckbox" name="terms" required>
+                            <label for="formTermsCheckbox">I agree to the <a href="#" class="terms-trigger-link">Terms and Conditions</a></label>
+                        </div>
+
+                        <div class="step-actions">
+                            <button type="button" class="btn-back" onclick="prevStep(3)">Back</button>
+                            <button type="button" class="btn-submit" onclick="submitForm()">Submit application</button>
+                        </div>
+                    </div>
+                </form>
+
+                <div class="form-footer" style="text-align: center; margin-top: 1.5rem; font-size: 0.85rem; color: #64748b;">
+                    <p>Already have an account? <a href="{{ url_for('rider_login') }}" style="color: #2563eb; font-weight: 600; text-decoration: none;">Sign in</a></p>
+                    <p style="margin-top: 0.5rem;"><a href="/" style="color: #64748b; text-decoration: none;">Back to home</a></p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Terms Modal -->
+    <div class="terms-modal-overlay" id="termsModalOverlay">
+        <div class="terms-modal">
+            <div class="terms-header">
+                <h3>Rider Terms and Conditions</h3>
+                <button class="terms-close" id="termsCloseBtn">&times;</button>
+            </div>
+            <div class="terms-content" id="termsContent">
+                <h4>1. Rider Agreement</h4>
+                <p>By signing up as a rider, you agree to deliver orders safely and efficiently.</p>
+                
+                <h4>2. Vehicle Requirements</h4>
+                <p>You must maintain your vehicle in good working condition and possess a valid driver's license and vehicle registration.</p>
+                
+                <h4>3. Code of Conduct</h4>
+                <p>You agree to treat customers and sellers with respect and professionalism.</p>
+                
+                <h4>4. Safety</h4>
+                <p>You must adhere to all traffic laws and safety regulations while performing deliveries.</p>
+                
+                <h4>5. Earnings and Payments</h4>
+                <p>Earnings are calculated based on completed deliveries. Payment terms are outlined in the Rider Dashboard.</p>
+                
+                <h4>6. Termination</h4>
+                <p>We reserve the right to deactivate rider accounts for violations of safety or conduct policies.</p>
+                
+                <p style="margin-top: 2rem; margin-bottom: 2rem;">&nbsp;</p>
+            </div>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/login.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/rider_signup.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/terms_modal.js') }}"></script>
+    <script>
+        function togglePassword(inputId, btn) {
+            const input = document.getElementById(inputId);
+            const eyeOpen = btn.querySelector('.eye-open');
+            const eyeClosed = btn.querySelector('.eye-closed');
+            
+            if (input.type === 'password') {
+                input.type = 'text';
+                eyeOpen.style.display = 'none';
+                eyeClosed.style.display = 'block';
+            } else {
+                input.type = 'password';
+                eyeOpen.style.display = 'block';
+                eyeClosed.style.display = 'none';
+            }
+        }
+        
+        // Simple file preview for rider license
+        document.getElementById('driverlicense')?.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            const preview = document.getElementById('license-preview');
+            if (file) {
+                preview.querySelector('.file-meta').textContent = file.name;
+            }
+        });
+    </script>
+</body>
+</html>

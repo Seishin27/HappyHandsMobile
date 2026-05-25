@@ -1,0 +1,1758 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+    <title>Seller Dashboard - HappyHands</title>
+    <link rel="icon" href="{{ url_for('static', filename='images/favicon.png') }}?v={{ range(1,9999)|random }}" type="image/png">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}?v=seller-dash-{{ range(1,9999)|random }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/seller_dashboard.css') }}?v=seller-dash-{{ range(1,9999)|random }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/ai_chat.css') }}?v=seller-dash-{{ range(1,9999)|random }}">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  
+</head>
+
+<body class="admin-body" data-server-flashes='{{ get_flashed_messages(with_categories=true) | tojson | safe }}' data-restriction-state='{{ (restriction_state or {}) | tojson | safe }}' data-seller-id="{{ session.get('seller').get('sellerID') if session.get('seller') else '' }}">
+
+  {# server-provided status: show overlay when not approved #}
+  {% set seller_status = session.get('seller').get('status') if session.get('seller') else None %}
+  {% set restriction_level = restriction_state.get('level') if restriction_state else 0 %}
+  {% set has_restriction = restriction_level is not none and restriction_level >= 2 %}
+  {% set restriction_until = restriction_state.get('restriction_end') if restriction_state else None %}
+  {% set restriction_deadline = restriction_until[:10] if restriction_until else None %}
+  {% set restriction_responses = restriction_state.get('responses') if restriction_state else [] %}
+  {% set latest_explanation = restriction_responses | selectattr('response_type', 'equalto', 'explanation') | list | first %}
+  {% set admin_contact_email = restriction_state.get('contact_email') if restriction_state else 'happyhands929@gmail.com' %}
+  {% set seller_logo_path = seller.storelogo_path if seller and seller.storelogo_path else ((session.get('seller') or {}).get('storelogo_path')) %}
+
+  
+  <div id="pendingOverlay" aria-hidden="true" class="{% if (seller_status and seller_status != 'approved') and not has_restriction %}visible{% endif %}">
+    <div class="panel" role="dialog" aria-modal="true" aria-labelledby="pendingTitle">
+      <h2 id="pendingTitle">The admin will approve your account first</h2>
+      <p>Your seller application is currently under review by our admin team. Once approved you will be able to manage your store and list products.</p>
+      <div class="actions" style="display: flex; flex-direction: column; align-items: center;">
+        <button id="refreshStatusBtn" class="btn" type="button">Check status now</button>
+        <a href="/seller-logout" class="btn-back-login">Back to Login</a>
+      </div>
+    </div>
+  </div>
+
+  {% if has_restriction %}
+  <div id="restrictionOverlay" class="visible" data-restriction-level="{{ restriction_level }}" data-warning-id="{{ restriction_state.get('report_id') if restriction_state else '' }}">
+    {% if restriction_level == 2 %}
+      <div class="restriction-panel warning-panel" role="dialog" aria-modal="true" aria-labelledby="restrictionTitle">
+        <h2 id="restrictionTitle">Account Notice</h2>
+        <p class="restriction-lede">We detected a policy violation on your store. Email the admin with your explanation within seven (7) days to avoid further action.</p>
+        <div class="restriction-note">
+          {% if restriction_deadline %}
+            Send your appeal by {{ restriction_deadline }}.
+          {% else %}
+            Send your appeal within seven (7) days of this warning.
+          {% endif %}
+        </div>
+        <div class="contact-email" data-email="{{ admin_contact_email }}">
+          <span class="contact-email__label">Admin Email</span>
+          <span class="contact-email__value" id="adminComplianceEmail">{{ admin_contact_email }}</span>
+          <button id="copyAdminEmailBtn" type="button" class="copy-email-btn" data-email="{{ admin_contact_email }}">Copy email</button>
+        </div>
+        <p class="contact-helper">Include your store name, the reported product, and the corrective steps you will take.</p>
+        <div class="restriction-actions warning-actions">
+          <button id="warningProceedBtn" class="btn-primary" type="button">Proceed to dashboard</button>
+        </div>
+      </div>
+    {% else %}
+      <div class="restriction-panel level-3" role="dialog" aria-modal="true" aria-labelledby="freezeTitle">
+        {% if latest_explanation %}
+          <div id="appealPendingContent">
+            <h2 id="freezeTitle">Appeal Under Review</h2>
+            <p>You have submitted an appeal. Please wait for the admin to review your request.</p>
+            <div class="contact-email" data-email="{{ admin_contact_email }}">
+              <span class="contact-email__label" style="color:#cbd5f5;">Admin Email</span>
+              <span class="contact-email__value" id="adminComplianceEmail">{{ admin_contact_email }}</span>
+              <button id="copyAdminEmailBtn" type="button" class="copy-email-btn" data-email="{{ admin_contact_email }}">Copy email</button>
+            </div>
+          </div>
+        {% else %}
+          <div id="freezeContent">
+            <h2 id="freezeTitle">Your account is frozen{% if restriction_deadline %} until {{ restriction_deadline }}{% endif %}</h2>
+            <p>Your account is in a frozen state for one month due to non-compliance with admin directives. Contact the admin if you wish to appeal.</p>
+            <div class="contact-email" data-email="{{ admin_contact_email }}">
+              <span class="contact-email__label" style="color:#cbd5f5;">Admin Email</span>
+              <span class="contact-email__value" id="adminComplianceEmail">{{ admin_contact_email }}</span>
+              <button id="copyAdminEmailBtn" type="button" class="copy-email-btn" data-email="{{ admin_contact_email }}">Copy email</button>
+            </div>
+            <div class="restriction-actions" style="justify-content:center;">
+              <button id="submitAppealBtn" class="btn-primary" type="button">Submit Appeal</button>
+            </div>
+          </div>
+
+          <div id="appealContent" style="display:none;">
+            <h2>Submit Appeal</h2>
+            <p>Please explain why your account should be unfrozen.</p>
+            <textarea id="appealReason" class="form-control" rows="4" placeholder="Enter your explanation here..." style="width:100%; margin-bottom:15px; padding:10px; border-radius:6px; border:1px solid #ccc; font-family:inherit;"></textarea>
+            <div class="restriction-actions" style="justify-content:center; gap: 10px;">
+              <button id="cancelAppealBtn" class="btn-secondary" type="button" style="background:#e2e8f0; color:#1e293b; border:none; padding:10px 20px; border-radius:6px; cursor:pointer; font-weight:600;">Cancel</button>
+              <button id="sendAppealBtn" class="btn-primary" type="button">Send Appeal</button>
+            </div>
+          </div>
+
+          <div id="appealPendingContent" style="display:none;">
+            <h2>Appeal Under Review</h2>
+            <p>You have submitted an appeal. Please wait for the admin to review your request.</p>
+            <div class="contact-email" data-email="{{ admin_contact_email }}">
+              <span class="contact-email__label" style="color:#cbd5f5;">Admin Email</span>
+              <span class="contact-email__value">{{ admin_contact_email }}</span>
+            </div>
+          </div>
+        {% endif %}
+      </div>
+    {% endif %}
+  </div>
+  {% endif %}
+
+  
+  <aside class="admin-sidebar">
+      <div class="sidebar-header">
+          <div class="logo-container">
+              <img src="{{ url_for('static', filename='images/favicon.png') }}" alt="Happy Hands" style="height: 40px; margin-right: 10px;">
+              <span class="logo-text">Happy Hands</span>
+          </div>
+      </div>
+
+      <div class="sidebar-content">
+          <div class="store-info">
+              <div class="store-avatar">
+                  {% if seller_logo_path %}
+                    <img src="{{ url_for('uploaded_file', filename=seller_logo_path) if not (seller_logo_path|string).startswith('http') else seller_logo_path }}" alt="Store Logo" style="width:48px;height:48px;border-radius:50%;object-fit:cover;border:1px solid #d0e0ff;" />
+                  {% else %}
+                    <i class="fas fa-store"></i>
+                  {% endif %}
+              </div>
+              <div class="store-details">
+                  <h4>{{ seller.storename if seller and seller.storename else 'My Store' }}</h4>
+              </div>
+          </div>
+
+          <nav class="sidebar-nav">
+              <ul class="nav-list">
+                  <li class="nav-item active">
+                      <a href="#" class="nav-link" data-tab="dashboard">
+                          <i class="fas fa-chart-line"></i>
+                          <span>Dashboard</span>
+                      </a>
+                  </li>
+                  <li class="nav-item">
+                      <a href="#" class="nav-link" data-tab="add-product">
+                          <i class="fas fa-plus-square"></i>
+                          <span>Add Product</span>
+                      </a>
+                  </li>
+                  <li class="nav-item">
+                      <a href="#" class="nav-link" data-tab="manage-product">
+                          <i class="fas fa-edit"></i>
+                          <span>Manage Product</span>
+                      </a>
+                  </li>
+                    <li class="nav-item">
+                      <a href="#" class="nav-link" data-tab="orders">
+                        <i class="fas fa-shopping-bag"></i>
+                        <span>Orders</span>
+                      </a>
+                    </li>
+                    <li class="nav-item">
+                      <a href="#" class="nav-link" data-tab="order-reports">
+                        <i class="fas fa-flag"></i>
+                        <span>Order Reports</span>
+                      </a>
+                    </li>
+                    <li class="nav-item">
+                      <a href="#" class="nav-link" data-tab="orders-overview">
+                        <i class="fas fa-clipboard-check"></i>
+                        <span>Orders Overview</span>
+                      </a>
+                    </li>
+                    <li class="nav-item">
+                      <a href="#" class="nav-link" data-tab="messages" style="display:flex;justify-content:space-between;align-items:center;">
+                        <div style="display:flex;align-items:center;gap:10px;">
+                            <i class="fas fa-comments"></i>
+                            <span>Messages</span>
+                        </div>
+                        <span id="sellerMsgBadge" class="nav-badge" style="display:none;background:#ef4444;color:#fff;font-size:11px;padding:2px 6px;border-radius:10px;font-weight:600;">0</span>
+                      </a>
+                    </li>
+              </ul>
+          </nav>
+      </div>
+  </aside>
+
+  
+  <main class="admin-main">
+      <!-- Header -->
+      <header class="admin-header">
+          <div class="header-content">
+              <h1 class="page-title">Seller <span class="title-accent">Dashboard</span></h1>
+              <div class="header-actions">
+                  <!-- Support Chat Button -->
+                  <button id="supportChatBtn" class="action-btn" aria-label="Customer Support Chat" style="background:#fff;border:1px solid #e6eef8;display:flex;align-items:center;justify-content:center;width:40px;height:40px;border-radius:50%;margin-right:16px;cursor:pointer;position:relative;z-index:10;">
+                      <i class="fas fa-comment-dots" style="color:#2c5aa0;font-size:1.1rem;"></i>
+                  </button>
+
+                  <div class="notif-bell-wrapper" style="margin-right:16px;">
+                    <button id="notifBtn" class="action-btn notif-btn" aria-label="Notifications" type="button" style="background:#fff;border:1px solid #e6eef8;display:flex;align-items:center;gap:8px;">
+                      <i class="fas fa-bell"></i>
+                      <span class="notif-badge" id="notifCount">0</span>
+                    </button>
+                    <div class="notif-menu" id="notifMenu">
+                      <div class="notif-menu-header">
+                        <span>Notifications</span>
+                        <button class="notif-mark-read" id="sellerNotifMarkAll" type="button">Mark all read</button>
+                      </div>
+                      <div class="notif-menu-body" id="notifList">
+                        <div class="notif-empty">No notifications</div>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="user-dropdown" style="position:relative;">
+                      <button class="action-btn account-btn dropdown-toggle" aria-label="Account" id="ActBtnSeller" data-logged-in="1" type="button">
+                          {% if seller_logo_path %}
+                            <img src="{{ url_for('uploaded_file', filename=seller_logo_path) if not (seller_logo_path|string).startswith('http') else seller_logo_path }}" alt="Profile" style="width:36px;height:36px;border-radius:50%;object-fit:cover;border:1px solid #e6eef8;">
+                          {% else %}
+                            <div class="profile-initials" title="{{ session.get('seller').get('sellername') if session.get('seller') else 'Seller' }}" style="width:36px;height:36px;border-radius:50%;background:#f3f4f6;display:flex;align-items:center;justify-content:center;font-weight:600;color:#111;">
+                                {{ (session.get('seller').get('sellername')[:1] if session.get('seller') and session.get('seller').get('sellername'))|upper }}
+                            </div>
+                          {% endif %}
+                        <i class="fas fa-chevron-down dropdown-arrow" style="margin-left:8px;"></i>
+                      </button>
+
+                      <div class="dropdown-menu" id="sellerDropdown" style="display:none; position:absolute; right:0; margin-top:8px; background:#fff; border:1px solid #e6eef8; border-radius:6px; box-shadow:0 6px 18px rgba(0,0,0,0.06); min-width:180px; z-index:50;">
+                        <div class="dropdown-header" style="padding:10px 14px;">
+                          <span class="user-name">{{ session.get('seller').get('sellername') if session.get('seller') else 'Seller' }}</span>
+                        </div>
+                        <div class="dropdown-divider" style="height:1px;background:#f1f1f1;margin:6px 0;"></div>
+
+                        <a class="dropdown-item" href="/seller/profile" style="display:block;padding:10px 14px;text-decoration:none;color:inherit;">Profile</a>
+                        <button class="dropdown-item logout-btn" id="sellerLogoutBtn" type="button" style="width:100%;text-align:left;padding:10px 14px;border:none;background:none;cursor:pointer;">
+                          <i class="fas fa-sign-out-alt" style="margin-right:8px;"></i>
+                          Logout
+                        </button>
+                      </div>
+                  </div>
+              </div>
+          </div>
+      </header>
+
+     
+      <section id="dashboard" class="tab-section active">
+          <div class="dashboard-content">
+              <!-- Stats Cards -->
+              <div class="stats-grid">
+                  <div class="stat-card">
+                      <div class="stat-content">
+                          <div class="stat-number">{{ stats.get('total_products', 0) if stats else 0 }}</div>
+                          <div class="stat-label">Total Products</div>
+                      </div>
+                      <div class="stat-icon">
+                          <i class="fas fa-box"></i>
+                      </div>
+                  </div>
+
+                  <div class="stat-card">
+                      <div class="stat-content">
+                          <div class="stat-number">₱{{ "%.2f"|format(stats.get('total_earnings', 0)) if stats else "0.00" }}</div>
+                          <div class="stat-label">Total Earnings</div>
+                      </div>
+                      <div class="stat-icon">
+                          <i class="fas fa-shopping-bag"></i>
+                      </div>
+                  </div>
+
+                  <div class="stat-card">
+                      <div class="stat-content">
+                          <div class="stat-number">{{ stats.get('pending_orders', 0) if stats else 0 }}</div>
+                          <div class="stat-label">Pending Orders</div>
+                      </div>
+                      <div class="stat-icon">
+                          <i class="fas fa-clock"></i>
+                      </div>
+                  </div>
+              </div>
+
+              <div class="insights-grid">
+                <div class="chart-card">
+                  <div class="chart-card-header">
+                    <div>
+                      <h3>Sales Overview</h3>
+                      <p>Daily total sales</p>
+                    </div>
+                    <span class="chart-range">Last 30 days</span>
+                  </div>
+                  <div class="chart-wrapper">
+                    <canvas id="sellerSalesChart" aria-label="Line chart showing daily sales"></canvas>
+                    <div class="chart-empty hidden" id="sellerSalesEmpty">No sales data yet.</div>
+                  </div>
+                </div>
+                <div class="chart-card">
+                  <div class="chart-card-header">
+                    <div>
+                      <h3>Orders Overview</h3>
+                      <p>Daily order volume</p>
+                    </div>
+                    <span class="chart-range">Last 30 days</span>
+                  </div>
+                  <div class="chart-wrapper">
+                    <canvas id="sellerOrdersChart" aria-label="Bar chart showing daily order volume"></canvas>
+                    <div class="chart-empty hidden" id="sellerOrdersEmpty">No order data yet.</div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="panel-card recent-orders-card">
+                <div class="chart-card-header" style="margin-bottom:0;">
+                  <div>
+                    <h3>Recent Orders</h3>
+                    <p>10 most recent orders with status</p>
+                  </div>
+                  <span class="chart-range">Latest 10</span>
+                </div>
+                <div class="table-responsive">
+                  <table id="recentOrdersTable" class="orders-table">
+                    <thead>
+                      <tr>
+                        <th>Order ID</th>
+                        <th>Customer Name</th>
+                        <th>Product</th>
+                        <th>Quantity</th>
+                        <th>Price</th>
+                        <th>Total</th>
+                        <th>Order Status</th>
+                        <th>Payment Status</th>
+                        <th>Shipping Status</th>
+                        <th>Order Date</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <td colspan="10" class="no-data">Loading recent orders…</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+          </div>
+      </section>
+
+      <!-- Add Product: in-page section -->
+      <section id="add-product" class="tab-section" aria-label="Add Product" style="display:none;">
+        <div class="panel-card add-product-panel">
+          {% if session.get('seller') %}
+          <div class="store-header" style="display:flex;align-items:center;gap:12px;margin-bottom:12px;">
+            {% if seller_logo_path %}
+              <img src="{{ url_for('uploaded_file', filename=seller_logo_path) if not (seller_logo_path|string).startswith('http') else seller_logo_path }}" alt="Store Logo" class="store-logo" style="width:56px;height:56px;border-radius:50%;object-fit:cover;border:1px solid #d0e0ff;" />
+            {% else %}
+              <div class="store-logo-placeholder" style="width:56px;height:56px;border-radius:50%;background:linear-gradient(135deg,#e6f0ff,#f3f7ff);border:1px solid #d0e0ff;"></div>
+            {% endif %}
+            <div class="store-meta">
+              <div class="store-name" style="font-weight:700;">{{ session.get('seller').get('storename') or session.get('seller').get('sellername') or 'Store' }}</div>
+            </div>
+          </div>
+          {% endif %}
+         
+          <h2 class="title">Add New Products</h2>
+          <form id="addProductForm" enctype="multipart/form-data" novalidate>
+            <label class="form-label">Product Images</label>
+            <div class="image-grid" role="group" aria-label="Product images">
+              <div class="image-box" data-index="0"><input type="file" accept="image/*" name="image0" /><div class="image-placeholder">Click to upload<br><small class="small-note">Main image</small></div></div>
+              <div class="image-box" data-index="1"><input type="file" accept="image/*" name="image1" /><div class="image-placeholder">Click to upload<br><small class="small-note">Image 2</small></div></div>
+              <div class="image-box" data-index="2"><input type="file" accept="image/*" name="image2" /><div class="image-placeholder">Click to upload<br><small class="small-note">Image 3</small></div></div>
+              <div class="image-box" data-index="3"><input type="file" accept="image/*" name="image3" /><div class="image-placeholder">Click to upload<br><small class="small-note">Image 4</small></div></div>
+            </div>
+            <div class="form-group"><label class="form-label">Name</label><input class="form-input" name="name" type="text" placeholder="e.g. Soft Baby Romper" required /></div>
+            <div class="form-group">
+              <label class="form-label" id="addProductDescriptionLabel" for="addProductDescription">Description</label>
+              <textarea class="form-textarea" name="description" id="addProductDescription" placeholder="Short description about the product"></textarea>
+              <div class="rich-text-wrapper" id="addProductDescriptionRich" hidden aria-labelledby="addProductDescriptionLabel" aria-describedby="addDescFormatHint">
+                <div class="rich-text-toolbar" id="addProductDescriptionToolbar" role="toolbar" aria-label="Description formatting controls">
+                  <button type="button" class="rich-text-btn" data-action="bullet">Bulleted list</button>
+                  <button type="button" class="rich-text-btn" data-action="break">Double line break</button>
+                  <span class="rich-text-hint" id="addDescFormatHint">Use bullets or spacing so parents can scan highlights.</span>
+                </div>
+                <div id="addProductDescriptionEditor" class="rich-text-editor" contenteditable="true" role="textbox" aria-multiline="true" data-placeholder="Describe your product..."></div>
+                <p class="rich-text-subtext">Formatting is preserved on product pages.</p>
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-col"><label class="form-label">Price</label><input class="form-input" name="price" type="number" step="0.01" placeholder="0.00" required /></div>
+              <div class="form-col"><label class="form-label">Stock</label><input class="form-input" name="stock" type="number" step="1" placeholder="0" required /></div>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Select a category</label>
+              {% if not categories %}
+                <div class="small-note" style="color:#b91c1c;font-weight:600;">
+                  No categories are assigned to your store. Please reach out to support to enable product uploads.
+                </div>
+              {% else %}
+                <select class="form-select" name="category" id="productCategory" title="Product Category" required>
+                  <option value="">Select a category</option>
+                  {% for cat in categories %}
+                    <option value="{{ cat.id or cat.categoryID }}" data-slug="{{ cat.slug }}">{{ cat.name }}</option>
+                  {% endfor %}
+                </select>
+              {% endif %}
+              <div id="sizeWrapper" class="form-group size-wrapper" aria-hidden="true">
+                <label class="form-label">Select size</label>
+                <select class="form-select" name="size" id="productSize">
+                  <option value="">Select size</option>
+                  <option value="Small">Small</option>
+                  <option value="Medium">Medium</option>
+                  <option value="Large">Large</option>
+                </select>
+                <div class="small-note">Sizes appear only for Baby Clothes & Accessories.</div>
+              </div>
+            </div>
+            <div class="form-group checkbox-group"><input type="checkbox" id="requestFeatured" name="request_featured" value="1" /><label for="requestFeatured" class="form-label checkbox-label">Request to be featured on homepage</label></div>
+            <div class="actions"><button type="reset" class="btn-ghost">Reset</button><button type="submit" class="btn-primary" {% if not categories %}disabled title="Assign categories before adding products"{% endif %}>Create Product</button></div>
+            <div id="addProductMsg" class="success-message"></div>
+          </form>
+        </div>
+      </section>
+
+      <!-- Manage Product: in-page section -->
+      <section id="manage-product" class="tab-section" aria-label="Manage Products" style="display:none;">
+        <div class="panel-card manage-product-panel">
+          <h2 class="title">Manage Your Products</h2>
+          <div class="table-responsive">
+            <table>
+              <thead><tr><th class="col-id">Product ID</th><th class="col-name">Name</th><th class="col-price">Price</th><th class="col-stock">Stock</th><th class="col-actions">Actions</th></tr></thead>
+              <tbody>
+                {% if seller_products %}
+                  {% for p in seller_products %}
+                  {% set image_keys = ['image_gallery','image_list','images','image_urls','image_path','image','main_image','imageurl','image0','image1','image2','image3'] %}
+                  {% set img_ns = namespace(items=[]) %}
+                  {% for key in image_keys %}
+                    {% if key in p %}
+                      {% set raw_val = p[key] %}
+                      {% if raw_val %}
+                        {% if raw_val is string %}
+                          {% for part in raw_val.split(',') %}
+                            {% set trimmed = part|trim %}
+                            {% if trimmed %}
+                              {% set img_ns.items = img_ns.items + [trimmed] %}
+                            {% endif %}
+                          {% endfor %}
+                        {% elif raw_val is iterable %}
+                          {% for part in raw_val %}
+                            {% if part %}
+                              {% set img_ns.items = img_ns.items + [part] %}
+                            {% endif %}
+                          {% endfor %}
+                        {% endif %}
+                      {% endif %}
+                    {% endif %}
+                  {% endfor %}
+                  {% set product_images = img_ns.items[:4] %}
+                  {% set product_description = p.description or p.product_description or p.details or '' %}
+                  <tr data-id="{{ p.productID or p.productId or p.id }}" data-name="{{ (p.name or p.title or p.product_name)|string }}" data-price="{{ (p.price|float if p.price is not none else '') }}" data-stock="{{ (p.stock if p.stock is not none else (p.quantity if p.quantity is not none else '')) }}" data-images='{{ product_images|tojson|safe }}' data-description="{{ product_description|e }}">
+                    <td>{{ p.productID or p.productId or p.id }}</td>
+                    <td class="prod-name">{{ p.name or p.title or p.product_name }}</td>
+                    <td class="prod-price">{% if p.price is not none %}₱{{ ('%.2f'|format(p.price|float)) }}{% else %}-{% endif %}</td>
+                    <td class="prod-stock">{{ p.stock if p.stock is not none else (p.quantity if p.quantity is not none else '—') }}</td>
+                    <td><button class="btn btn-edit" data-id="{{ p.productID or p.productId or p.id }}">Edit</button><button class="btn btn-delete" data-id="{{ p.productID or p.productId or p.id }}">Delete</button></td>
+                  </tr>
+                  {% endfor %}
+                {% else %}
+                  <tr><td colspan="5" class="no-data">No products yet.</td></tr>
+                {% endif %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <div id="editProductModal" class="modal" style="display:none">
+        <div class="modal-content">
+          <div class="modal-header"><h2>Edit Product</h2><span class="close" id="editProdClose">&times;</span></div>
+          <div class="modal-body">
+            <form id="editProductForm">
+              <input type="hidden" id="editProductID" name="productID" />
+              <div class="form-group">
+                <label for="editProductName">Product Name</label>
+                <input id="editProductName" name="name" type="text" maxlength="120" required />
+              </div>
+              <div class="form-group">
+                <label class="form-label">Current Images</label>
+                <div class="current-images-grid" id="editCurrentImages" role="group" aria-label="Current product images">
+                  {% for idx in range(4) %}
+                  <div class="current-image-slot" data-current-slot="{{ idx }}">
+                    <div class="preview-label">Image {{ idx + 1 }}</div>
+                    <img class="preview-img current-image" alt="Current image {{ idx + 1 }}" style="display:none" />
+                    <div class="empty-state">No image</div>
+                  </div>
+                  {% endfor %}
+                </div>
+              </div>
+              <div class="form-group">
+                <label class="form-label">New Image Preview</label>
+                <p class="small-note">Upload up to 4 new images. Current images remain until you save.</p>
+                <div class="image-grid" id="editNewImageGrid" role="group" aria-label="Upload new product images">
+                  {% for idx in range(4) %}
+                  <div class="image-box" data-index="{{ idx }}">
+                    <input type="file" accept="image/*" name="image{{ idx }}" class="edit-image-input" />
+                    <div class="image-placeholder">Click to upload<br><small class="small-note">Image {{ idx + 1 }}</small></div>
+                    <img class="preview" alt="New image preview {{ idx + 1 }}" />
+                    <button type="button" class="remove-image" aria-label="Remove image {{ idx + 1 }}">Remove</button>
+                  </div>
+                  {% endfor %}
+                </div>
+              </div>
+              <div class="form-group">
+                <label for="editProductDescription" id="editProductDescriptionLabel">Description</label>
+                <textarea id="editProductDescription" name="description" rows="4" placeholder="Describe your product"></textarea>
+                <div class="rich-text-wrapper" id="editProductDescriptionRich" hidden aria-labelledby="editProductDescriptionLabel" aria-describedby="editDescFormatHint">
+                  <div class="rich-text-toolbar" id="editProductDescriptionToolbar" role="toolbar" aria-label="Description formatting controls">
+                    <button type="button" class="rich-text-btn" data-action="bullet">Bulleted list</button>
+                    <button type="button" class="rich-text-btn" data-action="break">Double line break</button>
+                    <span class="rich-text-hint" id="editDescFormatHint">Use formatting to highlight care instructions or sizes.</span>
+                  </div>
+                  <div id="editProductDescriptionEditor" class="rich-text-editor" contenteditable="true" role="textbox" aria-multiline="true" data-placeholder="Describe your product..."></div>
+                  <p class="rich-text-subtext">Changes appear as formatted text on your store.</p>
+                </div>
+              </div>
+              <div class="form-grid" style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px">
+                <div class="form-group"><label for="editProductPrice">Price</label><input id="editProductPrice" name="price" type="number" min="0" step="0.01" required /></div>
+                <div class="form-group"><label for="editProductStock">Stock Quantity</label><input id="editProductStock" name="stock" type="number" min="0" step="1" required /></div>
+              </div>
+              <div id="editProductMsg" class="success-message"></div>
+              <div class="modal-actions"><button type="button" class="btn-ghost" id="editProdCancel">Cancel</button><button type="submit" class="btn-primary" id="editProdSave">Save Changes</button></div>
+            </form>
+          </div>
+        </div>
+      </div>
+
+      <!-- Orders: in-page section -->
+      <section id="orders" class="tab-section" aria-label="Your Orders" style="display:none;">
+        <div class="panel-card orders-panel">
+          <h2 class="title">Your Orders</h2>
+          <div id="dashOrdersData" data-orders='{{ orders|tojson|e }}' style="display:none"></div>
+          <div class="table-responsive">
+            <table class="orders-table">
+              <thead><tr><th>Order #</th><th>Customer</th><th>Placed</th><th>Items</th><th>Total</th><th>Rider</th><th>Status</th><th class="col-actions">Actions</th></tr></thead>
+              <tbody>
+                {% if orders %}
+                  {% for order in orders %}
+                  <tr data-order-id="{{ order.get('sellerOrderID') }}">
+                    <td data-label="Order #">{{ order.get('order_number') }}</td>
+                    <td data-label="Customer">{{ order.get('customer_name') or '—' }}</td>
+                    <td data-label="Placed">{{ (order.get('created_at')|string)[:19] if order.get('created_at') else '—' }}</td>
+                    <td data-label="Items">{{ (order.get('items') or []) | length }}</td>
+                    <td data-label="Total">₱{{ "%.2f"|format(order.get('total_amount', 0)|float) }}</td>
+                    <td data-label="Rider">{{ order.get('rider_name') or 'Unassigned' }}</td>
+                    <td data-label="Status"><span class="status-badge status-{{ order.get('status','pending') }}">{{ (order.get('status','pending').replace('_',' ').title()) }}</span></td>
+                    <td class="col-actions" data-label="Actions">
+                      <button class="btn btn-view-order" data-order-id="{{ order.get('sellerOrderID') }}">View</button>
+                      <button class="btn btn-update-status" data-order-id="{{ order.get('sellerOrderID') }}" data-order-status="{{ order.get('status','pending') }}">Update</button>
+                      <button class="btn btn-assign-rider" data-order-id="{{ order.get('sellerOrderID') }}">Request Rider</button>
+                    </td>
+                  </tr>
+                  {% endfor %}
+                {% else %}
+                  <tr><td colspan="8" class="no-data">No orders yet.</td></tr>
+                {% endif %}
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Modals replicated from seller_orders -->
+          <div id="dashStatusModal" class="modal" style="display:none">
+            <div class="modal-content"><div class="modal-header"><h2>Update Order Status</h2><span class="close" onclick="dashCloseStatusModal()">&times;</span></div><div class="modal-body"><form id="dashStatusForm"><div class="form-group"><label for="dashNewStatus">New Status:</label><select id="dashNewStatus" name="status" required><option value="pending">Pending</option><option value="packing">Packing</option><option value="packed">Packed (Ready for Pickup)</option></select></div><div class="form-group"><label for="dashStatusNotes">Notes (Optional):</label><textarea id="dashStatusNotes" name="notes" rows="3" placeholder="Add any additional notes..."></textarea></div><div class="modal-actions"><button type="button" class="btn-cancel-modal" onclick="dashCloseStatusModal()">Cancel</button><button type="submit" class="btn-confirm-status">Update Status</button></div></form></div></div>
+          </div>
+          <div id="dashRiderModal" class="modal" style="display:none">
+            <div class="modal-content"><div class="modal-header"><h2>Request Rider</h2><span class="close" onclick="dashCloseRiderModal()">&times;</span></div><div class="modal-body"><div id="dashRiderLoadState" class="rider-load">Loading available riders…</div><div id="dashRiderList" class="rider-list" style="display:none"></div><div id="dashRiderEmpty" class="rider-empty" style="display:none">No active riders available right now.</div><div class="modal-actions"><button type="button" class="btn-cancel-modal" onclick="dashCloseRiderModal()">Cancel</button><button type="button" class="btn-confirm-status" id="dashRiderAssignBtn" disabled>Request</button></div></div></div>
+          </div>
+          <div id="dashOrderDetailsModal" class="modal" style="display:none">
+            <div class="modal-content"><div class="modal-header"><h2>Order Details</h2><span class="close" onclick="dashCloseOrderDetails()">&times;</span></div><div class="modal-body"><div id="dashOrderDetailsContent"></div></div></div>
+          </div>
+        </div>
+      </section>
+
+      <section id="order-reports" class="tab-section" aria-label="Order Reports" style="display:none;">
+        <div class="panel-card orders-panel">
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:12px;">
+            <div>
+              <h2 class="title" style="margin-bottom:4px;">Order Reports</h2>
+              <p style="color:#64748b;font-size:0.95rem;margin:0;">Review buyer-reported delivery issues and escalate to the admin if you need assistance.</p>
+            </div>
+          </div>
+          <div id="dashOrderReportsData" data-order-reports='{{ order_reports_json|tojson|e }}' style="display:none"></div>
+          <div class="table-responsive" style="margin-top:12px;">
+            <table class="orders-table">
+              <thead>
+                <tr>
+                  <th>Report #</th>
+                  <th>Order #</th>
+                  <th>Issue</th>
+                  <th>Status</th>
+                  <th>Filed</th>
+                  <th>Reporter</th>
+                  <th style="width:150px;">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% if order_reports %}
+                  {% for report in order_reports %}
+                    <tr data-report-id="{{ report.id }}" data-order-id="{{ report.order_id }}" data-status="{{ report.status }}" data-issue="{{ report.issue_type }}" data-escalated="{{ 1 if report.escalated_to_admin else 0 }}">
+                      <td data-label="Report #">{{ report.id }}</td>
+                      <td data-label="Order #">{{ report.order_number or report.order_id }}</td>
+                      <td data-label="Issue">{{ (report.issue_type or report.description or 'Issue')|replace('_', ' ')|title }}</td>
+                      <td data-label="Status">
+                        <span class="status-badge status-{{ (report.status or 'open')|lower }}">{{ (report.status or 'Open')|replace('_', ' ')|title }}</span>
+                        {% if report.escalated_to_admin %}
+                          <small style="display:block;color:#b91c1c;font-weight:600;margin-top:4px;">Escalated to admin</small>
+                        {% endif %}
+                      </td>
+                      <td data-label="Filed">{{ report.created_at.strftime('%b %d, %Y %I:%M %p') if report.created_at else '—' }}</td>
+                      <td data-label="Reporter">{{ report.reporter_name or report.reporter_username or 'User' }}</td>
+                      <td data-label="Actions">
+                        <button class="btn btn-view-report" data-report-id="{{ report.id }}">View</button>
+                        {% if (report.status or '').lower() not in ['escalated', 'resolved', 'closed'] %}
+                          <button class="btn btn-escalate-report" data-report-id="{{ report.id }}">Escalate</button>
+                        {% else %}
+                          <button class="btn btn-escalate-report" data-report-id="{{ report.id }}" disabled>Escalated</button>
+                        {% endif %}
+                      </td>
+                    </tr>
+                  {% endfor %}
+                {% else %}
+                  <tr>
+                    <td colspan="7" class="no-data">No order reports at the moment.</td>
+                  </tr>
+                {% endif %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div id="reportDetailModal" class="modal" style="display:none">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h2>Report Details</h2>
+              <span class="close" onclick="closeSellerReportDetail()">&times;</span>
+            </div>
+            <div class="modal-body">
+              <div id="reportDetailContent"></div>
+            </div>
+          </div>
+        </div>
+
+        <div id="reportEscalateModal" class="modal" style="display:none">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h2>Escalate to Admin</h2>
+              <span class="close" onclick="closeSellerReportEscalate()">&times;</span>
+            </div>
+            <div class="modal-body">
+              <form id="reportEscalateForm">
+                <input type="hidden" id="escalateReportId" name="report_id" value="">
+                <div class="form-group">
+                  <label for="escalationNote">Explain what happened</label>
+                  <textarea id="escalationNote" name="note" rows="4" placeholder="Provide helpful context for the admin" required></textarea>
+                </div>
+                <div id="escalateError" class="form-error" style="display:none;"></div>
+                <div class="modal-actions">
+                  <button type="button" class="btn-cancel-modal" onclick="closeSellerReportEscalate()">Cancel</button>
+                  <button type="submit" class="btn btn-primary" id="escalateSubmitBtn">Escalate Report</button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="orders-overview" class="tab-section" aria-label="Completed Orders" style="display:none;">
+        <div class="panel-card orders-panel">
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;">
+            <div>
+              <h2 class="title" style="margin-bottom:4px;">Completed Orders</h2>
+              <p style="color:#64748b;font-size:0.95rem;margin:0;">Delivered orders automatically appear in this list.</p>
+            </div>
+          </div>
+          {% set delivered_orders = [] %}
+          {% if orders %}
+            {% set delivered_orders = orders | selectattr('status','equalto','delivered') | list %}
+          {% endif %}
+          <div class="table-responsive" style="margin-top:18px;">
+            <table class="orders-table">
+              <thead>
+                <tr>
+                  <th>Order #</th>
+                  <th>Customer</th>
+                  <th>Delivered On</th>
+                  <th>Items</th>
+                  <th>Total</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% if delivered_orders and delivered_orders|length > 0 %}
+                  {% for order in delivered_orders %}
+                    <tr>
+                      <td data-label="Order #">{{ order.get('order_number') }}</td>
+                      <td data-label="Customer">{{ order.get('customer_name') or '—' }}</td>
+                      <td data-label="Delivered On">
+                        {{ (order.get('delivered_at') or order.get('updated_at') or order.get('created_at') or '—')|string }}
+                      </td>
+                      <td data-label="Items">{{ (order.get('items') or []) | length }}</td>
+                      <td data-label="Total">₱{{ "%.2f"|format(order.get('total_amount', 0)|float) }}</td>
+                    </tr>
+                  {% endfor %}
+                {% else %}
+                  <tr>
+                    <td colspan="5" class="no-data">No delivered orders yet.</td>
+                  </tr>
+                {% endif %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <section id="messages" class="tab-section" aria-label="Messages" style="display:none;">
+        <div class="panel-card messages-panel">
+          <div class="panel-header">
+            <div>
+              <h2 class="title" style="margin-bottom:4px;">Messages</h2>
+              <p style="color:#64748b;margin:0;">Chat directly with customers and riders.</p>
+            </div>
+          </div>
+          <div class="messages-layout">
+            <div class="messages-sidebar">
+              <div class="messages-sidebar-header">Conversations</div>
+              <div id="sellerConvoItems" class="messages-convo-list">
+                <div style="padding:12px;color:#64748b;">Select a conversation.</div>
+              </div>
+            </div>
+            <div class="messages-chat">
+              <div id="sellerChatHeader" class="messages-chat-header">
+                <div class="chat-header-info">
+                  <div class="chat-header-text">
+                    <div id="sellerChatName" class="chat-header-title">Choose a conversation</div>
+                    <div id="sellerChatInfo" class="chat-header-sub">Select a customer or rider to start chatting</div>
+                  </div>
+                  <div class="rider-chat-modes">
+                    <button type="button" class="rider-chat-mode-btn active" data-mode="all">All</button>
+                    <button type="button" class="rider-chat-mode-btn" data-mode="user">Customer</button>
+                    <button type="button" class="rider-chat-mode-btn" data-mode="rider">Rider</button>
+                  </div>
+                </div>
+                <div class="chat-target-icons" id="sellerChatTargets">
+                    <div id="sellerChatProduct" style="color:#334155;font-size:12px;"></div>
+                </div>
+              </div>
+              <div id="sellerChatMessages" class="messages-chat-body"></div>
+              <div class="messages-chat-input">
+                <input id="sellerChatInput" type="text" placeholder="Type a message..." />
+                <button id="sellerChatSend" class="btn-primary">Send</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+  </main>
+
+  <!-- Customer Support Chat widget -->
+    <div id="supportChatModal" class="ai-chat-modal" role="dialog" aria-modal="true" aria-label="Customer Support Chat" style="display:none;">
+        <div class="ai-chat-header">
+            <div class="ai-chat-title">Support Chat</div>
+            <button id="supportChatCloseBtn" class="ai-chat-close" aria-label="Close">✕</button>
+        </div>
+        <div id="supportChatPanel" data-chat-box class="ai-chat-content" style="display:flex;flex-direction:column;height:100%;">
+            <div id="supportChatMessages" class="ai-chat-messages chat-messages" style="flex:1;">
+                <div class="ai-chat-empty">Hello! How can we help you today?</div>
+            </div>
+            <div class="ai-chat-input-row" style="display:flex;gap:8px;">
+                <textarea id="supportChatInput" class="ai-chat-input chat-input" rows="1" placeholder="Type a message..."></textarea>
+                <button id="supportChatSendBtn" class="ai-chat-send chat-send" aria-label="Send">Send</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.socket.io/4.6.1/socket.io.min.js"></script>
+    <script src="{{ url_for('static', filename='js/support_chat.js') }}?v={{ range(1,9999)|random }}" defer></script>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/ai_chat.css') }}">
+
+  <script>
+    // Simple tab switcher for sidebar
+    document.addEventListener('DOMContentLoaded', function(){
+      const links = document.querySelectorAll('.sidebar-nav .nav-link');
+      const sections = document.querySelectorAll('.tab-section');
+      function show(tab){
+        sections.forEach(s=>{ s.style.display = (s.id === tab) ? '' : 'none'; s.classList.toggle('active', s.id===tab); });
+        document.querySelectorAll('.sidebar-nav .nav-item').forEach(li=>li.classList.remove('active'));
+        const activeLink = document.querySelector(`.sidebar-nav .nav-link[data-tab="${tab}"]`);
+        if (activeLink) activeLink.parentElement.classList.add('active');
+        window.scrollTo({top:0, behavior:'smooth'});
+        document.dispatchEvent(new CustomEvent('sellerTabChange', { detail: { tab } }));
+      }
+      links.forEach(a=>{
+        a.addEventListener('click', function(e){
+          const tab = a.getAttribute('data-tab');
+          if (tab){ e.preventDefault(); show(tab); }
+        });
+      });
+      // optional hash deep-link: #orders etc.
+      const initial = (location.hash||'').replace('#','');
+      if (initial && document.getElementById(initial)) show(initial);
+    });
+  </script>
+
+  <script>
+    (function(){
+      // Initialize sockets once Socket.IO client is available.
+      function tryInit(){
+        try{
+          if (typeof io === 'undefined') return false;
+          // legacy socket (primary)
+          if (!window.sellerSocket){
+            const match = document.cookie.match(/(?:^|; )seller_session=([^;]*)/);
+            const token = match ? decodeURIComponent(match[1]) : null;
+            const opts = { withCredentials: true, auth: { role: 'seller' } };
+            if (token) opts.auth.session = token;
+            window.sellerSocket = io(opts);
+            // window.sellerSocket.on('connect', ()=>console.log('seller legacy socket connected'));
+          }
+          
+          // Handler for legacy chat_message events (existing flow)
+          if (window.sellerSocket && !window.sellerSocket._seller_handlers_attached){
+            window.sellerSocket._seller_handlers_attached = true;
+            window.sellerSocket.on('chat_message', (p)=>{
+              if (!p) return;
+              const sellerIdStr = String(window.SELLER_ID || '');
+              const rid = String(p.recipientID || p.recipientId || p.recipient_id || '');
+              const sid = String(p.senderID || p.senderId || p.sender_id || '');
+              const userPayloadId = String(p.userID || p.userId || p.user_id || '');
+              const riderPayloadId = String(p.riderID || p.riderId || p.rider_id || '');
+              const senderRole = (p.sender_role || p.sender || '').toLowerCase();
+
+              const matchesActiveUser = window.__activeUserID && (
+                sid === String(window.__activeUserID) ||
+                rid === String(window.__activeUserID) ||
+                userPayloadId === String(window.__activeUserID)
+              );
+              const matchesActiveRider = window.__activeRiderID && (
+                riderPayloadId === String(window.__activeRiderID) ||
+                sid === String(window.__activeRiderID)
+              );
+
+              if (matchesActiveUser || matchesActiveRider) {
+                window.appendSellerMessage(p);
+                // Mark as read immediately since we are viewing it
+                const peerRole = matchesActiveUser ? 'user' : 'rider';
+                const peerId = matchesActiveUser ? window.__activeUserID : window.__activeRiderID;
+                fetch('/api/chat2/mark_read', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ peer_role: peerRole, peer_id: peerId }),
+                    credentials: 'same-origin'
+                }).catch(e => console.error('Failed to mark read on live message', e));
+                return;
+              }
+
+              if (rid === sellerIdStr || p.recipient === 'seller' || p.recipient_role === 'seller') {
+                // Increment main sidebar badge if not on messages tab
+                const messagesTab = document.getElementById('messages');
+                if (!messagesTab || messagesTab.style.display === 'none') {
+                    const mainBadge = document.getElementById('sellerMsgBadge');
+                    if (mainBadge) {
+                        const cur = parseInt(mainBadge.textContent || '0') || 0;
+                        mainBadge.textContent = String(cur + 1);
+                        mainBadge.style.display = 'inline-block';
+                    }
+                }
+
+                if (senderRole === 'rider' || riderPayloadId){
+                  const item = document.querySelector(`#sellerConvoItems .convoItem[data-type='rider'][data-id='${riderPayloadId}']`);
+                  if (item){
+                    const badge = item.querySelector('.unread-badge');
+                    if (badge){
+                      const cur = parseInt(badge.textContent||'0')||0;
+                      badge.textContent = String(cur + 1);
+                      badge.style.display = '';
+                    }
+                  } else {
+                    try{ window.loadSellerConversations && window.loadSellerConversations(); }catch(e){}
+                  }
+                  return;
+                }
+
+                const userId = userPayloadId || sid;
+                if (!userId) return;
+                const item = document.querySelector(`#sellerConvoItems .convoItem[data-type='user'][data-id='${userId}']`);
+                if (item){
+                  const badge = item.querySelector('.unread-badge');
+                  if (badge){
+                    const cur = parseInt(badge.textContent||'0')||0;
+                    badge.textContent = String(cur + 1);
+                    badge.style.display = '';
+                  }
+                } else {
+                  try{ window.loadSellerConversations && window.loadSellerConversations(); }catch(e){}
+                }
+              }
+            });
+            // Listen for generic notification events for this seller and refresh the bell list
+            window.sellerSocket.on('notification', (n)=>{
+              try{
+                if (!n || n.recipient_type !== 'seller') return;
+                if (window.loadSellerNotifications) window.loadSellerNotifications();
+              }catch(e){ console.error('seller notification handler error', e); }
+            });
+          }
+
+          return true;
+        }catch(e){ console.error('socket init error', e); return false; }
+      }
+
+      // Attempt immediate init; if Socket.IO isn't loaded yet, retry on window load.
+      if (!tryInit()){
+        window.addEventListener('load', function(){ tryInit(); });
+      }
+    })();
+    </script>
+
+  <script>
+    (function(){
+      const SELLER_ID = (document.getElementById('sellerData') && document.getElementById('sellerData').dataset) ? (document.getElementById('sellerData').dataset.sellerId || null) : null;
+      window.SELLER_ID = SELLER_ID;
+      let activeUserID = null;
+      let activeRiderID = null;
+      let activeProductID = null;
+      window.__activeUserID = null;
+      window.__activeRiderID = null;
+      window.__activeProductID = null;
+
+      function normalizeProductId(raw){
+        if (raw === undefined || raw === null) return null;
+        const text = String(raw).trim();
+        if (!text) return null;
+        return /^[0-9]+$/.test(text) ? text : null;
+      }
+
+      function setConvoMenuVisible(visible){
+        const menu = document.getElementById('sellerConvoDropdown');
+        const toggle = document.getElementById('sellerConvoToggle');
+        if (!menu || !toggle) return;
+        const show = !!visible;
+        menu.style.display = show ? 'block' : 'none';
+        menu.classList.toggle('visible', show);
+        menu.setAttribute('aria-hidden', show ? 'false' : 'true');
+        toggle.setAttribute('aria-expanded', show ? 'true' : 'false');
+      }
+
+      let activeMode = 'all';
+
+      function bindModeButtons(){
+        const btns = document.querySelectorAll('.rider-chat-mode-btn');
+        btns.forEach(btn => {
+          btn.addEventListener('click', async () => {
+            btns.forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            activeMode = btn.getAttribute('data-mode');
+            await loadConversations();
+          });
+        });
+      }
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', bindModeButtons);
+      } else {
+        bindModeButtons();
+      }
+
+      async function loadConversations(){
+        const listEl = document.getElementById('sellerConvoItems');
+        if (!listEl) return;
+        listEl.innerHTML = '<div style="padding:12px;color:#64748b;">Loading…</div>';
+        try{
+          const r = await fetch('/api/seller/chat/conversations', { credentials: 'same-origin' });
+          const j = await r.json();
+          if (!r.ok || !j.success){ listEl.innerHTML = '<div style="padding:12px;color:#64748b;">No conversations</div>'; setConvoMenuVisible(false); return; }
+          let convos = j.conversations || [];
+          
+          if (activeMode === 'user') {
+            convos = convos.filter(c => (c.type || 'user') === 'user');
+          } else if (activeMode === 'rider') {
+            convos = convos.filter(c => (c.type || 'user') === 'rider');
+          }
+
+          if (!convos.length){ listEl.innerHTML = '<div style="padding:12px;color:#64748b;">No conversations</div>'; setConvoMenuVisible(false); return; }
+          listEl.innerHTML = convos.map(c => {
+            const type = c.type || 'user';
+            const id = String(c.id || c.userID);
+            const name = c.name || c.username || (type === 'rider' ? `Rider ${id}` : `User ${id}`);
+            const last = (c.lastMessage||'').slice(0,60);
+            const unread = (c.unreadCount && c.unreadCount > 0) ? c.unreadCount : 0;
+            const initials = name.charAt(0).toUpperCase();
+            const productAttr = c.lastProductID !== null && c.lastProductID !== undefined ? c.lastProductID : '';
+            return `<button class="convoItem" data-type="${type}" data-id="${id}" data-lastchatid="${c.lastChatID||''}" data-product-id="${productAttr}" style="display:flex;gap:10px;align-items:center;padding:10px;border-radius:8px;border:0;background:transparent;width:100%;text-align:left;position:relative;">
+              <div class="avatar-wrapper" style="position:relative;">
+                <div class="avatar">${initials}</div>
+                <span class="unread-badge" style="${unread > 0 ? '' : 'display:none;'}">${unread}</span>
+              </div>
+              <div style="flex:1"><div class="convo-name" style="font-weight:600">${name}</div><div class="convo-meta">${last}</div></div>
+            </button>`;
+          }).join('');
+          setConvoMenuVisible(false);
+
+          listEl.querySelectorAll('.convoItem').forEach(btn => {
+            const type = btn.getAttribute('data-type');
+            const targetId = btn.getAttribute('data-id');
+            const displayName = btn.querySelector('.convo-name').textContent;
+            btn.addEventListener('click', ()=>{
+              const prodId = normalizeProductId(btn.getAttribute('data-product-id'));
+              if (type === 'rider') openChatWithRider(targetId, displayName, prodId);
+              else openChatWithUser(targetId, displayName, prodId);
+              setConvoMenuVisible(false);
+            });
+          });
+        }catch(err){ listEl.innerHTML = '<div style="padding:12px;color:#64748b;">Failed to load</div>'; setConvoMenuVisible(false); }
+      }
+      window.loadSellerConversations = loadConversations;
+
+      (function initSellerConvoDropdown(){
+        const toggle = document.getElementById('sellerConvoToggle');
+        const menu = document.getElementById('sellerConvoDropdown');
+        if (!toggle || !menu) return;
+        toggle.addEventListener('click', (ev)=>{
+          ev.preventDefault();
+          ev.stopPropagation();
+          const open = menu.classList.contains('visible');
+          setConvoMenuVisible(!open);
+        });
+        document.addEventListener('click', (ev)=>{
+          if (!menu.contains(ev.target) && ev.target !== toggle){
+            setConvoMenuVisible(false);
+          }
+        });
+      })();
+
+      async function openChatWithUser(userID, username, productID){
+        activeUserID = userID;
+        activeRiderID = null;
+        window.__activeUserID = String(userID);
+        window.__activeRiderID = null;
+        const normalizedProductID = normalizeProductId(productID);
+        activeProductID = normalizedProductID;
+        window.__activeProductID = normalizedProductID;
+        try{
+          const nameEl = document.getElementById('sellerChatName');
+          const infoEl = document.getElementById('sellerChatInfo');
+          const avatarEl = document.getElementById('sellerChatAvatar');
+          const productSlot = document.getElementById('sellerChatProduct');
+          if (nameEl) nameEl.textContent = username || (`User ${userID}`);
+          if (infoEl) infoEl.textContent = `User ${userID}`;
+          if (avatarEl) avatarEl.innerHTML = '<i class="fas fa-user"></i>';
+          if (productSlot) productSlot.innerHTML = '';
+        }catch(e){}
+        const messagesEl = document.getElementById('sellerChatMessages');
+        messagesEl.innerHTML = '<div style="padding:12px;color:#64748b;">Loading conversation…</div>';
+
+        // Hide unread badge immediately
+        try{
+          const btn = document.querySelector(`#sellerConvoItems .convoItem[data-type='user'][data-id='${userID}']`);
+          if (btn){ 
+            const b = btn.querySelector('.unread-badge'); 
+            if (b) { b.style.display='none'; b.textContent='0'; }
+          }
+        }catch(e){}
+
+        try{
+            const q = [];
+            if (SELLER_ID) q.push(`sellerID=${encodeURIComponent(SELLER_ID)}`);
+            if (userID) q.push(`userID=${encodeURIComponent(userID)}`);
+            if (normalizedProductID) q.push(`productID=${encodeURIComponent(normalizedProductID)}`);
+            const legacyUrl = '/api/chat/history' + (q.length ? '?' + q.join('&') : '');
+            const lr = await fetch(legacyUrl, { credentials: 'same-origin' });
+            const lj = await lr.json().catch(()=>null);
+            if (lr.ok && lj && lj.success){
+              messagesEl.innerHTML = '';
+              (lj.messages || []).forEach(m => {
+                const payload = {
+                  message: m.messages || m.message || '',
+                  sender_role: m.sender_role || null,
+                  senderID: m.senderID || m.senderId || m.sender_id || null,
+                  userID: m.userID || m.userId || null,
+                  sellerID: m.sellerID || m.sellerId || m.seller_id || null,
+                  messageID: m.chatID || m.chatId || m.id || null,
+                  created_at: m.created_at || null
+                };
+                appendSellerMessage(payload);
+              });
+            } else {
+              messagesEl.innerHTML = '<div style="padding:12px;color:#64748b;">No messages</div>';
+            }
+        }catch(err){ console.error('history request exception', err); messagesEl.innerHTML = '<div style="padding:12px;color:#64748b;">Failed to load conversation</div>'; }
+
+        // Mark as read
+        try{
+          fetch('/api/chat2/mark_read', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ peer_role: 'user', peer_id: userID }),
+            credentials: 'same-origin'
+          }).catch(e=>console.error(e));
+        }catch(e){}
+        setConvoMenuVisible(false);
+      }
+
+      async function openChatWithRider(riderID, riderName, productID){
+        activeUserID = null;
+        activeRiderID = String(riderID);
+        window.__activeUserID = null;
+        window.__activeRiderID = activeRiderID;
+        const normalizedProductID = normalizeProductId(productID);
+        activeProductID = normalizedProductID;
+        window.__activeProductID = normalizedProductID;
+        try{
+          const nameEl = document.getElementById('sellerChatName');
+          const infoEl = document.getElementById('sellerChatInfo');
+          const avatarEl = document.getElementById('sellerChatAvatar');
+          const productSlot = document.getElementById('sellerChatProduct');
+          if (nameEl) nameEl.textContent = riderName || (`Rider ${riderID}`);
+          if (infoEl) infoEl.textContent = `Rider ${riderID}`;
+          if (avatarEl) avatarEl.innerHTML = '<i class="fas fa-motorcycle"></i>';
+          if (productSlot) productSlot.innerHTML = '';
+        }catch(e){}
+        const messagesEl = document.getElementById('sellerChatMessages');
+        messagesEl.innerHTML = '<div style="padding:12px;color:#64748b;">Loading conversation…</div>';
+
+        // Hide unread badge immediately
+        try{
+          const btn = document.querySelector(`#sellerConvoItems .convoItem[data-type='rider'][data-id='${riderID}']`);
+          if (btn){ 
+            const b = btn.querySelector('.unread-badge'); 
+            if (b) { b.style.display='none'; b.textContent='0'; }
+          }
+        }catch(e){}
+
+        try{
+            const q = [];
+            if (SELLER_ID) q.push(`sellerID=${encodeURIComponent(SELLER_ID)}`);
+            if (riderID) q.push(`riderID=${encodeURIComponent(riderID)}`);
+            if (normalizedProductID) q.push(`productID=${encodeURIComponent(normalizedProductID)}`);
+            const legacyUrl = '/api/chat/history' + (q.length ? '?' + q.join('&') : '');
+            const lr = await fetch(legacyUrl, { credentials: 'same-origin' });
+            const lj = await lr.json().catch(()=>null);
+            if (lr.ok && lj && lj.success){
+              messagesEl.innerHTML = '';
+              (lj.messages || []).forEach(m => {
+                const payload = {
+                  message: m.messages || m.message || '',
+                  sender_role: m.sender_role || null,
+                  senderID: m.senderID || m.senderId || m.sender_id || null,
+                  riderID: m.riderID || m.riderId || null,
+                  sellerID: m.sellerID || m.sellerId || m.seller_id || null,
+                  messageID: m.chatID || m.chatId || m.id || null,
+                  created_at: m.created_at || null
+                };
+                appendSellerMessage(payload);
+              });
+            } else {
+              messagesEl.innerHTML = '<div style="padding:12px;color:#64748b;">No messages</div>';
+            }
+        }catch(err){ console.error('rider history exception', err); messagesEl.innerHTML = '<div style="padding:12px;color:#64748b;">Failed to load conversation</div>'; }
+
+        // Mark as read
+        try{
+          fetch('/api/chat2/mark_read', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ peer_role: 'rider', peer_id: riderID }),
+            credentials: 'same-origin'
+          }).catch(e=>console.error(e));
+        }catch(e){}
+        setConvoMenuVisible(false);
+      }
+
+      function appendSellerMessage(m){
+        const messagesEl = document.getElementById('sellerChatMessages');
+        if (!messagesEl) return;
+        const localId = m.localId || m.localID || m.local_id || null;
+        if (localId && messagesEl){
+          try{
+            const pending = messagesEl.querySelector(`[data-message-id="${localId}"]`);
+            if (pending && pending.parentNode === messagesEl){
+              messagesEl.removeChild(pending);
+            }
+          }catch(e){ console.warn('failed to remove optimistic placeholder', e); }
+        }
+        const div = document.createElement('div');
+        const normalizeId = (value) => (value === undefined || value === null) ? '' : String(value);
+        const sellerIdStr = normalizeId(window.SELLER_ID);
+        const senderRole = (m.sender_role || m.sender || '').toLowerCase();
+        const messageSellerId = normalizeId(m.sellerID || m.sellerId || m.seller_id);
+        const messageSenderId = normalizeId(m.senderID || m.senderId || m.sender_id);
+        const messageUserId = normalizeId(m.userID || m.userId || m.user_id);
+        const messageRiderId = normalizeId(m.riderID || m.riderId || m.rider_id);
+        const activeUserId = normalizeId(window.__activeUserID);
+        const activeRiderId = normalizeId(window.__activeRiderID);
+        let resolvedRole = senderRole;
+
+        // Fallback for legacy rows that do not store sender_role
+        if (!resolvedRole) {
+          if (messageRiderId && activeRiderId && messageRiderId === activeRiderId) {
+            resolvedRole = 'rider';
+          } else if (messageUserId && activeUserId && messageUserId === activeUserId) {
+            resolvedRole = 'user';
+          } else if (sellerIdStr && messageSellerId && messageSellerId === sellerIdStr) {
+            resolvedRole = 'seller';
+          } else if (sellerIdStr && messageSenderId && messageSenderId === sellerIdStr) {
+            resolvedRole = 'seller';
+          }
+        }
+
+        const isSeller = resolvedRole === 'seller';
+
+        const text = m.messages || m.message || '';
+        const msgId = m.messageID || m.chatID || m.chatId || m.id || null;
+        try{
+          if (msgId && messagesEl.querySelector(`[data-message-id="${msgId}"]`)) return;
+        }catch(e){}
+
+        if (msgId) div.setAttribute('data-message-id', String(msgId));
+        if (localId) div.setAttribute('data-local-id', String(localId));
+        if (resolvedRole) div.setAttribute('data-sender-role', resolvedRole);
+        const content = document.createElement('div');
+        content.textContent = text;
+        const ts = m.created_at || m.ts || null;
+        const meta = document.createElement('div');
+        meta.style.cssText = 'font-size:12px;color:#94a3b8;margin-top:4px;';
+        if (ts){ meta.textContent = String(ts).toString().slice(0,19); }
+        div.appendChild(content);
+        if (ts) div.appendChild(meta);
+
+        if (isSeller) {
+          div.setAttribute('data-sender', 'seller');
+          div.classList.add('seller-bubble');
+        } else if (resolvedRole === 'rider') {
+          div.setAttribute('data-sender', 'rider');
+          div.classList.add('user-bubble');
+        } else {
+          div.setAttribute('data-sender', 'user');
+          div.classList.add('user-bubble');
+        }
+
+        const baseStyle = 'max-width:68%;padding:6px 10px;border-radius:8px;margin:6px 0;font-size:0.95rem;';
+        const userStyle = baseStyle + 'align-self:flex-start;';
+        const sellerStyle = baseStyle + 'align-self:flex-end;';
+        div.style.cssText = isSeller ? (sellerStyle + 'background:#0b73ff;color:#ffffff;') : (userStyle + 'background:#f3f4f6;color:#0f1724;');
+        messagesEl.appendChild(div);
+        // If payload carries product context, reflect it in header
+        try{
+          const pid = m.productID || m.productId || m.product_id || null;
+          const normalizedPid = normalizeProductId(pid);
+          if (normalizedPid){
+            const activeUserMatch = window.__activeUserID && String(window.__activeUserID) === String(m.userID || m.userId || m.user_id || '');
+            const activeRiderMatch = window.__activeRiderID && String(window.__activeRiderID) === String(m.riderID || m.riderId || m.rider_id || '');
+            if (activeUserMatch || activeRiderMatch){
+              activeProductID = normalizedPid;
+              window.__activeProductID = normalizedPid;
+            }
+          }
+          const pname = (m.productName || '').trim();
+          if (normalizedPid || pname){
+            const hdr = document.getElementById('sellerChatHeader');
+            const slot = document.getElementById('sellerChatProduct');
+            const nameText = pname || (`Product ${normalizedPid}`);
+            const link = normalizedPid ? `<a href="/product/${normalizedPid}" target="_blank" style="text-decoration:none;color:#0b73ff">${nameText}</a>` : nameText;
+            const html = `<div style="display:flex;gap:8px;align-items:center;background:#f1f5f9;border-radius:999px;padding:6px 10px;font-weight:500;">${link}</div>`;
+            if (slot) slot.innerHTML = html; else if (hdr) hdr.insertAdjacentHTML('beforeend', `<div id="sellerChatProduct">${html}</div>`);
+          }
+        }catch(e){}
+        messagesEl.scrollTop = messagesEl.scrollHeight;
+      }
+      window.appendSellerMessage = appendSellerMessage;
+
+      // Send button
+      let messagesTabBootstrapped = false;
+
+      async function openSuggestedConversation(){
+        try {
+          const r = await fetch('/api/seller/chat/partner', { credentials: 'same-origin' });
+          const j = await r.json();
+          if (r.ok && j.success && j.userID) {
+            openChatWithUser(j.userID, j.userName || `User ${j.userID}`);
+            return;
+          }
+        } catch(err) {
+          console.error('Failed to get chat partner', err);
+        }
+        const first = document.querySelector('#sellerConvoItems .convoItem');
+        if (first) first.click();
+      }
+
+      async function handleMessagesTab(){
+        await loadConversations();
+        if (!messagesTabBootstrapped){
+          messagesTabBootstrapped = true;
+          await openSuggestedConversation();
+        }
+      }
+
+      document.addEventListener('DOMContentLoaded', ()=>{
+        document.addEventListener('sellerTabChange', async (event)=>{
+          if (event.detail && event.detail.tab === 'messages'){
+            // Clear main badge
+            const mainBadge = document.getElementById('sellerMsgBadge');
+            if (mainBadge) {
+                mainBadge.style.display = 'none';
+                mainBadge.textContent = '0';
+            }
+            await handleMessagesTab();
+          }
+        });
+        const messagesSection = document.getElementById('messages');
+        if (messagesSection && messagesSection.classList.contains('active')){
+          handleMessagesTab();
+        }
+        // Helper: send a message from the seller (legacy)
+        async function sendSellerMessage(text){
+          const trimmed = String(text || '').trim();
+          if (!trimmed) return false;
+          if (!activeUserID && !window.__activeRiderID) return false;
+          const normalizedProductID = normalizeProductId(activeProductID);
+          const tempId = 'local-' + Date.now();
+          const nowIso = new Date().toISOString();
+
+          // optimistic UI append
+          try{
+            window.appendSellerMessage({ message: trimmed, messages: trimmed, sender_role: 'seller', senderID: SELLER_ID, sellerID: SELLER_ID, userID: activeUserID || null, riderID: window.__activeRiderID || null, productID: normalizedProductID, messageID: tempId, localId: tempId, created_at: nowIso, ts: nowIso, optimistic: true });
+          }catch(e){ console.error('optimistic append failed', e); }
+
+          // Clear input immediately
+          try{ document.getElementById('sellerChatInput').value = ''; }catch(e){}
+
+          const legacy = window.sellerSocket;
+          const legacyPayload = activeUserID ? { message: trimmed, userID: activeUserID, sellerID: SELLER_ID } : { message: trimmed, riderID: window.__activeRiderID, sellerID: SELLER_ID };
+          if (normalizedProductID) legacyPayload.productID = normalizedProductID;
+          legacyPayload.localId = tempId;
+
+          if (legacy){
+            try{ legacy.emit('chat_message', legacyPayload); }catch(e){ console.error('legacy emit failed', e); }
+          } else {
+            console.error('No socket available to send message');
+            return false;
+          }
+
+          return true;
+        }
+
+        // click handler
+        document.getElementById('sellerChatSend').addEventListener('click', async ()=>{
+          const v = document.getElementById('sellerChatInput').value;
+          await sendSellerMessage(v);
+        });
+
+        // send on Enter (unless Shift+Enter)
+        document.getElementById('sellerChatInput').addEventListener('keydown', async function(e){
+          try{
+            if (e.key === 'Enter' && !e.shiftKey){
+              e.preventDefault();
+              const v = this.value;
+              await sendSellerMessage(v);
+            }
+          }catch(err){ console.error('enter key send error', err); }
+        });
+      });
+    })();
+  </script>
+
+  <script>
+    (function(){
+      const currencyFormatter = new Intl.NumberFormat('en-PH', { style: 'currency', currency: 'PHP' });
+      let salesChartInstance = null;
+      let ordersChartInstance = null;
+
+      function toggleEmptyState(id, visible, message){
+        const el = document.getElementById(id);
+        if (!el) return;
+        if (typeof message === 'string') el.textContent = message;
+        el.classList.toggle('hidden', !visible);
+      }
+
+      function formatCurrency(value){
+        return currencyFormatter.format(Number(value || 0));
+      }
+
+      function escapeHtml(value){
+        if (value === null || value === undefined) return '';
+        return String(value)
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;')
+          .replace(/"/g, '&quot;')
+          .replace(/'/g, '&#39;');
+      }
+
+      function normalizeStatus(value){
+        return String(value || 'pending').toLowerCase().replace(/[^a-z0-9]+/g, '-');
+      }
+
+      async function loadSalesChart(){
+        const canvas = document.getElementById('sellerSalesChart');
+        if (!canvas) return;
+        toggleEmptyState('sellerSalesEmpty', true, 'Loading sales data…');
+        try{
+          const res = await fetch('/api/seller/stats/sales?range=daily', { credentials:'same-origin' });
+          const payload = await res.json().catch(()=>null);
+          if (!res.ok || !payload || !payload.success){
+            throw new Error((payload && payload.msg) || 'Failed to load sales data');
+          }
+          const labels = (payload.data || []).map(entry => entry.date);
+          const values = (payload.data || []).map(entry => Number(entry.total_sales || 0));
+          if (!labels.length){
+            if (salesChartInstance){ salesChartInstance.destroy(); salesChartInstance = null; }
+            toggleEmptyState('sellerSalesEmpty', true, 'No sales data yet.');
+            return;
+          }
+          toggleEmptyState('sellerSalesEmpty', false);
+          const ctx = canvas.getContext('2d');
+          if (salesChartInstance){ salesChartInstance.destroy(); }
+          salesChartInstance = new Chart(ctx, {
+            type: 'line',
+            data: {
+              labels,
+              datasets: [{
+                label: 'Daily Sales',
+                data: values,
+                tension: 0.35,
+                borderColor: '#2563eb',
+                backgroundColor: 'rgba(37,99,235,0.12)',
+                pointBackgroundColor: '#2563eb',
+                pointRadius: 3,
+                fill: true,
+              }]
+            },
+            options: {
+              responsive: true,
+              maintainAspectRatio: false,
+              plugins: {
+                legend: { display: false },
+                tooltip: {
+                  callbacks: {
+                    label: context => {
+                      const val = (context.parsed && typeof context.parsed.y !== 'undefined') ? context.parsed.y : context.parsed;
+                      return ` ${formatCurrency(val)}`;
+                    }
+                  }
+                }
+              },
+              scales: {
+                y: {
+                  beginAtZero: true,
+                  ticks: {
+                    callback: value => formatCurrency(value)
+                  },
+                  grid: { color: '#eef2f7' }
+                },
+                x: {
+                  grid: { display: false }
+                }
+              }
+            }
+          });
+        } catch(err){
+          console.error('Sales chart error', err);
+          if (salesChartInstance){ salesChartInstance.destroy(); salesChartInstance = null; }
+          toggleEmptyState('sellerSalesEmpty', true, 'Unable to load sales data.');
+        }
+      }
+
+      async function loadOrdersChart(){
+        const canvas = document.getElementById('sellerOrdersChart');
+        if (!canvas) return;
+        toggleEmptyState('sellerOrdersEmpty', true, 'Loading order data…');
+        try{
+          const res = await fetch('/api/seller/stats/orders?range=daily', { credentials:'same-origin' });
+          const payload = await res.json().catch(()=>null);
+          if (!res.ok || !payload || !payload.success){
+            throw new Error((payload && payload.msg) || 'Failed to load orders data');
+          }
+          const labels = (payload.data || []).map(entry => entry.date);
+          const values = (payload.data || []).map(entry => Number(entry.order_count || 0));
+          if (!labels.length){
+            if (ordersChartInstance){ ordersChartInstance.destroy(); ordersChartInstance = null; }
+            toggleEmptyState('sellerOrdersEmpty', true, 'No order data yet.');
+            return;
+          }
+          toggleEmptyState('sellerOrdersEmpty', false);
+          const ctx = canvas.getContext('2d');
+          if (ordersChartInstance){ ordersChartInstance.destroy(); }
+          ordersChartInstance = new Chart(ctx, {
+            type: 'bar',
+            data: {
+              labels,
+              datasets: [{
+                label: 'Orders per Day',
+                data: values,
+                backgroundColor: 'rgba(14,165,233,0.45)',
+                borderColor: '#0ea5e9',
+                borderWidth: 1.5,
+                borderRadius: 6,
+              }]
+            },
+            options: {
+              responsive: true,
+              maintainAspectRatio: false,
+              plugins: {
+                legend: { display: false },
+                tooltip: {
+                  callbacks: {
+                    label: context => {
+                      const val = (context.parsed && typeof context.parsed.y !== 'undefined') ? context.parsed.y : context.parsed;
+                      return ` ${val} orders`;
+                    }
+                  }
+                }
+              },
+              scales: {
+                y: {
+                  beginAtZero: true,
+                  ticks: { precision: 0 },
+                  grid: { color: '#eef2f7' }
+                },
+                x: {
+                  grid: { display: false }
+                }
+              }
+            }
+          });
+        } catch(err){
+          console.error('Orders chart error', err);
+          if (ordersChartInstance){ ordersChartInstance.destroy(); ordersChartInstance = null; }
+          toggleEmptyState('sellerOrdersEmpty', true, 'Unable to load order data.');
+        }
+      }
+
+      async function loadRecentOrders(){
+        const tbody = document.querySelector('#recentOrdersTable tbody');
+        if (!tbody) return;
+        tbody.innerHTML = '<tr><td colspan="10" class="no-data">Loading recent orders…</td></tr>';
+        try{
+          const res = await fetch('/api/seller/stats/recent-orders?limit=10', { credentials:'same-origin' });
+          const payload = await res.json().catch(()=>null);
+          if (!res.ok || !payload || !payload.success){
+            throw new Error((payload && payload.msg) || 'Failed to load recent orders');
+          }
+          const rows = payload.data || [];
+          if (!rows.length){
+            tbody.innerHTML = '<tr><td colspan="10" class="no-data">No recent orders yet.</td></tr>';
+            return;
+          }
+          tbody.innerHTML = rows.map((order) => {
+            const orderNumber = escapeHtml(order.order_number || order.order_id || '—');
+            const customer = escapeHtml(order.customer_name || '—');
+            const product = escapeHtml(order.product || '—');
+            const quantity = Number(order.quantity || 0);
+            const unitPrice = formatCurrency(order.unit_price);
+            const totalPrice = formatCurrency(order.total);
+            const orderStatus = escapeHtml(order.order_status || 'Pending');
+            const paymentStatus = escapeHtml(order.payment_status || 'Pending');
+            const shippingStatus = escapeHtml(order.shipping_status || 'Pending');
+            const orderDate = escapeHtml(order.order_date || '—');
+            const orderStatusClass = normalizeStatus(order.order_status);
+            const paymentStatusClass = normalizeStatus(order.payment_status);
+            const shippingStatusClass = normalizeStatus(order.shipping_status);
+            return `
+              <tr>
+                <td data-label="Order ID">${orderNumber}</td>
+                <td data-label="Customer">${customer}</td>
+                <td data-label="Product">${product}</td>
+                <td data-label="Quantity">${quantity}</td>
+                <td data-label="Price">${unitPrice}</td>
+                <td data-label="Total">${totalPrice}</td>
+                <td data-label="Order Status"><span class="status-badge status-${orderStatusClass}">${orderStatus}</span></td>
+                <td data-label="Payment Status"><span class="status-badge status-${paymentStatusClass}">${paymentStatus}</span></td>
+                <td data-label="Shipping Status"><span class="status-badge status-${shippingStatusClass}">${shippingStatus}</span></td>
+                <td data-label="Order Date">${orderDate}</td>
+              </tr>
+            `;
+          }).join('');
+        } catch(err){
+          console.error('Recent orders error', err);
+          tbody.innerHTML = '<tr><td colspan="10" class="no-data">Unable to load recent orders.</td></tr>';
+        }
+      }
+
+      document.addEventListener('DOMContentLoaded', function(){
+        loadSalesChart();
+        loadOrdersChart();
+        loadRecentOrders();
+      });
+
+      document.addEventListener('sellerTabChange', function(event){
+        if (event.detail && event.detail.tab === 'dashboard'){
+          loadSalesChart();
+          loadOrdersChart();
+          loadRecentOrders();
+        }
+      });
+    })();
+  </script>
+
+  <script>
+    // Notifications for seller
+    document.addEventListener('DOMContentLoaded', function(){
+      const btn = document.getElementById('notifBtn');
+      const menu = document.getElementById('notifMenu');
+      const list = document.getElementById('notifList');
+      const count = document.getElementById('notifCount');
+      const markAllBtn = document.getElementById('sellerNotifMarkAll');
+
+      function toggle(show){ if (!menu) return; const vis = (show===undefined) ? (menu.style.display==='block') : !!show; menu.style.display = vis ? 'block' : 'none'; }
+      function escapeHtml(value){ const str = value==null ? '' : String(value); return str.replace(/[&<>"']/g, function(match){ switch(match){ case '&': return '&amp;'; case '<': return '&lt;'; case '>': return '&gt;'; case '"': return '&quot;'; case "'": return '&#39;'; default: return match; } }); }
+      function formatStamp(value){ if (!value) return ''; try{ const d = new Date(value); if (!Number.isNaN(d.valueOf())){ return d.toLocaleString(undefined,{ month:'short', day:'numeric', hour:'2-digit', minute:'2-digit' }); } }catch(e){} const raw = String(value); return raw.length>19 ? raw.slice(0,19) : raw; }
+      
+      function isUnreadFlag(value){
+        if (value === undefined || value === null) return true;
+        if (typeof value === 'boolean') return value === false;
+        const str = String(value).trim().toLowerCase();
+        if (str === '1' || str === 'true' || str === 'yes') return false;
+        if (str === '0' || str === 'false' || str === 'no') return true;
+        const num = Number(str);
+        if (!Number.isNaN(num)) return num < 1;
+        return true;
+      }
+
+      function render(notifs){
+        if (!list) return;
+        if (!notifs || !notifs.length) { 
+            list.innerHTML = '<div class="notif-empty">No notifications</div>'; 
+            if (count){ count.style.display='none'; count.textContent='0'; } 
+            if (markAllBtn) markAllBtn.disabled = true;
+            return; 
+        }
+        
+        let unreadCounter = 0;
+        const parts = notifs.map(n => {
+          const unread = isUnreadFlag(n.is_read);
+          if (unread) unreadCounter += 1;
+          
+          const cardClasses = ['notif-card'];
+          if (unread) cardClasses.push('unread');
+          
+          const rows = ['<div class="' + cardClasses.join(' ') + '">'];
+          rows.push('<div class="notif-card-title">' + escapeHtml(n.title || 'Notification') + '</div>');
+          if (n.body) rows.push('<div class="notif-card-body">' + escapeHtml(n.body) + '</div>');
+          const ts = formatStamp(n.created_at);
+          if (ts) rows.push('<div class="notif-card-meta">' + escapeHtml(ts) + '</div>');
+          rows.push('</div>');
+          return rows.join('');
+        });
+        list.innerHTML = parts.join('');
+        
+        if (count){ 
+            count.textContent = String(unreadCounter); 
+            count.style.display = unreadCounter > 0 ? 'inline-flex' : 'none'; 
+        }
+        if (markAllBtn) markAllBtn.disabled = unreadCounter === 0;
+      }
+      async function load(){
+        try{ const r = await fetch('/api/seller/notifications',{credentials:'same-origin'}); const j = await r.json(); if (r.ok && j && j.success) render(j.notifications||[]); } catch(e){ console.error(e); }
+      }
+      
+      if (markAllBtn) {
+        markAllBtn.addEventListener('click', async function(e){
+            e.preventDefault();
+            e.stopPropagation();
+            try {
+                const r = await fetch('/api/seller/notifications/mark_read', { method: 'POST', credentials: 'same-origin' });
+                if (r.ok) {
+                    load(); // Reload to update UI
+                }
+            } catch(e) { console.error(e); }
+        });
+      }
+
+      // expose so Socket.IO handler can trigger a refresh when real-time events arrive
+      window.loadSellerNotifications = load;
+      btn?.addEventListener('click', function(e){ 
+        e.preventDefault(); 
+        e.stopPropagation(); 
+        const wasOpen = (menu && menu.style.display === 'block');
+        toggle(!wasOpen);
+        if (!wasOpen) {
+            // Mark all as read when opening
+            fetch('/api/seller/notifications/mark_read', { method: 'POST', credentials: 'same-origin' })
+                .then(r => { if(r.ok) load(); })
+                .catch(console.error);
+        }
+      });
+      document.addEventListener('click', function(e){ if (menu && !menu.contains(e.target) && !btn.contains(e.target)) toggle(false); });
+      load(); setInterval(load, 15000);
+    });
+  </script>
+
+  <!-- Global flash + page JS -->
+  <script>
+    // Read server-side flashed messages from a data-attribute (keeps template tokens out of JS parsing)
+    try {
+      window.__server_flashes = JSON.parse(document.body.getAttribute('data-server-flashes') || '[]');
+    } catch (e) {
+      window.__server_flashes = [];
+    }
+  </script>
+  <!-- SweetAlert2 + confirm helper: use confirmAction({title, text, icon}) in scripts -->
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script src="{{ url_for('static', filename='js/confirm_helper.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/flash.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/seller_dashboard.js') }}" defer></script>
+  <script src="{{ url_for('static', filename='js/sidebar_toggle.js') }}" defer></script>
+
+
+  <script>
+    (function(){
+      // On pageshow, browsers may restore the page from bfcache (event.persisted === true)
+      // or indicate navigation type 'back_forward'. In both cases, reload to revalidate.
+      window.addEventListener('pageshow', function(evt){
+        try{
+          // If this restoration came from the bfcache, reload from the server.
+          if (evt.persisted) {
+            // Replace location to avoid creating an extra history entry.
+            window.location.replace(window.location.pathname + window.location.search + (window.location.hash||''));
+            return;
+          }
+          // Also check PerformanceNavigationTiming for back/forward nav
+          var nav = performance.getEntriesByType && performance.getEntriesByType('navigation');
+          if (nav && nav[0] && nav[0].type === 'back_forward') {
+            window.location.replace(window.location.pathname + window.location.search + (window.location.hash||''));
+            return;
+          }
+        } catch (e) {
+          // Fallback: if anything goes wrong, do a normal reload
+          try{ window.location.reload(); }catch(err){}
+        }
+      });
+
+      // Additionally: if server rendered `#sellerData` with an empty seller id,
+      // it means there's no seller session — redirect to login.
+      document.addEventListener('DOMContentLoaded', function(){
+        try{
+          var sellerEl = document.getElementById('sellerData');
+          if (sellerEl) {
+            var id = sellerEl.getAttribute('data-seller-id') || '';
+            if (!id.trim()) {
+              // No seller session — replace current page with login
+              window.location.replace('/login');
+            }
+          }
+        }catch(e){}
+      });
+    })();
+  </script>
+
+</body>
+</html>

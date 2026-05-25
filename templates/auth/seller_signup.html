@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Seller Sign Up - BabyBloom</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}?v=auth-fixed-{{ range(1,9999)|random }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/terms_modal.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/seller_signup.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <div class="split-layout">
+        <!-- Left Side (70%) -->
+        <div class="left-panel">
+            <img src="{{ url_for('static', filename='images/favicon.png') }}" alt="HappyHands Logo" class="seller-signup-logo">
+        </div>
+
+        <!-- Right Side (30%) -->
+        <div class="right-panel">
+            <div class="form-container-centered">
+                
+                <!-- Flash Messages -->
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                    {% if messages %}
+                        {% for category, message in messages %}
+                            {% set alert_class = 'signup-alert-success' if category == 'success' else 'signup-alert-error' %}
+                            <div class="signup-alert {{ alert_class }}">
+                                {{ message }}
+                                <button type="button" class="alert-close" aria-label="Close">&times;</button>
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+                {% endwith %}
+
+                <div class="form-header">
+                    <h2>Become a Seller</h2>
+                    <p>Create your seller account</p>
+                </div>
+
+                <!-- Step Indicator -->
+                <div class="step-indicator">
+                    <div class="step active" id="indicator-1">
+                        <div class="step-circle">1</div>
+                        <span>Account</span>
+                    </div>
+                    <div class="step" id="indicator-2">
+                        <div class="step-circle">2</div>
+                        <span>Store</span>
+                    </div>
+                    <div class="step" id="indicator-3">
+                        <div class="step-circle">3</div>
+                        <span>Location</span>
+                    </div>
+                </div>
+
+                <form method="POST" enctype="multipart/form-data" class="auth-form seller-signup-form" action="{{ url_for('seller_signup') }}" id="multiStepForm">
+                    
+                    <!-- Step 1: Account Information -->
+                    <div class="form-step active" id="step-1">
+                        <div class="form-group">
+                            <label for="sellername">Full Name</label>
+                            <div class="input-wrapper">
+                                <svg class="input-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                                    <circle cx="12" cy="7" r="4"></circle>
+                                </svg>
+                                <input type="text" id="sellername" name="sellername" placeholder="Your full name" required>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="selleremail">Email Address</label>
+                            <div class="input-wrapper">
+                                <svg class="input-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+                                    <polyline points="22,6 12,13 2,6"></polyline>
+                                </svg>
+                                <input type="email" id="selleremail" name="selleremail" placeholder="you@example.com" required>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="contactnumber">Contact Number</label>
+                            <div class="input-wrapper">
+                                <svg class="input-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M22 16.92V20a2 2 0 0 1-2 2 19 19 0 0 1-8.63-2.54A19 19 0 0 1 3.73 14.6 19 19 0 0 1 1 6a2 2 0 0 1 2-2h3.09a2 2 0 0 1 2 1.72c.12.9.35 1.77.69 2.59a2 2 0 0 1-.45 2.11L8.91 10.09a16 16 0 0 0 6 6l1.09-1.09a2 2 0 0 1 2.11-.45c.82.34 1.69.57 2.59.69A2 2 0 0 1 22 16.92z"></path>
+                                </svg>
+                                <input type="tel" id="contactnumber" name="contactnumber" placeholder="09..." required>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="sellerpassword">Password</label>
+                            <div class="input-wrapper password-wrapper">
+                                <svg class="input-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                                    <circle cx="12" cy="16" r="1"></circle>
+                                    <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                                </svg>
+                                <input type="password" id="password" name="sellerpassword" placeholder="Create a password" required>
+                                 <button type="button" class="password-toggle" data-password-target="password">
+                                    <svg class="eye-open" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                                        <circle cx="12" cy="12" r="3"></circle>
+                                    </svg>
+                                    <svg class="eye-closed" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
+                                        <line x1="1" y1="1" x2="23" y2="23"></line>
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="confirmpassword">Confirm Password</label>
+                            <div class="input-wrapper password-wrapper">
+                                <svg class="input-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                                    <circle cx="12" cy="16" r="1"></circle>
+                                    <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                                </svg>
+                                <input type="password" id="confirmpassword" name="confirmpassword" placeholder="Confirm password" required>
+                                 <button type="button" class="password-toggle" data-password-target="confirmpassword">
+                                    <svg class="eye-open" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                                        <circle cx="12" cy="12" r="3"></circle>
+                                    </svg>
+                                    <svg class="eye-closed" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
+                                        <line x1="1" y1="1" x2="23" y2="23"></line>
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div class="step-actions">
+                            <button type="button" class="btn-next" data-next-step="1">Next</button>
+                        </div>
+                    </div>
+
+                    <!-- Step 2: Store Details -->
+                    <div class="form-step" id="step-2">
+                        <div class="form-group">
+                            <label for="storename">Store Name</label>
+                            <div class="input-wrapper">
+                                <svg class="input-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M3 9l9-6 9 6v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                                    <path d="M9 22V12h6v10"></path>
+                                </svg>
+                                <input type="text" id="storename" name="storename" placeholder="Your store name" required>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="storedesc">Store Description</label>
+                            <div class="input-wrapper textarea-enhanced">
+                                <svg class="input-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M12 20h9"></path>
+                                    <path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"></path>
+                                </svg>
+                                <textarea id="storedesc" name="storedesc" placeholder="Short description" rows="3" required></textarea>
+                                <div class="char-count" id="storedesc-count">0 / 300</div>
+                            </div>
+                        </div>
+
+                            <div class="form-group">
+                            <label>Product Categories</label>
+                            <div class="category-grid" id="category-container">
+                                {% if categories %}
+                                    {% for category in categories %}
+                                        {% set icon = 'fa-box' %}
+                                        {% if 'Clothes' in category.name %}{% set icon = 'fa-tshirt' %}
+                                        {% elif 'Comfort' in category.name %}{% set icon = 'fa-baby' %}
+                                        {% elif 'Educational' in category.name %}{% set icon = 'fa-puzzle-piece' %}
+                                        {% elif 'Furniture' in category.name %}{% set icon = 'fa-couch' %}
+                                        {% elif 'Safety' in category.name %}{% set icon = 'fa-first-aid' %}
+                                        {% elif 'Stoller' in category.name or 'Stroller' in category.name %}{% set icon = 'fa-baby-carriage' %}
+                                        {% endif %}
+                                        <label class="category-item">
+                                            <input type="checkbox" name="seller_category_ids" value="{{ category.id or category.categoryID }}">
+                                            <span class="category-card">
+                                                <i class="fas {{ icon }}"></i>
+                                                {{ category.name }}
+                                            </span>
+                                        </label>
+                                    {% endfor %}
+                                {% else %}
+                                    <p class="no-categories-message">No categories available. Please contact support.</p>
+                                {% endif %}
+                            </div>
+                            <div id="category-error" class="category-error">Please select at least one category</div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="storelogo">Store Logo</label>
+                            <div class="file-input">
+                                <label for="storelogo" class="file-label">
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                        <rect x="3" y="3" width="18" height="14" rx="2"></rect>
+                                        <path d="M3 7h18"></path>
+                                    </svg>
+                                    Upload logo
+                                </label>
+                                <input type="file" id="storelogo" name="storelogo" accept="image/*" hidden>
+                                <div class="file-preview" id="storelogo-preview" aria-hidden="true">
+                                    <img src="" alt="" />
+                                    <span class="file-meta">No file chosen</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="businesspermit">Business Permit</label>
+                            <div class="file-input">
+                                <label for="businesspermit" class="file-label">
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                                        <path d="M14 2v6h6"></path>
+                                    </svg>
+                                    Upload permit
+                                </label>
+                                <input type="file" id="businesspermit" name="businesspermit" accept=".pdf,image/*" hidden>
+                                <div class="file-preview" id="permit-preview" aria-hidden="true">
+                                    <img src="" alt="" />
+                                    <span class="file-meta">No file chosen</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="step-actions">
+                            <button type="button" class="btn-back" data-prev-step="2">Back</button>
+                            <button type="button" class="btn-next" data-next-step="2">Next</button>
+                        </div>
+                    </div>
+
+                    <!-- Step 3: Location -->
+                    <div class="form-step" id="step-3">
+                        <div class="location-grid">
+                            <div class="form-group">
+                                <label for="region">Region</label>
+                                <div class="input-wrapper">
+                                    <svg class="input-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M12 2a7 7 0 0 0-7 7c0 5 7 13 7 13s7-8 7-13a7 7 0 0 0-7-7z"></path>
+                                    </svg>
+                                    <select id="region" name="region" class="form-select" required>
+                                        <option value="">Loading regions...</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="province">Province</label>
+                                <div class="input-wrapper">
+                                    <svg class="input-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M3 7h6l3 6 3-12 3 6h3"></path>
+                                    </svg>
+                                    <select id="province" name="province" class="form-select" required disabled>
+                                        <option value="">Select region first</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="city">City / Municipality</label>
+                                <div class="input-wrapper">
+                                    <svg class="input-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M21 10c0 6-9 12-9 12S3 16 3 10a9 9 0 0 1 18 0z"></path>
+                                        <circle cx="12" cy="10" r="3"></circle>
+                                    </svg>
+                                    <select id="city" name="city" class="form-select" required disabled>
+                                        <option value="">Select province first</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="barangay">Barangay</label>
+                                <div class="input-wrapper">
+                                    <svg class="input-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M4 7h16v10H4z"></path>
+                                        <path d="M4 7l8 5 8-5"></path>
+                                    </svg>
+                                    <select id="barangay" name="barangay" class="form-select" required disabled>
+                                        <option value="">Select city first</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="form-group full-width-row">
+                                <label for="exact_address">Exact Address (Street, House No., Landmark)</label>
+                                <div class="input-wrapper">
+                                    <svg class="input-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M3 9l9-6 9 6v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                                        <path d="M9 22V12h6v10"></path>
+                                    </svg>
+                                    <input type="text" id="exact_address" name="exact_address" placeholder="e.g. 123 Main St, Near Plaza" required>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-terms-checkbox">
+                            <input type="checkbox" id="formTermsCheckbox" name="terms" required>
+                            <label for="formTermsCheckbox">I agree to the <a href="#" class="terms-trigger-link">Terms and Conditions</a></label>
+                        </div>
+
+                        <div class="step-actions">
+                            <button type="button" class="btn-back" data-prev-step="3">Back</button>
+                            <button type="button" class="btn-submit" data-submit-step="3">Sign Up</button>
+                        </div>
+                    </div>
+                </form>
+
+                <div class="form-footer">
+                    <p>Already have an account? <a href="{{ url_for('seller_login') }}">Sign in</a></p>
+                    <p><a class="back-home-link" href="/">Back to home</a></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Terms Modal -->
+    <div class="terms-modal-overlay" id="termsModalOverlay">
+        <div class="terms-modal">
+            <div class="terms-header">
+                <h3>Seller Terms and Conditions</h3>
+                <button class="terms-close" id="termsCloseBtn">&times;</button>
+            </div>
+            <div class="terms-content" id="termsContent">
+                <h4>1. Seller Agreement</h4>
+                <p>By signing up as a seller on HappyHands, you agree to abide by our seller policies and guidelines.</p>
+                
+                <h4>2. Product Listings</h4>
+                <p>You are responsible for the accuracy and legality of your product listings. Prohibited items must not be listed.</p>
+                
+                <h4>3. Order Fulfillment</h4>
+                <p>You agree to fulfill orders promptly and maintain high standards of customer service.</p>
+                
+                <h4>4. Fees and Payments</h4>
+                <p>HappyHands charges a commission on sales. Payment terms and schedules are outlined in the Seller Dashboard.</p>
+                
+                <h4>5. Returns and Refunds</h4>
+                <p>You must comply with our platform's return and refund policies.</p>
+                
+                <h4>6. Termination</h4>
+                <p>We reserve the right to suspend or terminate seller accounts that violate our terms or policies.</p>
+                
+                <p class="terms-spacer">&nbsp;</p>
+            </div>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/seller_signup.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/terms_modal.js') }}"></script>
+</body>
+</html>
