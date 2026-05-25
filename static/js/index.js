@@ -1013,3 +1013,49 @@ document.addEventListener('click', (e) => {
   toggle.setAttribute('aria-expanded', String(!open));
 });
 
+// Auto-close mobile nav on outside click, link click, or Escape
+document.addEventListener('click', (e) => {
+  const nav = document.querySelector('.navbar[data-open="true"]');
+  if (!nav) return;
+  // If click is inside the toggle button, the other handler already manages it
+  if (e.target.closest('.nav-mobile-toggle')) return;
+  // Close if click landed inside a nav link or outside the navbar entirely
+  if (!nav.contains(e.target) || e.target.closest('.nav-center a')) {
+    nav.setAttribute('data-open', 'false');
+    const toggle = nav.querySelector('.nav-mobile-toggle');
+    if (toggle) toggle.setAttribute('aria-expanded', 'false');
+  }
+});
+
+document.addEventListener('keydown', (e) => {
+  if (e.key !== 'Escape') return;
+  const nav = document.querySelector('.navbar[data-open="true"]');
+  if (!nav) return;
+  nav.setAttribute('data-open', 'false');
+  const toggle = nav.querySelector('.nav-mobile-toggle');
+  if (toggle) {
+    toggle.setAttribute('aria-expanded', 'false');
+    toggle.focus();
+  }
+});
+
+// Submenu toggle (keyboard + click accessibility)
+document.addEventListener('click', (e) => {
+  const toggle = e.target.closest('.nav-submenu-toggle');
+  if (!toggle) return;
+  const expanded = toggle.getAttribute('aria-expanded') === 'true';
+  // Close any other open submenus
+  document.querySelectorAll('.nav-submenu-toggle[aria-expanded="true"]').forEach(t => {
+    if (t !== toggle) t.setAttribute('aria-expanded', 'false');
+  });
+  toggle.setAttribute('aria-expanded', String(!expanded));
+});
+
+// Close submenu when clicking outside it
+document.addEventListener('click', (e) => {
+  if (e.target.closest('.has-submenu')) return;
+  document.querySelectorAll('.nav-submenu-toggle[aria-expanded="true"]').forEach(t => {
+    t.setAttribute('aria-expanded', 'false');
+  });
+});
+
