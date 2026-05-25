@@ -171,6 +171,35 @@
             align-items: center;
         }
 
+        /* Auth tab strip */
+        .auth-tabs {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            background: var(--ds-color-surface-muted, #f8fafc);
+            border-radius: var(--ds-radius-pill, 999px);
+            padding: var(--ds-space-1, 0.25rem);
+            margin-bottom: var(--ds-space-5, 1.25rem);
+            gap: var(--ds-space-1, 0.25rem);
+        }
+        .auth-tab {
+            background: none;
+            border: 0;
+            padding: var(--ds-space-2, 0.5rem) var(--ds-space-3, 0.75rem);
+            border-radius: var(--ds-radius-pill, 999px);
+            cursor: pointer;
+            font-weight: 500;
+            font-family: inherit;
+            font-size: 0.9rem;
+            color: var(--ds-color-text-muted, #5b6476);
+            transition: background-color 0.15s, color 0.15s, box-shadow 0.15s;
+        }
+        .auth-tab.is-active {
+            background: #fff;
+            color: var(--ds-color-brand-500, #2563eb);
+            box-shadow: var(--ds-shadow-sm, 0 6px 18px rgba(15, 23, 42, 0.06));
+        }
+        [role="tabpanel"][hidden] { display: none; }
+
         /* Compact Register Form */
         #register-form .form-group {
             margin-bottom: 0.65rem;
@@ -300,7 +329,14 @@
                     {% endif %}
                 {% endwith %}
 
-                <!-- LOGIN FORM -->
+                <!-- Auth tabs -->
+                <div class="auth-tabs" role="tablist">
+                    <button type="button" role="tab" id="tab-login" aria-selected="true" aria-controls="login-panel" class="auth-tab is-active" data-target="login-panel">Sign in</button>
+                    <button type="button" role="tab" id="tab-register" aria-selected="false" aria-controls="register-panel" class="auth-tab" data-target="register-panel">Create account</button>
+                </div>
+
+                <!-- LOGIN PANEL -->
+                <section id="login-panel" role="tabpanel" aria-labelledby="tab-login">
                 <div id="login-form" class="form-section active">
                     <div class="form-header">
                         <h2>Welcome Back</h2>
@@ -353,9 +389,11 @@
                         <p style="margin-top: 0.5rem;"><a href="/home" style="color: #64748b; text-decoration: none;">Back to home</a></p>
                     </div>
                 </div>
+                </section>
 
-                <!-- REGISTER FORM (Hidden by default) -->
-                <div id="register-form" class="form-section" style="display: none;">
+                <!-- REGISTER PANEL -->
+                <section id="register-panel" role="tabpanel" aria-labelledby="tab-register" hidden>
+                <div id="register-form" class="form-section active">
                     <div class="form-header">
                         <h2>Create Account</h2>
                         <p>Join HappyHands today</p>
@@ -483,6 +521,7 @@
                         <p style="margin-top: 0.5rem;"><a href="/home" style="color: #64748b; text-decoration: none;">Back to home</a></p>
                     </div>
                 </div>
+                </section>
 
             </div>
         </div>
@@ -522,14 +561,33 @@
     <script src="{{ url_for('static', filename='js/terms_modal.js') }}"></script>
     <script src="{{ url_for('static', filename='js/user_signup_geo.js') }}"></script>
     <script>
-        function showRegister() {
-            document.getElementById('login-form').style.display = 'none';
-            document.getElementById('register-form').style.display = 'block';
+        function activateAuthTab(targetId) {
+            const panels = document.querySelectorAll('[role="tabpanel"]');
+            const tabs = document.querySelectorAll('.auth-tab');
+            panels.forEach(p => {
+                if (p.id === targetId) { p.removeAttribute('hidden'); }
+                else { p.setAttribute('hidden', ''); }
+            });
+            tabs.forEach(t => {
+                const active = t.dataset.target === targetId;
+                t.classList.toggle('is-active', active);
+                t.setAttribute('aria-selected', String(active));
+            });
+            const panel = document.getElementById(targetId);
+            const firstField = panel ? panel.querySelector('input, button, select, textarea') : null;
+            if (firstField) firstField.focus();
         }
-        function showLogin() {
-            document.getElementById('register-form').style.display = 'none';
-            document.getElementById('login-form').style.display = 'block';
-        }
+
+        document.addEventListener('click', (e) => {
+            const tab = e.target.closest('.auth-tab');
+            if (!tab) return;
+            activateAuthTab(tab.dataset.target);
+        });
+
+        // Back-compat wrappers (preserve inline onclick handlers)
+        function showLogin() { activateAuthTab('login-panel'); }
+        function showRegister() { activateAuthTab('register-panel'); }
+
         function togglePassword(inputId, btn) {
             const input = document.getElementById(inputId);
             const eyeOpen = btn.querySelector('.eye-open');
