@@ -1272,3 +1272,90 @@
             font-size: 24px;
         }
     }
+
+    /* ============================================================
+       Collapsible sidebar — Phase D
+       Hamburger appears at <=1024px, sidebar slides off-screen
+       Desktop layout (>=1025px) preserved by existing styles.
+       ============================================================ */
+    .admin-sidebar {
+        transition: transform .2s ease;
+    }
+    .sidebar-toggle {
+        display: none; /* hidden on desktop */
+        background: none;
+        border: 0;
+        cursor: pointer;
+        padding: var(--ds-space-2, 8px);
+        align-items: center;
+        justify-content: center;
+        flex-direction: column;
+        gap: 0;
+        position: absolute;
+        top: 12px;
+        left: 12px;
+        z-index: 60;
+    }
+    .sidebar-toggle span {
+        display: block;
+        width: 22px;
+        height: 2px;
+        background: var(--ds-color-text, #172033);
+        margin: 3px 0;
+        border-radius: 2px;
+        transition: transform .2s ease, opacity .2s ease;
+    }
+
+    @media (max-width: 1024px) {
+        .admin-sidebar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            height: 100vh;
+            width: 260px;
+            z-index: 1100;
+            transform: translateX(-100%);
+            box-shadow: var(--ds-shadow-lg, 0 10px 30px rgba(2, 6, 23, 0.25));
+            background: #ffffff;
+        }
+        .admin-layout[data-sidebar="open"] .admin-sidebar {
+            transform: translateX(0);
+        }
+        .admin-layout[data-sidebar="open"]::after {
+            /* backdrop */
+            content: '';
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.35);
+            z-index: 1050;
+        }
+        .sidebar-toggle {
+            display: inline-flex;
+        }
+        /* Main content must not reserve sidebar space at mobile widths */
+        .admin-main {
+            margin-left: 0 !important;
+        }
+        /* Give the hamburger room above the header */
+        .admin-main .admin-header {
+            padding-left: 56px;
+        }
+    }
+
+    /* ============================================================
+       Table overflow fixes — Phase D
+       Ensure wide tables scroll horizontally within their card.
+       ============================================================ */
+    .table-responsive,
+    .recent-orders-card .table-wrap,
+    .manage-product .table-wrap,
+    .manage-product-panel .table-wrap {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        max-width: 100%;
+    }
+    .table-responsive table {
+        min-width: 600px;
+        width: 100%;
+    }

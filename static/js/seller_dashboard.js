@@ -1376,3 +1376,35 @@ document.addEventListener('DOMContentLoaded', function () {
     window.open('/seller/reports/sales.pdf?period=' + encodeURIComponent(period), '_blank');
   });
 });
+
+// Sidebar toggle (Phase D) — collapsible on mobile/tablet
+(function setupSidebarToggle() {
+  const onClick = (e) => {
+    const t = e.target.closest('.sidebar-toggle');
+    if (t) {
+      const layout = document.querySelector('.admin-layout');
+      if (!layout) return;
+      const open = layout.getAttribute('data-sidebar') === 'open';
+      layout.setAttribute('data-sidebar', open ? 'closed' : 'open');
+      t.setAttribute('aria-expanded', String(!open));
+      return;
+    }
+    // Click outside the sidebar closes it
+    const layout = document.querySelector('.admin-layout[data-sidebar="open"]');
+    if (layout && !e.target.closest('.admin-sidebar') && !e.target.closest('.sidebar-toggle')) {
+      layout.setAttribute('data-sidebar', 'closed');
+      const toggle = document.querySelector('.sidebar-toggle');
+      if (toggle) toggle.setAttribute('aria-expanded', 'false');
+    }
+  };
+  document.addEventListener('click', onClick);
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key !== 'Escape') return;
+    const layout = document.querySelector('.admin-layout[data-sidebar="open"]');
+    if (!layout) return;
+    layout.setAttribute('data-sidebar', 'closed');
+    const toggle = document.querySelector('.sidebar-toggle');
+    if (toggle) { toggle.setAttribute('aria-expanded', 'false'); toggle.focus(); }
+  });
+})();

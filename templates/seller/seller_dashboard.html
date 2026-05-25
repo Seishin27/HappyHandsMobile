@@ -17,7 +17,7 @@
   
 </head>
 
-<body class="admin-body" data-server-flashes='{{ get_flashed_messages(with_categories=true) | tojson | safe }}' data-restriction-state='{{ (restriction_state or {}) | tojson | safe }}' data-seller-id="{{ session.get('seller').get('sellerID') if session.get('seller') else '' }}">
+<body class="admin-body seller-dashboard-page" data-server-flashes='{{ get_flashed_messages(with_categories=true) | tojson | safe }}' data-restriction-state='{{ (restriction_state or {}) | tojson | safe }}' data-seller-id="{{ session.get('seller').get('sellerID') if session.get('seller') else '' }}">
 
   {# server-provided status: show overlay when not approved #}
   {% set seller_status = session.get('seller').get('status') if session.get('seller') else None %}
@@ -115,8 +115,9 @@
   </div>
   {% endif %}
 
-  
-  <aside class="admin-sidebar">
+
+  <div class="admin-layout">
+  <aside class="admin-sidebar" id="seller-sidebar">
       <div class="sidebar-header">
           <div class="logo-container">
               <img src="{{ url_for('static', filename='images/favicon.png') }}" alt="Happy Hands" style="height: 40px; margin-right: 10px;">
@@ -190,8 +191,11 @@
       </div>
   </aside>
 
-  
+
   <main class="admin-main">
+      <button type="button" class="sidebar-toggle" aria-label="Toggle sidebar" aria-controls="seller-sidebar" aria-expanded="false">
+        <span></span><span></span><span></span>
+      </button>
       <!-- Header -->
       <header class="admin-header">
           <div class="header-content">
@@ -777,6 +781,7 @@
       </section>
 
   </main>
+  </div>
 
   <!-- Customer Support Chat widget -->
     <div id="supportChatModal" class="ai-chat-modal" role="dialog" aria-modal="true" aria-label="Customer Support Chat" style="display:none;">
@@ -795,6 +800,7 @@
         </div>
     </div>
 
+    <script src="{{ url_for('static', filename='js/design_system.js') }}"></script>
     <script src="https://cdn.socket.io/4.6.1/socket.io.min.js"></script>
     <script src="{{ url_for('static', filename='js/support_chat.js') }}?v={{ range(1,9999)|random }}" defer></script>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/ai_chat.css') }}">
@@ -1724,7 +1730,6 @@
   <script src="{{ url_for('static', filename='js/confirm_helper.js') }}"></script>
   <script src="{{ url_for('static', filename='js/flash.js') }}"></script>
   <script src="{{ url_for('static', filename='js/seller_dashboard.js') }}" defer></script>
-  <script src="{{ url_for('static', filename='js/sidebar_toggle.js') }}" defer></script>
 
 
   <script>
