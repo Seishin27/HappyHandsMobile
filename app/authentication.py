@@ -1834,6 +1834,12 @@ socketio = SocketIO(app, cors_allowed_origins='*', async_mode='threading')
 chat_socket.register_chat_socket_handlers(socketio)
 app.register_blueprint(chat_routes.chat_bp)
 app.register_blueprint(admin_support.support_bp)
+try:
+    from app.reports_api import reports_bp
+    if 'reports' not in app.blueprints:
+        app.register_blueprint(reports_bp)
+except Exception:
+    app.logger.exception("Failed to register reports blueprint")
 
 # Mapping of connected identities to socket ids. Key format: "role:id" e.g. "user:123" or "seller:45"
 # Value is a set of socket session ids (sids). Used to deliver private messages to online clients.

@@ -24,6 +24,13 @@ try:
     except Exception:
         pass
 
+    try:
+        from app.reports_api import reports_bp
+        if 'reports' not in authentication.app.blueprints:
+            authentication.app.register_blueprint(reports_bp)
+    except Exception:
+        pass
+
     _app = authentication.app
 
 except Exception:
