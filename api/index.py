@@ -1,27 +1,42 @@
 import sys
 import os
+import traceback
 
-# Add project root to path so `from app import authentication` resolves correctly
 root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, root)
 
-# Load .env before importing authentication — it reads env vars at import time
 try:
     from dotenv import load_dotenv
     load_dotenv(os.path.join(root, '.env'))
 except ImportError:
     pass
 
-# Import the Flask app object (created at authentication.py:275)
-from app import authentication
+_startup_error = None
+_app = None
 
-# Register blueprints that run.py normally registers inside __main__
 try:
-    from app.seller_api import seller_api_bp
-    if 'seller_api' not in authentication.app.blueprints:
-        authentication.app.register_blueprint(seller_api_bp)
-except Exception:
-    pass
+    from app import authentication
 
-# Expose module-level `app` — Vercel's WSGI handler looks for this name
-app = authentication.app
+    try:
+        from app.seller_api import seller_api_bp
+        if 'seller_api' not in authentication.app.blueprints:
+            authentication.app.register_blueprint(seller_api_bp)
+    except Exception:
+        pass
+
+    _app = authentication.app
+
+except Exception:
+    _startup_error = traceback.format_exc()
+
+
+def _error_app(environ, start_response):
+    body = f"Startup failed:\n\n{_startup_error}".encode()
+    start_response("500 Internal Server Error", [
+        ("Content-Type", "text/plain"),
+        ("Content-Length", str(len(body))),
+    ])
+    return [body]
+
+
+app = _app if _app is not None else _error_app
