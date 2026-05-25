@@ -137,26 +137,26 @@
   var _shippingDebounceTimer = null;
   var _fetchingShipping = false;
   var _shippingRequestToken = 0; // monotonic counter; only newest fetch wins
-  var MIN_SHIPPING_FEE = 36;
+  var DEFAULT_SHIPPING_FEE = 36; // matches backend app/shipping_utils.py DEFAULT_SHIPPING_FEE
+  var MIN_SHIPPING_FEE = DEFAULT_SHIPPING_FEE;
+  var _lastShippingError = false; // when true, shippingEl shows em-dash for retry visibility
 
-  // Full validation: all 4 dropdowns filled (required before placing an order AND before estimating fee)
+  // Estimate gate: province + city are enough (barangay optional).
+  // The backend uses PSGC region-prefix matching, so partial addresses still compute correctly.
   function hasAddressDropdowns(){
     const regionSel = $('#region');
     const provSel = $('#province');
     const citySel = $('#city');
-    const brgySel = $('#barangay');
     const regionName = regionSel && regionSel.selectedOptions[0] ? regionSel.selectedOptions[0].textContent.trim() : '';
     const provinceName = provSel && provSel.selectedOptions[0] ? provSel.selectedOptions[0].textContent.trim() : '';
     const cityName = citySel && citySel.selectedOptions[0] ? citySel.selectedOptions[0].textContent.trim() : '';
-    const barangayName = brgySel && brgySel.selectedOptions[0] ? brgySel.selectedOptions[0].textContent.trim() : '';
     return !!(regionName && regionName !== 'Select Region'
            && provinceName && provinceName !== 'Select Province'
-           && cityName && cityName !== 'Select City/Municipality'
-           && barangayName && barangayName !== 'Select Barangay');
+           && cityName && cityName !== 'Select City/Municipality');
   }
 
   async function refreshShippingEstimate(mode, directItem, cartItems){
-    // All 4 dropdowns must be filled before calling the estimate API (matches mobile behavior)
+    // Province + city are enough to estimate; barangay is optional.
     var gateOk = hasAddressDropdowns();
     console.log('[Shipping] Gate:', gateOk,
       '| region:', ($('#region') || {}).value,
@@ -167,8 +167,11 @@
       '| directItem:', directItem,
       '| cartItems.length:', Array.isArray(cartItems) ? cartItems.length : cartItems);
     if (!gateOk) {
-      currentShippingEstimate = MIN_SHIPPING_FEE; // show ₱36 minimum, same as mobile default
+      _fetchingShipping = false;
+      _lastShippingError = false;
+      currentShippingEstimate = DEFAULT_SHIPPING_FEE; // show ₱36 default
       renderOrderSummary(mode, cartItems, directItem);
+      document.dispatchEvent(new CustomEvent('shipping:updated', { detail: { fee: currentShippingEstimate, source: 'default' } }));
       return;
     }
 
@@ -181,9 +184,7 @@
 
       // Show loading state while fetching
       _fetchingShipping = true;
-      if (currentShippingEstimate < MIN_SHIPPING_FEE) {
-        currentShippingEstimate = MIN_SHIPPING_FEE;
-      }
+      _lastShippingError = false;
       renderOrderSummary(mode, cartItems, directItem);
 
       try {
@@ -201,21 +202,36 @@
         }
         console.log('[Shipping] API response:', data);
         if (data && data.success) {
-          const fee = Number(data.shipping_fee || 0);
-          currentShippingEstimate = Math.max(fee, MIN_SHIPPING_FEE);
+          const rawFee = (data && data.shipping_fee !== undefined && data.shipping_fee !== null)
+            ? Number(data.shipping_fee)
+            : NaN;
+          if (Number.isFinite(rawFee)) {
+            currentShippingEstimate = Math.max(rawFee, MIN_SHIPPING_FEE);
+            _lastShippingError = false;
+          } else {
+            console.warn('[Shipping] Non-finite shipping_fee, falling back to default:', data && data.shipping_fee);
+            currentShippingEstimate = DEFAULT_SHIPPING_FEE;
+            _lastShippingError = true;
+          }
         } else {
           if (data && data.msg) console.warn('[Shipping] Server returned error:', data.msg);
-          currentShippingEstimate = MIN_SHIPPING_FEE;
+          currentShippingEstimate = DEFAULT_SHIPPING_FEE;
+          _lastShippingError = true;
         }
       } catch (e) {
         if (myToken !== _shippingRequestToken) return;
         console.error('[Shipping] Estimate fetch error:', e);
-        currentShippingEstimate = MIN_SHIPPING_FEE;
+        currentShippingEstimate = DEFAULT_SHIPPING_FEE;
+        _lastShippingError = true;
       }
       if (myToken !== _shippingRequestToken) return;
-      console.log('[Shipping] Final estimate:', currentShippingEstimate);
+      console.log('[Shipping] Final estimate:', currentShippingEstimate, 'error?', _lastShippingError);
       _fetchingShipping = false;
       renderOrderSummary(mode, cartItems, directItem);
+      // Notify listeners (order-total updaters etc.) that the shipping fee just changed.
+      document.dispatchEvent(new CustomEvent('shipping:updated', {
+        detail: { fee: currentShippingEstimate, error: _lastShippingError }
+      }));
     }, 300);
   }
 
@@ -523,26 +539,27 @@
     const citySel = $('#city');
     const brgySel = $('#barangay');
     if (!regionSel || !provSel || !citySel || !brgySel) return;
+    // Wire change listeners for every dropdown so distance is recomputed on each pick.
     regionSel.addEventListener('change', function(){
       loadProvinces();
-      currentShippingEstimate = 0;
+      _fetchingShipping = true;
       renderOrderSummary(currentCheckoutMode, currentCartItems, currentDirectItem);
       refreshShippingEstimate(currentCheckoutMode, currentDirectItem, currentCartItems);
     });
     provSel.addEventListener('change', function(){
       loadCities();
-      currentShippingEstimate = 0;
+      _fetchingShipping = true;
       renderOrderSummary(currentCheckoutMode, currentCartItems, currentDirectItem);
       refreshShippingEstimate(currentCheckoutMode, currentDirectItem, currentCartItems);
     });
     citySel.addEventListener('change', function(){
       loadBarangays();
-      currentShippingEstimate = 0;
+      _fetchingShipping = true;
       renderOrderSummary(currentCheckoutMode, currentCartItems, currentDirectItem);
       refreshShippingEstimate(currentCheckoutMode, currentDirectItem, currentCartItems);
     });
     brgySel.addEventListener('change', function(){
-      currentShippingEstimate = 0;
+      _fetchingShipping = true;
       renderOrderSummary(currentCheckoutMode, currentCartItems, currentDirectItem);
       refreshShippingEstimate(currentCheckoutMode, currentDirectItem, currentCartItems);
     });
@@ -588,8 +605,20 @@
 
     const shipping = currentShippingEstimate;
     subtotalEl.textContent = '₱' + subtotal.toFixed(2);
-    shippingEl.textContent = _fetchingShipping ? 'Calculating…' : '₱' + shipping.toFixed(2);
-    totalEl.textContent = _fetchingShipping ? '—' : '₱' + (subtotal + shipping).toFixed(2);
+
+    // Reflect loading / error state on the shipping fee element via data attribute.
+    shippingEl.setAttribute('data-shipping-loading', _fetchingShipping ? 'true' : 'false');
+    if (_fetchingShipping) {
+      shippingEl.textContent = 'Calculating…';
+      totalEl.textContent = '—';
+    } else if (_lastShippingError) {
+      // Error state: em-dash signals "retry-able" — user can change a dropdown to refetch.
+      shippingEl.textContent = '—';
+      totalEl.textContent = '—';
+    } else {
+      shippingEl.textContent = '₱' + shipping.toFixed(2);
+      totalEl.textContent = '₱' + (subtotal + shipping).toFixed(2);
+    }
   }
 
   async function handlePlaceOrder(e, mode, directItem, cartItems){
@@ -691,19 +720,24 @@
       placeOrderBtn.addEventListener('click', function(e){ handlePlaceOrder(e, mode, directItem, cartItems); });
     }
 
-    const regionSel = document.getElementById('region');
-    const provSel = document.getElementById('province');
-    const citySel = document.getElementById('city');
-    const brgySel = document.getElementById('barangay');
     const homeInput = document.getElementById('homeAddress');
     const contactInput = document.getElementById('contactNumber');
 
-    if (regionSel){ regionSel.addEventListener('change', function(){ refreshPlaceOrderButtonState(); }); }
-    if (provSel){ provSel.addEventListener('change', function(){ refreshPlaceOrderButtonState(); }); }
-    if (citySel){ citySel.addEventListener('change', function(){ refreshPlaceOrderButtonState(); }); }
-    if (brgySel){ brgySel.addEventListener('change', function(){ refreshPlaceOrderButtonState(); refreshShippingEstimate(mode, directItem, cartItems); }); }
+    // Refresh place-order-button state AND shipping estimate when any dropdown changes.
+    // setupGeoDropdowns() already wires shipping refresh + cascade loading, so we only
+    // wire button-state here to avoid duplicate fetches.
+    ['region','province','city','barangay'].forEach(function(id){
+      const el = document.getElementById(id);
+      if (el) el.addEventListener('change', refreshPlaceOrderButtonState);
+    });
     if (homeInput){ homeInput.addEventListener('input', refreshPlaceOrderButtonState); }
     if (contactInput){ contactInput.addEventListener('input', refreshPlaceOrderButtonState); }
+
+    // Order total recomputes via renderOrderSummary inside refreshShippingEstimate,
+    // but also listen on the event so any future external totalizers stay in sync.
+    document.addEventListener('shipping:updated', function(){
+      renderOrderSummary(currentCheckoutMode, currentCartItems, currentDirectItem);
+    });
 
     refreshPlaceOrderButtonState();
     refreshShippingEstimate(mode, directItem, cartItems);

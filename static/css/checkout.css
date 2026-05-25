@@ -332,3 +332,9 @@ body.checkout-page {
   .checkout-card  { padding: 14px 12px; }
   .checkout-title { font-size: 1.35rem; }
 }
+
+/* Shipping fee loading state — styled muted while estimate fetch is in flight. */
+#orderShipping[data-shipping-loading="true"] {
+  color: var(--ds-color-text-muted, #8a8a8a);
+  font-style: italic;
+}
