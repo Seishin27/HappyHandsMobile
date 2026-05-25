@@ -31,19 +31,22 @@ reports_bp = Blueprint("reports", __name__)
 # Internal helpers
 # ---------------------------------------------------------------------------
 def _validated_period() -> Optional[str]:
-    """Return the ``period`` query param if valid, else None (caller -> 400)."""
-    period = (request.args.get("period") or "today").lower().strip()
-    if period not in ALLOWED_PERIODS:
+    """Return the ``period`` query param if valid, else None (caller -> 400).
+
+    Strict: missing, empty/whitespace, or unknown values all return ``None``.
+    Callers are expected to pass an explicit ``?period=today|week|month``.
+    """
+    raw = request.args.get("period")
+    if raw is None:
+        return None
+    period = raw.lower().strip()
+    if not period or period not in ALLOWED_PERIODS:
         return None
     return period
 
 
-def _bad_period() -> Response:
-    return Response(
-        response='{"success": false, "message": "Invalid period. Use today, week, or month."}',
-        status=400,
-        mimetype="application/json",
-    )
+def _bad_period():
+    return jsonify({"success": False, "message": "Invalid period. Use today, week, or month."}), 400
 
 
 def _pdf_response(pdf_bytes: bytes, filename: str) -> Response:

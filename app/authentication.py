@@ -1838,7 +1838,7 @@ try:
     from app.reports_api import reports_bp
     if 'reports' not in app.blueprints:
         app.register_blueprint(reports_bp)
-except Exception:
+except ImportError:
     app.logger.exception("Failed to register reports blueprint")
 
 # Mapping of connected identities to socket ids. Key format: "role:id" e.g. "user:123" or "seller:45"

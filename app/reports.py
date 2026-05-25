@@ -18,10 +18,12 @@ session-authenticated routes or the mobile JWT routes.
 
 from __future__ import annotations
 
+import functools
 import io
 import logging
+from contextlib import contextmanager
 from datetime import datetime, timedelta
-from typing import Iterable, List, Optional, Sequence, Tuple
+from typing import List, Optional, Sequence, Tuple
 
 import mysql.connector
 
@@ -41,6 +43,24 @@ from app.db import get_db as _get_db_connection
 
 
 logger = logging.getLogger(__name__)
+
+
+@contextmanager
+def _db_cursor():
+    """Yield a dict cursor, guaranteeing cursor + connection cleanup."""
+    conn = _get_db_connection()
+    cur = conn.cursor(dictionary=True)
+    try:
+        yield cur
+    finally:
+        try:
+            cur.close()
+        except Exception:
+            logger.debug("cursor close failed", exc_info=True)
+        try:
+            conn.close()
+        except Exception:
+            logger.debug("conn close failed", exc_info=True)
 
 # ---------------------------------------------------------------------------
 # Brand palette
@@ -100,6 +120,7 @@ def _period_range(period: str) -> Tuple[datetime, datetime, str]:
     return start, end, label
 
 
+@functools.lru_cache(maxsize=1)
 def _styles():
     """Return cached paragraph styles."""
     base = getSampleStyleSheet()
@@ -343,121 +364,106 @@ def build_seller_sales_pdf(seller_id: int, period: str) -> bytes:
     table_rows: List[List[str]] = []
     fallback_msg: Optional[str] = None
 
-    conn = None
-    cur = None
     try:
-        conn = _get_db_connection()
-        cur = conn.cursor(dictionary=True)
-
-        # Resolve store name
-        try:
-            cur.execute(
-                "SELECT storename, sellername FROM sellers WHERE sellerID = %s LIMIT 1",
-                (seller_id,),
-            )
-            row = cur.fetchone() or {}
-            storename = (
-                row.get("storename")
-                or row.get("sellername")
-                or f"Seller #{seller_id}"
-            )
-        except mysql.connector.Error:
-            logger.exception("Failed to load seller %s", seller_id)
-
-        # Itemised orders + items count + total
-        cur.execute(
-            """
-            SELECT
-                so.sellerOrderID,
-                so.order_number,
-                so.created_at,
-                so.status,
-                so.total_amount,
-                COALESCE(u.username, 'Customer') AS customer_name,
-                COALESCE(SUM(soi.quantity), 0) AS items_count
-            FROM seller_orders so
-            LEFT JOIN seller_order_items soi
-                ON so.sellerOrderID = soi.sellerOrderID
-            LEFT JOIN users u ON so.userID = u.userID
-            WHERE so.sellerID = %s
-              AND so.created_at >= %s
-              AND so.created_at < %s
-            GROUP BY so.sellerOrderID
-            ORDER BY so.created_at DESC
-            """,
-            (seller_id, start, end),
-        )
-        orders = cur.fetchall() or []
-
-        total_revenue = 0.0
-        for o in orders:
+        with _db_cursor() as cur:
+            # Resolve store name
             try:
-                total_revenue += float(o.get("total_amount") or 0)
-            except (TypeError, ValueError):
-                pass
-            order_no = o.get("order_number") or f"#{o.get('sellerOrderID')}"
-            created = o.get("created_at")
-            created_s = (
-                created.strftime("%Y-%m-%d %H:%M") if isinstance(created, datetime) else str(created or "")
-            )
-            table_rows.append(
-                [
-                    str(order_no),
-                    created_s,
-                    str(o.get("customer_name") or ""),
-                    str(int(o.get("items_count") or 0)),
-                    str(o.get("status") or ""),
-                    _money(o.get("total_amount")),
-                ]
-            )
+                cur.execute(
+                    "SELECT storename, sellername FROM sellers WHERE sellerID = %s LIMIT 1",
+                    (seller_id,),
+                )
+                row = cur.fetchone() or {}
+                storename = (
+                    row.get("storename")
+                    or row.get("sellername")
+                    or f"Seller #{seller_id}"
+                )
+            except mysql.connector.Error:
+                logger.exception("Failed to load seller %s", seller_id)
 
-        total_orders = len(orders)
-        avg_order = (total_revenue / total_orders) if total_orders else 0.0
-
-        # Top product (by quantity) for this seller in window
-        top_product = "—"
-        try:
+            # Itemised orders + items count + total
             cur.execute(
                 """
-                SELECT p.name AS pname, SUM(soi.quantity) AS qty
-                FROM seller_order_items soi
-                JOIN seller_orders so ON so.sellerOrderID = soi.sellerOrderID
-                LEFT JOIN products p ON p.productID = soi.productID
+                SELECT
+                    so.sellerOrderID,
+                    so.order_number,
+                    so.created_at,
+                    so.status,
+                    so.total_amount,
+                    COALESCE(u.username, 'Customer') AS customer_name,
+                    COALESCE(SUM(soi.quantity), 0) AS items_count
+                FROM seller_orders so
+                LEFT JOIN seller_order_items soi
+                    ON so.sellerOrderID = soi.sellerOrderID
+                LEFT JOIN users u ON so.userID = u.userID
                 WHERE so.sellerID = %s
                   AND so.created_at >= %s
                   AND so.created_at < %s
-                GROUP BY soi.productID
-                ORDER BY qty DESC
-                LIMIT 1
+                GROUP BY so.sellerOrderID
+                ORDER BY so.created_at DESC
                 """,
                 (seller_id, start, end),
             )
-            tp = cur.fetchone()
-            if tp and tp.get("pname"):
-                top_product = f"{tp['pname']} ({int(tp.get('qty') or 0)})"
-        except mysql.connector.Error:
-            logger.exception("Top product lookup failed for seller %s", seller_id)
+            orders = cur.fetchall() or []
 
-        summary_items = [
-            ("Total Revenue", _money(total_revenue)),
-            ("Total Orders", str(total_orders)),
-            ("Average Order Value", _money(avg_order)),
-            ("Top Product", top_product),
-        ]
+            total_revenue = 0.0
+            for o in orders:
+                try:
+                    total_revenue += float(o.get("total_amount") or 0)
+                except (TypeError, ValueError):
+                    pass
+                order_no = o.get("order_number") or f"#{o.get('sellerOrderID')}"
+                created = o.get("created_at")
+                created_s = (
+                    created.strftime("%Y-%m-%d %H:%M") if isinstance(created, datetime) else str(created or "")
+                )
+                table_rows.append(
+                    [
+                        str(order_no),
+                        created_s,
+                        str(o.get("customer_name") or ""),
+                        str(int(o.get("items_count") or 0)),
+                        str(o.get("status") or ""),
+                        _money(o.get("total_amount")),
+                    ]
+                )
+
+            total_orders = len(orders)
+            avg_order = (total_revenue / total_orders) if total_orders else 0.0
+
+            # Top product (by quantity) for this seller in window
+            top_product = "—"
+            try:
+                cur.execute(
+                    """
+                    SELECT p.name AS pname, SUM(soi.quantity) AS qty
+                    FROM seller_order_items soi
+                    JOIN seller_orders so ON so.sellerOrderID = soi.sellerOrderID
+                    LEFT JOIN products p ON p.productID = soi.productID
+                    WHERE so.sellerID = %s
+                      AND so.created_at >= %s
+                      AND so.created_at < %s
+                    GROUP BY soi.productID
+                    ORDER BY qty DESC
+                    LIMIT 1
+                    """,
+                    (seller_id, start, end),
+                )
+                tp = cur.fetchone()
+                if tp and tp.get("pname"):
+                    top_product = f"{tp['pname']} ({int(tp.get('qty') or 0)})"
+            except mysql.connector.Error:
+                logger.exception("Top product lookup failed for seller %s", seller_id)
+
+            summary_items = [
+                ("Total Revenue", _money(total_revenue)),
+                ("Total Orders", str(total_orders)),
+                ("Average Order Value", _money(avg_order)),
+                ("Top Product", top_product),
+            ]
     except mysql.connector.Error as e:
         logger.exception("Seller sales PDF DB error: %s", e)
         fallback_msg = "Unable to load data at this time. Please try again later."
-    finally:
-        try:
-            if cur:
-                cur.close()
-        except Exception:
-            pass
-        try:
-            if conn:
-                conn.close()
-        except Exception:
-            pass
 
     title = f"Sales Report — {storename}"
     if fallback_msg:
@@ -485,95 +491,80 @@ def build_admin_sales_pdf(period: str) -> bytes:
     top_sellers_rows: List[List[str]] = []
     fallback_msg: Optional[str] = None
 
-    conn = None
-    cur = None
     try:
-        conn = _get_db_connection()
-        cur = conn.cursor(dictionary=True)
-
-        # Aggregate platform totals from financial_transactions
-        cur.execute(
-            """
-            SELECT
-                COALESCE(SUM(total_amount), 0) AS gross,
-                COALESCE(SUM(admin_share), 0)  AS admin_share,
-                COUNT(*) AS tx_count,
-                COUNT(DISTINCT seller_id) AS active_sellers
-            FROM financial_transactions
-            WHERE created_at >= %s AND created_at < %s
-            """,
-            (start, end),
-        )
-        agg = cur.fetchone() or {}
-        gross_revenue = float(agg.get("gross") or 0)
-        admin_share = float(agg.get("admin_share") or 0)
-        active_sellers = int(agg.get("active_sellers") or 0)
-
-        # Delivered orders in window (from seller_orders, by updated_at)
-        delivered_orders = 0
-        try:
+        with _db_cursor() as cur:
+            # Aggregate platform totals from financial_transactions
             cur.execute(
                 """
-                SELECT COUNT(*) AS c
-                FROM seller_orders
-                WHERE LOWER(IFNULL(status, '')) = 'delivered'
-                  AND updated_at >= %s AND updated_at < %s
+                SELECT
+                    COALESCE(SUM(total_amount), 0) AS gross,
+                    COALESCE(SUM(admin_share), 0)  AS admin_share,
+                    COUNT(*) AS tx_count,
+                    COUNT(DISTINCT seller_id) AS active_sellers
+                FROM financial_transactions
+                WHERE created_at >= %s AND created_at < %s
                 """,
                 (start, end),
             )
-            row = cur.fetchone() or {}
-            delivered_orders = int(row.get("c") or 0)
-        except mysql.connector.Error:
-            logger.exception("Delivered-orders count failed")
+            agg = cur.fetchone() or {}
+            gross_revenue = float(agg.get("gross") or 0)
+            admin_share = float(agg.get("admin_share") or 0)
+            active_sellers = int(agg.get("active_sellers") or 0)
 
-        summary_items = [
-            ("Total Platform Revenue", _money(gross_revenue)),
-            ("Admin Share", _money(admin_share)),
-            ("Delivered Orders", str(delivered_orders)),
-            ("Active Sellers", str(active_sellers)),
-        ]
+            # Delivered orders in window (from seller_orders, by updated_at)
+            delivered_orders = 0
+            try:
+                cur.execute(
+                    """
+                    SELECT COUNT(*) AS c
+                    FROM seller_orders
+                    WHERE LOWER(IFNULL(status, '')) = 'delivered'
+                      AND updated_at >= %s AND updated_at < %s
+                    """,
+                    (start, end),
+                )
+                row = cur.fetchone() or {}
+                delivered_orders = int(row.get("c") or 0)
+            except mysql.connector.Error:
+                logger.exception("Delivered-orders count failed")
 
-        # Top 10 sellers by gross revenue in the window
-        cur.execute(
-            """
-            SELECT
-                ft.seller_id,
-                COALESCE(s.storename, s.sellername, CONCAT('Seller #', ft.seller_id)) AS seller_label,
-                COUNT(*)                              AS order_count,
-                COALESCE(SUM(ft.total_amount), 0)     AS gross,
-                COALESCE(SUM(ft.admin_share), 0)      AS admin_share
-            FROM financial_transactions ft
-            LEFT JOIN sellers s ON s.sellerID = ft.seller_id
-            WHERE ft.created_at >= %s AND ft.created_at < %s
-            GROUP BY ft.seller_id
-            ORDER BY gross DESC
-            LIMIT 10
-            """,
-            (start, end),
-        )
-        for r in cur.fetchall() or []:
-            top_sellers_rows.append(
-                [
-                    str(r.get("seller_label") or ""),
-                    str(int(r.get("order_count") or 0)),
-                    _money(r.get("gross")),
-                    _money(r.get("admin_share")),
-                ]
+            summary_items = [
+                ("Total Platform Revenue", _money(gross_revenue)),
+                ("Admin Share", _money(admin_share)),
+                ("Delivered Orders", str(delivered_orders)),
+                ("Active Sellers", str(active_sellers)),
+            ]
+
+            # Top 10 sellers by gross revenue in the window
+            cur.execute(
+                """
+                SELECT
+                    ft.seller_id,
+                    COALESCE(s.storename, s.sellername, CONCAT('Seller #', ft.seller_id)) AS seller_label,
+                    COUNT(*)                              AS order_count,
+                    COALESCE(SUM(ft.total_amount), 0)     AS gross,
+                    COALESCE(SUM(ft.admin_share), 0)      AS admin_share
+                FROM financial_transactions ft
+                LEFT JOIN sellers s ON s.sellerID = ft.seller_id
+                WHERE ft.created_at >= %s AND ft.created_at < %s
+                GROUP BY ft.seller_id
+                ORDER BY gross DESC
+                LIMIT 10
+                """,
+                (start, end),
             )
+            for r in cur.fetchall() or []:
+                top_sellers_rows.append(
+                    [
+                        str(r.get("seller_label") or ""),
+                        str(int(r.get("order_count") or 0)),
+                        _money(r.get("gross")),
+                        _money(r.get("admin_share")),
+                    ]
+                )
     except mysql.connector.Error as e:
         logger.exception("Admin sales PDF DB error: %s", e)
         fallback_msg = "Unable to load data at this time. Please try again later."
-    finally:
-        try:
-            if cur:
-                cur.close()
-        except Exception:
-            pass
-        try:
-            if conn:
-                conn.close()
-        except Exception:
-            pass
 
     title = "Platform Sales Report"
     if fallback_msg:
@@ -602,103 +593,88 @@ def build_rider_deliveries_pdf(rider_id: int, period: str) -> bytes:
     table_rows: List[List[str]] = []
     fallback_msg: Optional[str] = None
 
-    conn = None
-    cur = None
     try:
-        conn = _get_db_connection()
-        cur = conn.cursor(dictionary=True)
-
-        # Resolve rider name
-        try:
-            cur.execute(
-                "SELECT ridername FROM riders WHERE riderID = %s LIMIT 1",
-                (rider_id,),
-            )
-            row = cur.fetchone() or {}
-            rider_name = row.get("ridername") or rider_name
-        except mysql.connector.Error:
-            logger.exception("Failed to load rider %s", rider_id)
-
-        # Completed deliveries in window
-        cur.execute(
-            """
-            SELECT
-                so.sellerOrderID,
-                so.order_number,
-                so.updated_at AS completed_at,
-                so.total_amount,
-                COALESCE(u.username, 'Customer') AS customer_name,
-                COALESCE(s.storename, s.sellername, 'Store') AS store_name,
-                COALESCE(ft.rider_commission, 0) AS rider_earnings
-            FROM seller_orders so
-            LEFT JOIN users   u ON so.userID   = u.userID
-            LEFT JOIN sellers s ON so.sellerID = s.sellerID
-            LEFT JOIN financial_transactions ft ON ft.order_id = so.sellerOrderID
-            WHERE so.riderID = %s
-              AND LOWER(IFNULL(so.status, '')) = 'delivered'
-              AND so.updated_at >= %s
-              AND so.updated_at < %s
-            ORDER BY so.updated_at DESC
-            """,
-            (rider_id, start, end),
-        )
-        rows = cur.fetchall() or []
-
-        total_earnings = 0.0
-        per_day_counts = {}
-        for r in rows:
+        with _db_cursor() as cur:
+            # Resolve rider name
             try:
-                total_earnings += float(r.get("rider_earnings") or 0)
-            except (TypeError, ValueError):
-                pass
-            completed = r.get("completed_at")
-            completed_s = (
-                completed.strftime("%Y-%m-%d %H:%M")
-                if isinstance(completed, datetime)
-                else str(completed or "")
+                cur.execute(
+                    "SELECT ridername FROM riders WHERE riderID = %s LIMIT 1",
+                    (rider_id,),
+                )
+                row = cur.fetchone() or {}
+                rider_name = row.get("ridername") or rider_name
+            except mysql.connector.Error:
+                logger.exception("Failed to load rider %s", rider_id)
+
+            # Completed deliveries in window
+            cur.execute(
+                """
+                SELECT
+                    so.sellerOrderID,
+                    so.order_number,
+                    so.updated_at AS completed_at,
+                    so.total_amount,
+                    COALESCE(u.username, 'Customer') AS customer_name,
+                    COALESCE(s.storename, s.sellername, 'Store') AS store_name,
+                    COALESCE(ft.rider_commission, 0) AS rider_earnings
+                FROM seller_orders so
+                LEFT JOIN users   u ON so.userID   = u.userID
+                LEFT JOIN sellers s ON so.sellerID = s.sellerID
+                LEFT JOIN financial_transactions ft ON ft.order_id = so.sellerOrderID
+                WHERE so.riderID = %s
+                  AND LOWER(IFNULL(so.status, '')) = 'delivered'
+                  AND so.updated_at >= %s
+                  AND so.updated_at < %s
+                ORDER BY so.updated_at DESC
+                """,
+                (rider_id, start, end),
             )
-            if isinstance(completed, datetime):
-                day_key = completed.strftime("%a %b %d")
-                per_day_counts[day_key] = per_day_counts.get(day_key, 0) + 1
+            rows = cur.fetchall() or []
 
-            table_rows.append(
-                [
-                    str(r.get("order_number") or f"#{r.get('sellerOrderID')}"),
-                    completed_s,
-                    str(r.get("customer_name") or ""),
-                    str(r.get("store_name") or ""),
-                    _money(r.get("rider_earnings")),
-                ]
-            )
+            total_earnings = 0.0
+            per_day_counts = {}
+            for r in rows:
+                try:
+                    total_earnings += float(r.get("rider_earnings") or 0)
+                except (TypeError, ValueError):
+                    pass
+                completed = r.get("completed_at")
+                completed_s = (
+                    completed.strftime("%Y-%m-%d %H:%M")
+                    if isinstance(completed, datetime)
+                    else str(completed or "")
+                )
+                if isinstance(completed, datetime):
+                    day_key = completed.strftime("%a %b %d")
+                    per_day_counts[day_key] = per_day_counts.get(day_key, 0) + 1
 
-        total_deliveries = len(rows)
-        avg_per = (total_earnings / total_deliveries) if total_deliveries else 0.0
-        if per_day_counts:
-            most_active_day = max(per_day_counts.items(), key=lambda kv: kv[1])
-            most_active_label = f"{most_active_day[0]} ({most_active_day[1]})"
-        else:
-            most_active_label = "—"
+                table_rows.append(
+                    [
+                        str(r.get("order_number") or f"#{r.get('sellerOrderID')}"),
+                        completed_s,
+                        str(r.get("customer_name") or ""),
+                        str(r.get("store_name") or ""),
+                        _money(r.get("rider_earnings")),
+                    ]
+                )
 
-        summary_items = [
-            ("Total Deliveries", str(total_deliveries)),
-            ("Total Earnings", _money(total_earnings)),
-            ("Average per Delivery", _money(avg_per)),
-            ("Most Active Day", most_active_label),
-        ]
+            total_deliveries = len(rows)
+            avg_per = (total_earnings / total_deliveries) if total_deliveries else 0.0
+            if per_day_counts:
+                most_active_day = max(per_day_counts.items(), key=lambda kv: kv[1])
+                most_active_label = f"{most_active_day[0]} ({most_active_day[1]})"
+            else:
+                most_active_label = "—"
+
+            summary_items = [
+                ("Total Deliveries", str(total_deliveries)),
+                ("Total Earnings", _money(total_earnings)),
+                ("Average per Delivery", _money(avg_per)),
+                ("Most Active Day", most_active_label),
+            ]
     except mysql.connector.Error as e:
         logger.exception("Rider deliveries PDF DB error: %s", e)
         fallback_msg = "Unable to load data at this time. Please try again later."
-    finally:
-        try:
-            if cur:
-                cur.close()
-        except Exception:
-            pass
-        try:
-            if conn:
-                conn.close()
-        except Exception:
-            pass
 
     title = f"Delivery Report — {rider_name}"
     if fallback_msg:

@@ -28,8 +28,8 @@ try:
         from app.reports_api import reports_bp
         if 'reports' not in authentication.app.blueprints:
             authentication.app.register_blueprint(reports_bp)
-    except Exception:
-        pass
+    except ImportError as e:
+        print(f"[startup] reports_api unavailable: {e}", file=sys.stderr)
 
     _app = authentication.app
 
