@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(ls \"c:\\\\Users\\\\admin\\\\Downloads\\\\Happy Hands SUPER FINAL-20260413T060429Z-3-001\\\\Happy Hands SUPER FINAL\")",
+      "Read(//c/Users/admin/Downloads/Happy Hands SUPER FINAL-20260413T060429Z-3-001/Happy Hands SUPER FINAL/**)",
+      "Bash(grep -n \"CREATE TABLE.*riders\\\\|CREATE TABLE \\\\`riders\\\\`\" \"c:/Users/admin/Downloads/Happy Hands SUPER FINAL-20260413T060429Z-3-001/Happy Hands SUPER FINAL/babystore \\(1\\).sql\")",
+      "Bash(grep -n \"CREATE TABLE \\\\`sellers\\\\`\" \"c:/Users/admin/Downloads/Happy Hands SUPER FINAL-20260413T060429Z-3-001/Happy Hands SUPER FINAL/babystore \\(1\\).sql\")",
+      "PowerShell(Test-NetConnection -ComputerName 127.0.0.1 -Port 5500 -InformationLevel Quiet -WarningAction SilentlyContinue)"
+    ]
+  }
+}

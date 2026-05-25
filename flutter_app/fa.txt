@@ -1,0 +1,39 @@
+Analyzing flutter_app...                                        
+
+   info - 'groupValue' is deprecated and shouldn't be used. Use a RadioGroup ancestor to manage group value instead. This feature was deprecated after v3.32.0-0.0.pre - lib\screens\checkout_screen.dart:660:19 - deprecated_member_use
+   info - 'onChanged' is deprecated and shouldn't be used. Use RadioGroup to handle value change instead. This feature was deprecated after v3.32.0-0.0.pre - lib\screens\checkout_screen.dart:661:19 - deprecated_member_use
+   info - Use a function declaration rather than a variable assignment to bind a function to a name - lib\screens\home\categories_screen.dart:50:13 - prefer_function_declarations_over_variables
+  error - A value of type 'List<dynamic>' can't be assigned to a variable of type 'List<Category>' - lib\screens\home\categories_screen.dart:58:23 - invalid_assignment
+   info - Unnecessary braces in a string interpolation - lib\screens\rider\orders_tab.dart:283:61 - unnecessary_brace_in_string_interps
+   info - 'groupValue' is deprecated and shouldn't be used. Use a RadioGroup ancestor to manage group value instead. This feature was deprecated after v3.32.0-0.0.pre - lib\screens\seller\order_detail_screen.dart:233:25 - deprecated_member_use
+   info - 'onChanged' is deprecated and shouldn't be used. Use RadioGroup to handle value change instead. This feature was deprecated after v3.32.0-0.0.pre - lib\screens\seller\order_detail_screen.dart:242:25 - deprecated_member_use
+   info - 'groupValue' is deprecated and shouldn't be used. Use a RadioGroup ancestor to manage group value instead. This feature was deprecated after v3.32.0-0.0.pre - lib\screens\seller\orders_tab.dart:217:25 - deprecated_member_use
+   info - 'onChanged' is deprecated and shouldn't be used. Use RadioGroup to handle value change instead. This feature was deprecated after v3.32.0-0.0.pre - lib\screens\seller\orders_tab.dart:227:25 - deprecated_member_use
+  error - The body might complete normally, causing 'null' to be returned, but the return type, 'FutureOr<List<Product>>', is a potentially non-nullable type - lib\services\flask_api_service.dart:57:25 - body_might_complete_normally
+  error - Expected to find '}' - lib\services\flask_api_service.dart:92:3 - expected_token
+  error - The name 'Category' is defined in the libraries 'package:flutter/src/foundation/annotations.dart (via package:flutter/foundation.dart)' and 'package:flutter_app/models/category.dart' - lib\services\flask_api_service.dart:130:7 - ambiguous_import
+  error - The name 'Category' is defined in the libraries 'package:flutter/src/foundation/annotations.dart (via package:flutter/foundation.dart)' and 'package:flutter_app/models/category.dart' - lib\services\flask_api_service.dart:130:30 - ambiguous_import
+  error - The name 'Category' is defined in the libraries 'package:flutter/src/foundation/annotations.dart (via package:flutter/foundation.dart)' and 'package:flutter_app/models/category.dart' - lib\services\flask_api_service.dart:147:14 - ambiguous_import
+  error - The name 'Category' is defined in the libraries 'package:flutter/src/foundation/annotations.dart (via package:flutter/foundation.dart)' and 'package:flutter_app/models/category.dart' - lib\services\flask_api_service.dart:151:21 - ambiguous_import
+   info - Use 'whereType' to select elements of a given type - lib\services\flask_api_service.dart:1073:12 - prefer_iterable_wheretype
+   info - Don't invoke 'print' in production code - test\integration\seller_integration_test.dart:29:7 - avoid_print
+   info - Don't invoke 'print' in production code - test\integration\seller_integration_test.dart:30:7 - avoid_print
+   info - Don't invoke 'print' in production code - test\integration\seller_integration_test.dart:69:7 - avoid_print
+   info - Don't invoke 'print' in production code - test\integration\seller_integration_test.dart:70:7 - avoid_print
+   info - Don't invoke 'print' in production code - test\integration\seller_integration_test.dart:88:7 - avoid_print
+   info - Don't invoke 'print' in production code - test\integration\seller_integration_test.dart:89:7 - avoid_print
+   info - Don't invoke 'print' in production code - test\integration\seller_integration_test.dart:107:7 - avoid_print
+   info - Don't invoke 'print' in production code - test\integration\seller_integration_test.dart:108:7 - avoid_print
+   info - Don't invoke 'print' in production code - test\integration\seller_integration_test.dart:145:7 - avoid_print
+   info - Don't invoke 'print' in production code - test\integration\seller_integration_test.dart:146:7 - avoid_print
+   info - Don't invoke 'print' in production code - test\integration\seller_integration_test.dart:174:7 - avoid_print
+   info - Don't invoke 'print' in production code - test\integration\seller_integration_test.dart:175:7 - avoid_print
+   info - Don't invoke 'print' in production code - test\integration\seller_integration_test.dart:210:7 - avoid_print
+   info - Don't invoke 'print' in production code - test\integration\seller_integration_test.dart:235:7 - avoid_print
+   info - Don't invoke 'print' in production code - test\integration\seller_integration_test.dart:246:9 - avoid_print
+   info - The local variable '_seedItem' starts with an underscore - test\providers\cart_provider_test.dart:53:14 - no_leading_underscores_for_local_identifiers
+warning - Unused import: 'package:flutter_app/models/seller_order.dart' - test\providers\orders_provider_test.dart:8:8 - unused_import
+warning - Unused import: 'dart:io' - test\services\flask_api_service_product_test.dart:1:8 - unused_import
+warning - Unused import: 'package:flutter_app/models/seller_order.dart' - test\services\flask_api_service_test.dart:8:8 - unused_import
+
+35 issues found. (ran in 7.6s)

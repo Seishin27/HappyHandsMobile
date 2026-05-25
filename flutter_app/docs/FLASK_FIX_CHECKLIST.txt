@@ -1,0 +1,61 @@
+═══════════════════════════════════════════════════════════════
+  FLASK seller_api.py FIX CHECKLIST
+═══════════════════════════════════════════════════════════════
+
+Flutter/Dart models: ✅ DONE (already updated)
+
+Flask backend: ⏳ TODO (you need to do these 11 replacements)
+
+───────────────────────────────────────────────────────────────
+ORDERS FIXES (6 replacements)
+───────────────────────────────────────────────────────────────
+
+[ ] 1. Find: so.buyerID = u.userID
+       Replace: so.userID = u.userID
+
+[ ] 2. Find: so.orderNumber
+       Replace: so.order_number
+
+[ ] 3. Find: so.totalAmount
+       Replace: so.total_amount
+
+[ ] 4. Find: so.orderDate
+       Replace: so.items_received_at
+
+[ ] 5. Find: so.createdAt
+       Replace: NULL as createdAt
+
+[ ] 6. Find: so.updatedAt
+       Replace: NULL as updatedAt
+
+───────────────────────────────────────────────────────────────
+PRODUCTS FIXES (5 replacements)
+───────────────────────────────────────────────────────────────
+
+[ ] 7. Find: productname
+       Replace: name
+
+[ ] 8. Find: productdescription
+       Replace: description
+
+[ ] 9. Find: productprice
+       Replace: price
+
+[ ] 10. Find: productcategory
+        Replace: categoryID
+
+[ ] 11. Find: productquantity
+        Replace: stock
+
+───────────────────────────────────────────────────────────────
+AFTER ALL REPLACEMENTS
+───────────────────────────────────────────────────────────────
+
+[ ] Save seller_api.py
+[ ] Restart Flask server
+[ ] Test Orders tab in Flutter app
+[ ] Test Products tab in Flutter app
+
+═══════════════════════════════════════════════════════════════
+  EXPECTED RESULT: Everything works! ✅
+═══════════════════════════════════════════════════════════════

@@ -1,0 +1,27 @@
+Analyzing flutter_app...                                        
+
+   info - 'groupValue' is deprecated and shouldn't be used. Use a RadioGroup ancestor to manage group value instead. This feature was deprecated after v3.32.0-0.0.pre - lib\screens\seller\order_detail_screen.dart:233:27 - deprecated_member_use
+   info - 'onChanged' is deprecated and shouldn't be used. Use RadioGroup to handle value change instead. This feature was deprecated after v3.32.0-0.0.pre - lib\screens\seller\order_detail_screen.dart:234:27 - deprecated_member_use
+   info - 'groupValue' is deprecated and shouldn't be used. Use a RadioGroup ancestor to manage group value instead. This feature was deprecated after v3.32.0-0.0.pre - lib\screens\seller\orders_tab.dart:217:27 - deprecated_member_use
+   info - 'onChanged' is deprecated and shouldn't be used. Use RadioGroup to handle value change instead. This feature was deprecated after v3.32.0-0.0.pre - lib\screens\seller\orders_tab.dart:218:27 - deprecated_member_use
+   info - Don't invoke 'print' in production code - test\integration\seller_integration_test.dart:29:7 - avoid_print
+   info - Don't invoke 'print' in production code - test\integration\seller_integration_test.dart:30:7 - avoid_print
+   info - Don't invoke 'print' in production code - test\integration\seller_integration_test.dart:69:7 - avoid_print
+   info - Don't invoke 'print' in production code - test\integration\seller_integration_test.dart:70:7 - avoid_print
+   info - Don't invoke 'print' in production code - test\integration\seller_integration_test.dart:88:7 - avoid_print
+   info - Don't invoke 'print' in production code - test\integration\seller_integration_test.dart:89:7 - avoid_print
+   info - Don't invoke 'print' in production code - test\integration\seller_integration_test.dart:107:7 - avoid_print
+   info - Don't invoke 'print' in production code - test\integration\seller_integration_test.dart:108:7 - avoid_print
+   info - Don't invoke 'print' in production code - test\integration\seller_integration_test.dart:145:7 - avoid_print
+   info - Don't invoke 'print' in production code - test\integration\seller_integration_test.dart:146:7 - avoid_print
+   info - Don't invoke 'print' in production code - test\integration\seller_integration_test.dart:174:7 - avoid_print
+   info - Don't invoke 'print' in production code - test\integration\seller_integration_test.dart:175:7 - avoid_print
+   info - Don't invoke 'print' in production code - test\integration\seller_integration_test.dart:210:7 - avoid_print
+   info - Don't invoke 'print' in production code - test\integration\seller_integration_test.dart:235:7 - avoid_print
+   info - Don't invoke 'print' in production code - test\integration\seller_integration_test.dart:246:9 - avoid_print
+   info - The local variable '_seedItem' starts with an underscore - test\providers\cart_provider_test.dart:53:14 - no_leading_underscores_for_local_identifiers
+warning - Unused import: 'package:flutter_app/models/seller_order.dart' - test\providers\orders_provider_test.dart:8:8 - unused_import
+warning - Unused import: 'dart:io' - test\services\flask_api_service_product_test.dart:1:8 - unused_import
+warning - Unused import: 'package:flutter_app/models/seller_order.dart' - test\services\flask_api_service_test.dart:8:8 - unused_import
+
+23 issues found. (ran in 9.2s)

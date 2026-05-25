@@ -1,0 +1,39 @@
+=== FIND & REPLACE INSTRUCTIONS FOR seller_api.py ===
+
+Based on your database schema, make these 5 replacements:
+
+1. Find: productname
+   Replace: name
+   
+2. Find: productdescription
+   Replace: description
+   
+3. Find: productprice
+   Replace: price
+   
+4. Find: productcategory
+   Replace: categoryID
+   
+5. Find: productquantity
+   Replace: stock
+
+=== ORDERS FIX ===
+
+The orders should work because 'username' column exists in your users table.
+If orders still fail, the issue might be with 'orderNumber' column.
+
+Check if seller_orders table has:
+- orderNumber (camelCase) OR
+- order_number (snake_case)
+
+If it's snake_case, also replace:
+   Find: orderNumber
+   Replace: order_number
+
+=== AFTER APPLYING FIXES ===
+
+1. Save seller_api.py
+2. Restart Flask server
+3. Test in your Flutter app
+4. Orders and Products should now load correctly
+
